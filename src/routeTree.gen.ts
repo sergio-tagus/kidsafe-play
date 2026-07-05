@@ -16,6 +16,7 @@ import { Route as AuthenticatedParentRouteRouteImport } from './routes/_authenti
 import { Route as AuthenticatedParentIndexRouteImport } from './routes/_authenticated/parent/index'
 import { Route as AuthenticatedParentUnlockRouteImport } from './routes/_authenticated/parent/unlock'
 import { Route as AuthenticatedParentResetPinRouteImport } from './routes/_authenticated/parent/reset-pin'
+import { Route as AuthenticatedParentHistoryRouteImport } from './routes/_authenticated/parent/history'
 import { Route as AuthenticatedParentChildrenRouteImport } from './routes/_authenticated/parent/children'
 import { Route as AuthenticatedParentCategoriesRouteImport } from './routes/_authenticated/parent/categories'
 import { Route as AuthenticatedParentWhitelistIndexRouteImport } from './routes/_authenticated/parent/whitelist/index'
@@ -67,6 +68,12 @@ const AuthenticatedParentResetPinRoute =
   AuthenticatedParentResetPinRouteImport.update({
     id: '/reset-pin',
     path: '/reset-pin',
+    getParentRoute: () => AuthenticatedParentRouteRoute,
+  } as any)
+const AuthenticatedParentHistoryRoute =
+  AuthenticatedParentHistoryRouteImport.update({
+    id: '/history',
+    path: '/history',
     getParentRoute: () => AuthenticatedParentRouteRoute,
   } as any)
 const AuthenticatedParentChildrenRoute =
@@ -160,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/parent': typeof AuthenticatedParentRouteRouteWithChildren
   '/parent/categories': typeof AuthenticatedParentCategoriesRoute
   '/parent/children': typeof AuthenticatedParentChildrenRoute
+  '/parent/history': typeof AuthenticatedParentHistoryRoute
   '/parent/reset-pin': typeof AuthenticatedParentResetPinRoute
   '/parent/unlock': typeof AuthenticatedParentUnlockRoute
   '/parent/': typeof AuthenticatedParentIndexRoute
@@ -181,6 +189,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/parent/categories': typeof AuthenticatedParentCategoriesRoute
   '/parent/children': typeof AuthenticatedParentChildrenRoute
+  '/parent/history': typeof AuthenticatedParentHistoryRoute
   '/parent/reset-pin': typeof AuthenticatedParentResetPinRoute
   '/parent/unlock': typeof AuthenticatedParentUnlockRoute
   '/parent': typeof AuthenticatedParentIndexRoute
@@ -205,6 +214,7 @@ export interface FileRoutesById {
   '/_authenticated/parent': typeof AuthenticatedParentRouteRouteWithChildren
   '/_authenticated/parent/categories': typeof AuthenticatedParentCategoriesRoute
   '/_authenticated/parent/children': typeof AuthenticatedParentChildrenRoute
+  '/_authenticated/parent/history': typeof AuthenticatedParentHistoryRoute
   '/_authenticated/parent/reset-pin': typeof AuthenticatedParentResetPinRoute
   '/_authenticated/parent/unlock': typeof AuthenticatedParentUnlockRoute
   '/_authenticated/parent/': typeof AuthenticatedParentIndexRoute
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/parent'
     | '/parent/categories'
     | '/parent/children'
+    | '/parent/history'
     | '/parent/reset-pin'
     | '/parent/unlock'
     | '/parent/'
@@ -250,6 +261,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/parent/categories'
     | '/parent/children'
+    | '/parent/history'
     | '/parent/reset-pin'
     | '/parent/unlock'
     | '/parent'
@@ -273,6 +285,7 @@ export interface FileRouteTypes {
     | '/_authenticated/parent'
     | '/_authenticated/parent/categories'
     | '/_authenticated/parent/children'
+    | '/_authenticated/parent/history'
     | '/_authenticated/parent/reset-pin'
     | '/_authenticated/parent/unlock'
     | '/_authenticated/parent/'
@@ -346,6 +359,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-pin'
       fullPath: '/parent/reset-pin'
       preLoaderRoute: typeof AuthenticatedParentResetPinRouteImport
+      parentRoute: typeof AuthenticatedParentRouteRoute
+    }
+    '/_authenticated/parent/history': {
+      id: '/_authenticated/parent/history'
+      path: '/history'
+      fullPath: '/parent/history'
+      preLoaderRoute: typeof AuthenticatedParentHistoryRouteImport
       parentRoute: typeof AuthenticatedParentRouteRoute
     }
     '/_authenticated/parent/children': {
@@ -452,6 +472,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedParentRouteRouteChildren {
   AuthenticatedParentCategoriesRoute: typeof AuthenticatedParentCategoriesRoute
   AuthenticatedParentChildrenRoute: typeof AuthenticatedParentChildrenRoute
+  AuthenticatedParentHistoryRoute: typeof AuthenticatedParentHistoryRoute
   AuthenticatedParentResetPinRoute: typeof AuthenticatedParentResetPinRoute
   AuthenticatedParentUnlockRoute: typeof AuthenticatedParentUnlockRoute
   AuthenticatedParentIndexRoute: typeof AuthenticatedParentIndexRoute
@@ -463,6 +484,7 @@ const AuthenticatedParentRouteRouteChildren: AuthenticatedParentRouteRouteChildr
   {
     AuthenticatedParentCategoriesRoute: AuthenticatedParentCategoriesRoute,
     AuthenticatedParentChildrenRoute: AuthenticatedParentChildrenRoute,
+    AuthenticatedParentHistoryRoute: AuthenticatedParentHistoryRoute,
     AuthenticatedParentResetPinRoute: AuthenticatedParentResetPinRoute,
     AuthenticatedParentUnlockRoute: AuthenticatedParentUnlockRoute,
     AuthenticatedParentIndexRoute: AuthenticatedParentIndexRoute,
