@@ -1,53 +1,66 @@
-## Diagnóstico
+## Diagnóstico visual
 
-Los botones siguen clicables por tres motivos concretos en `src/routes/_authenticated/kids/$childId/watch/$videoId.tsx`:
+Capturé el reproductor con Playwright. Los botones que salen a YouTube y NO están bloqueados son:
 
-1. **Overlay del logo mal posicionado**: `absolute bottom-10 right-0 w-24 h-10` deja el bloqueador 40 px por encima de la barra de controles, donde el logo de YouTube realmente NO está. El logo vive dentro de la barra (bottom 0, altura ~48 px), a la izquierda del botón de fullscreen.
-2. **Overlay superior demasiado corto**: `h-16` (64 px) no cubre el botón "Ver en YouTube" que YouTube muestra en la esquina superior derecha al hacer hover (aparece hasta ~72–80 px).
-3. **Pantalla de pausa/fin con retardo**: el overlay `paused` se monta tras `setState`, mientras que la end-screen de YouTube (grid de "More videos" con enlaces externos) aparece inmediatamente. Hay un flash de ~50–100 ms en el que los enlaces son clicables. Y en algunos vídeos la end-screen persiste tras ENDED antes de que React reaccione.
-4. **Menú contextual del navegador**: click derecho sobre el iframe abre "Copiar URL del vídeo" → enlace directo a youtube.com.
+- **Icono "Enlace"** (cadena) en esquina inferior-izquierda, debajo de la barra de progreso.
+- **Pill "More videos"** en zona inferior-derecha, debajo de la barra de progreso.
+- **Wordmark "YouTube"** en esquina inferior-derecha (mi overlay actual está mal ubicado).
+
+Además, el overlay superior actual `inset-x-0 h-20` está tapando los **controles legítimos de arriba-derecha** (volumen, subtítulos CC, ajustes), que no son enlaces externos.
+
+Layout real del player (976 × 549 en la captura):
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ [avatar] Título del vídeo              [vol][CC][⚙]      │  ← top: título+avatar (ext), controles (ok)
+│                                                          │
+│                    [ play/pausa ]                        │
+│                                                          │
+│                                                          │
+│                                                          │
+│   0:03 / 1:59:05                        [fullscreen]     │  ← fullscreen (ok)
+│  ══════════════════════════════════════                  │  ← progress bar (ok)
+│  [🔗]                        [More videos] [▶ YouTube]   │  ← TODO externo, tapar
+└──────────────────────────────────────────────────────────┘
+```
 
 ## Cambios en `src/routes/_authenticated/kids/$childId/watch/$videoId.tsx`
 
-### 1. Reposicionar y ampliar los overlays de bloqueo
+### Nueva estrategia de overlays
 
-```
-Top:     absolute inset-x-0 top-0 h-20 z-10   (era h-16)
-Logo YT: absolute bottom-0 right-14 w-20 h-12 z-10
-         ↑ dentro de la barra de controles, a la izquierda del botón fullscreen (que ocupa ~48 px a la derecha)
-```
+Reemplazar los dos overlays actuales por tres, todos con `z-10` y `pointer-events-auto`:
 
-Ambos con `pointer-events: auto` explícito y un `onClick` que llama a play/pause manual del player (no dejar el click "muerto" — mejor UX: tocar arriba del vídeo pausa/reanuda).
+1. **Top-left** (título + avatar):
+   `absolute top-0 left-0 h-16 right-1/3`
+   Deja el tercio derecho libre para volumen/CC/ajustes.
 
-### 2. Cerrar el flash de la end-screen
+2. **Bottom-strip** (icono enlace + "More videos" + wordmark YouTube):
+   `absolute bottom-0 inset-x-0 h-14`
+   Cubre TODA la franja inferior debajo de la barra de progreso. La barra de progreso, el tiempo y el botón fullscreen están por encima de esa franja (aprox. bottom 56–110 px), así que siguen accesibles.
 
-En vez de esperar al `onStateChange`, montar un overlay `absolute inset-0 z-20` con `pointer-events: none` SIEMPRE presente, que se vuelve `pointer-events: auto` + visible cuando `paused === true`. Y adicionalmente:
-- Detectar el estado inicial y pintar el botón grande "Reanudar" ya desde el primer render.
-- Escuchar también `PlayerState.BUFFERING` y `CUED` para adelantarse (`setPaused(true)` cuando `!== PLAYING`).
+3. **Eliminar** el antiguo overlay `bottom-0 right-14 w-20 h-12` (queda englobado en el bottom-strip).
 
-Esto elimina el flash porque el overlay ya está en el DOM y solo cambia visibilidad/pointer-events sin re-render costoso.
+Todos los overlays capturan el click y hacen `e.stopPropagation()` sin navegar (o el superior invoca play/pausa como ya hace).
 
-### 3. Bloquear menú contextual
+### Verificación tras el cambio
 
-Añadir `onContextMenu={(e) => e.preventDefault()}` al contenedor `.relative aspect-video`. Elimina "Copiar URL del vídeo" y "Ver en YouTube.com" del menú del navegador.
+Con Playwright, cargar la página, screenshot en:
+- Vídeo reproduciendo con hover: confirmar que volumen/CC/ajustes/fullscreen siguen visibles y clicables (probar clic → estado cambia).
+- Confirmar que clics sobre las zonas del icono enlace, "More videos" y wordmark NO abren nueva pestaña (contar `context.pages()` antes/después = 1).
+- Estado pausa: confirmar que el overlay React tapa la end-screen sin flash.
 
-### 4. Endurecer el iframe post-creación
+### Comprobación de otros botones ocultos
 
-Justo después de `new YT.Player(...)`, cuando YouTube inyecta el `<iframe>`, aplicar sobre el iframe:
-- `iframe.setAttribute('tabindex', '-1')` — evita foco por teclado que abriría atajos.
-- Wrapper con `onDragStart={(e)=>e.preventDefault()}` — evita arrastrar el vídeo como enlace.
+De la captura no aparecen otros botones externos. En algunos vídeos YouTube muestra:
+- **Botón "..."** o "Más" en la barra superior → cae dentro del top-left overlay si tuviera menú, pero si aparece a la derecha, se acepta el riesgo residual (menú de calidad/velocidad no es externo).
+- **Cards / anotaciones** en esquina superior-derecha con enlaces externos → `iv_load_policy: 3` ya las desactiva.
+- **End-screen** de recomendados y "Ver en YouTube" al finalizar → tapado por el overlay `paused` (que ya se activa también en ENDED/BUFFERING/CUED).
 
-### 5. Verificación
-
-Después de implementar, abrir `/kids/:childId/watch/:videoId` en el preview, esperar a la reproducción, y comprobar con Playwright (o inspección DOM manual) que:
-- Click en la franja superior no navega a youtube.com.
-- Click en la esquina inferior-derecha (zona del logo) no navega.
-- Click derecho no muestra opciones de YouTube.
-- Al pausar, la end-screen de vídeos relacionados queda tapada sin flash.
+Si tras verificar aparece algún botón nuevo, se añade un overlay puntual.
 
 ## Fuera de alcance
-- Reemplazar el reproductor por controles 100 % personalizados (requeriría reimplementar seek, volumen, fullscreen).
-- Bloquear atajos de teclado nativos del navegador (Cmd+Click, "Abrir en pestaña nueva" del menú OS) — no es posible desde web.
+- Custom-controls totalmente propios (implicaría reimplementar seek, volumen, calidad).
+- Bloquear atajos del sistema operativo (arrastrar iframe, cmd+click) — no accesibles desde web.
 
 ## Archivos tocados
 - `src/routes/_authenticated/kids/$childId/watch/$videoId.tsx` (único).
