@@ -19,14 +19,21 @@ export const Route = createFileRoute("/_authenticated/parent/")({
 const COLORS = ["oklch(0.68 0.22 20)", "oklch(0.72 0.18 150)", "oklch(0.68 0.17 240)", "oklch(0.75 0.18 55)", "oklch(0.65 0.24 300)", "oklch(0.75 0.2 350)", "oklch(0.87 0.17 95)", "oklch(0.6 0.15 200)"];
 
 function ParentDashboard() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const statsFn = useServerFn(getParentStats);
+  const catsFn = useServerFn(listCategories);
   const { data } = useQuery({ queryKey: ["stats"], queryFn: () => statsFn() });
+  const { data: cats = [] } = useQuery<any[]>({ queryKey: ["categories"], queryFn: () => catsFn() as any });
 
   const days = data?.days ?? [];
   const week = days.slice(-7).map(d => ({ ...d, day: d.date.slice(5) }));
   const month = days.map(d => ({ ...d, day: d.date.slice(5) }));
-  const catData = (data?.topCategories ?? []).map((c) => ({ ...c, label: t(`categories.${c.name}` as any) }));
+  const catLabel = (slug: string) => {
+    const c = cats.find((x) => x.slug === slug);
+    if (!c) return slug;
+    return lang === "es" ? c.name_es : lang === "pt" ? c.name_pt : c.name_en;
+  };
+  const catData = (data?.topCategories ?? []).map((c) => ({ ...c, label: catLabel(c.name) }));
 
   return (
     <ParentShell>
