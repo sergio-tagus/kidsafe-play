@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedKidsChildIdIndexRouteImport } from './routes/_authenticated/kids/$childId/index'
+import { Route as AuthenticatedKidsChildIdWatchVideoIdRouteImport } from './routes/_authenticated/kids/$childId/watch/$videoId'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -34,16 +35,24 @@ const AuthenticatedKidsChildIdIndexRoute =
     path: '/kids/$childId/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedKidsChildIdWatchVideoIdRoute =
+  AuthenticatedKidsChildIdWatchVideoIdRouteImport.update({
+    id: '/kids/$childId/watch/$videoId',
+    path: '/kids/$childId/watch/$videoId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/kids/$childId/': typeof AuthenticatedKidsChildIdIndexRoute
+  '/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/kids/$childId': typeof AuthenticatedKidsChildIdIndexRoute
+  '/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -51,18 +60,20 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/kids/$childId/': typeof AuthenticatedKidsChildIdIndexRoute
+  '/_authenticated/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/kids/$childId/'
+  fullPaths: '/' | '/auth' | '/kids/$childId/' | '/kids/$childId/watch/$videoId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/kids/$childId'
+  to: '/' | '/auth' | '/kids/$childId' | '/kids/$childId/watch/$videoId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/kids/$childId/'
+    | '/_authenticated/kids/$childId/watch/$videoId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -101,15 +112,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKidsChildIdIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/kids/$childId/watch/$videoId': {
+      id: '/_authenticated/kids/$childId/watch/$videoId'
+      path: '/kids/$childId/watch/$videoId'
+      fullPath: '/kids/$childId/watch/$videoId'
+      preLoaderRoute: typeof AuthenticatedKidsChildIdWatchVideoIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedKidsChildIdIndexRoute: typeof AuthenticatedKidsChildIdIndexRoute
+  AuthenticatedKidsChildIdWatchVideoIdRoute: typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedKidsChildIdIndexRoute: AuthenticatedKidsChildIdIndexRoute,
+  AuthenticatedKidsChildIdWatchVideoIdRoute:
+    AuthenticatedKidsChildIdWatchVideoIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
