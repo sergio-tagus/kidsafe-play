@@ -56,6 +56,24 @@ export type Database = {
         }
         Relationships: []
       }
+      channel_recommendations_cache: {
+        Row: {
+          generated_at: string
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          generated_at?: string
+          payload: Json
+          user_id: string
+        }
+        Update: {
+          generated_at?: string
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       child_profiles: {
         Row: {
           age: number | null
@@ -114,6 +132,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      parent_pins: {
+        Row: {
+          created_at: string
+          pin_hash: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          pin_hash: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          pin_hash?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
