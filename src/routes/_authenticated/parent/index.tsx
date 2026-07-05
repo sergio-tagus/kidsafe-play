@@ -1,11 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getParentStats } from "@/lib/kids.functions";
+import { getSyncSettings, upsertSyncSettings } from "@/lib/sync.functions";
 import { ParentShell } from "@/components/parent-shell";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/parent/")({
   component: ParentDashboard,
