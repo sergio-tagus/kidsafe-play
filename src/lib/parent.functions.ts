@@ -185,3 +185,166 @@ export const deleteVideo = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ---------- YouTube auto-import ----------
+const CATEGORY_ENUM = ["cartoons", "education", "music", "science", "stories", "games", "arts", "sports"] as const;
+
+export const previewChannelFromUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ url: z.string().min(1).max(500) }).parse(d))
+  .handler(async ({ data }) => {
+    const { fetchChannel, fetchRecentUploads, inferCategory } = await import("@/lib/youtube.server");
+    const ch = await fetchChannel(data.url);
+    // Pull first page of uploads to sharpen category inference
+    let sampleCategoryIds: (string | null)[] = [];
+    let sampleTitle = "";
+    let sampleDesc = "";
+    try {
+      const sample = await fetchRecentUploads(ch.uploadsPlaylistId, 25);
+      sampleCategoryIds = sample.map((v) => v.categoryId);
+      sampleTitle = sample.map((v) => v.title).slice(0, 5).join(" \n ");
+      sampleDesc = sample.map((v) => v.description).slice(0, 3).join(" \n ").slice(0, 2000);
+    } catch {
+      // fallthrough - use channel-only signals
+    }
+    const category = inferCategory({
+      topicIds: ch.topicIds,
+      videoCategoryIds: sampleCategoryIds,
+      title: `${ch.title}\n${sampleTitle}`,
+      description: `${ch.description}\n${sampleDesc}`,
+    });
+    return {
+      youtube_channel_id: ch.id,
+      channel_name: ch.title,
+      channel_handle: ch.handle,
+      channel_thumbnail_url: ch.thumbnail,
+      subscriberCount: ch.subscriberCount,
+      videoCount: ch.videoCount,
+      category,
+    };
+  });
+
+async function importVideosForChannel(
+  supabase: any,
+  parentUserId: string,
+  channelRowId: string,
+  uploadsPlaylistId: string,
+  videoLimit: number,
+): Promise<number> {
+  const { fetchRecentUploads } = await import("@/lib/youtube.server");
+  const videos = await fetchRecentUploads(uploadsPlaylistId, videoLimit);
+  if (!videos.length) return 0;
+  const rows = videos.map((v) => ({
+    parent_user_id: parentUserId,
+    whitelist_channel_id: channelRowId,
+    youtube_video_id: v.youtube_video_id,
+    title: v.title,
+    description: v.description || null,
+    thumbnail_url: v.thumbnail || `https://img.youtube.com/vi/${v.youtube_video_id}/hqdefault.jpg`,
+    duration_seconds: v.durationSeconds,
+    published_at: v.publishedAt,
+  }));
+  const { error } = await supabase
+    .from("videos_cache")
+    .upsert(rows, { onConflict: "parent_user_id,youtube_video_id" });
+  if (error) throw new Error(error.message);
+  return rows.length;
+}
+
+export const importChannelFromUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      url: z.string().min(1).max(500),
+      category: z.enum(CATEGORY_ENUM).optional(),
+      videoLimit: z.number().int().min(1).max(500).default(200),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { fetchChannel, inferCategory } = await import("@/lib/youtube.server");
+    const ch = await fetchChannel(data.url);
+    const category = data.category ?? inferCategory({
+      topicIds: ch.topicIds,
+      title: ch.title,
+      description: ch.description,
+    });
+
+    // Upsert channel
+    const { data: existing } = await context.supabase
+      .from("whitelist_channels")
+      .select("id")
+      .eq("parent_user_id", context.userId)
+      .eq("youtube_channel_id", ch.id)
+      .maybeSingle();
+
+    let channelRowId: string;
+    if (existing) {
+      const { error } = await context.supabase
+        .from("whitelist_channels")
+        .update({
+          channel_name: ch.title,
+          channel_handle: ch.handle,
+          channel_thumbnail_url: ch.thumbnail,
+          category,
+          active: true,
+        })
+        .eq("id", existing.id);
+      if (error) throw new Error(error.message);
+      channelRowId = existing.id;
+    } else {
+      const { data: row, error } = await context.supabase
+        .from("whitelist_channels")
+        .insert({
+          parent_user_id: context.userId,
+          youtube_channel_id: ch.id,
+          channel_name: ch.title,
+          channel_handle: ch.handle,
+          channel_thumbnail_url: ch.thumbnail,
+          category,
+          active: true,
+        })
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message);
+      channelRowId = row.id;
+    }
+
+    const imported = await importVideosForChannel(
+      context.supabase,
+      context.userId,
+      channelRowId,
+      ch.uploadsPlaylistId,
+      data.videoLimit,
+    );
+
+    return { channelId: channelRowId, videosImported: imported };
+  });
+
+export const refreshChannelVideos = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      channelId: z.string().uuid(),
+      videoLimit: z.number().int().min(1).max(500).default(200),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: ch, error } = await context.supabase
+      .from("whitelist_channels")
+      .select("id, youtube_channel_id")
+      .eq("id", data.channelId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!ch) throw new Error("Channel not found");
+
+    const { fetchChannel } = await import("@/lib/youtube.server");
+    const yt = await fetchChannel(ch.youtube_channel_id);
+    const imported = await importVideosForChannel(
+      context.supabase,
+      context.userId,
+      ch.id,
+      yt.uploadsPlaylistId,
+      data.videoLimit,
+    );
+    return { videosImported: imported };
+  });
