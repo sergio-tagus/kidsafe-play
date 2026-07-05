@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getParentStats } from "@/lib/kids.functions";
 import { getSyncSettings, upsertSyncSettings } from "@/lib/sync.functions";
+import { listCategories } from "@/lib/categories.functions";
 import { ParentShell } from "@/components/parent-shell";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
