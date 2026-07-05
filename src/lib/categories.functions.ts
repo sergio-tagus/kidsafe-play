@@ -16,6 +16,26 @@ export const listCategories = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+export const listCategoriesWithContent = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: wl, error: wlErr } = await context.supabase
+      .from("whitelist_channels")
+      .select("category")
+      .eq("active", true);
+    if (wlErr) throw new Error(wlErr.message);
+    const slugs = Array.from(new Set((wl ?? []).map((r: any) => r.category).filter(Boolean)));
+    if (slugs.length === 0) return [];
+    const { data, error } = await context.supabase
+      .from("categories")
+      .select("*")
+      .in("slug", slugs)
+      .order("sort_order", { ascending: true })
+      .order("name_en", { ascending: true });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
 const upsertInput = z.object({
   id: z.string().uuid().optional(),
   slug: z.string().regex(slugRegex, "slug must be lowercase letters, digits or dashes"),
