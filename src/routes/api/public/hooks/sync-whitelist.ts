@@ -25,10 +25,19 @@ export const Route = createFileRoute("/api/public/hooks/sync-whitelist")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
       POST: async ({ request }) => {
-        // Auth: require the anon apikey header (matches pg_cron config)
-        const providedKey = request.headers.get("apikey");
-        const expectedKey = process.env.SUPABASE_PUBLISHABLE_KEY;
-        if (!providedKey || !expectedKey || providedKey !== expectedKey) {
+        // Auth: require the private CRON_SECRET (server-only env var).
+        // The Supabase publishable key is shipped to browsers and is NOT a secret.
+        const providedSecret = request.headers.get("x-cron-secret");
+        const expectedSecret = process.env.CRON_SECRET;
+        if (!expectedSecret || !providedSecret) {
+          return json({ error: "Unauthorized" }, 401);
+        }
+        // Timing-safe compare
+        const a = new TextEncoder().encode(providedSecret);
+        const b = new TextEncoder().encode(expectedSecret);
+        let diff = a.length ^ b.length;
+        for (let i = 0; i < Math.min(a.length, b.length); i++) diff |= a[i] ^ b[i];
+        if (diff !== 0) {
           return json({ error: "Unauthorized" }, 401);
         }
 
