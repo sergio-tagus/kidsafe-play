@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import * as Icons from "lucide-react";
 import { listChildProfiles } from "@/lib/parent.functions";
-import { listCategories } from "@/lib/categories.functions";
+import { listCategoriesWithContent } from "@/lib/categories.functions";
 import { KidShell } from "@/components/kid-shell";
 import { useI18n } from "@/lib/i18n";
 
