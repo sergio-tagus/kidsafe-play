@@ -174,7 +174,35 @@ function WatchPage() {
         <div className="max-w-6xl mx-auto">
           <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl">
             {!locked ? (
-              <div ref={containerRef} className="w-full h-full" />
+              <>
+                <div ref={containerRef} className="w-full h-full pointer-events-auto" />
+                {/* Block clicks on YouTube title bar (top) */}
+                <div className="absolute top-0 left-0 right-0 h-16 z-10" aria-hidden="true" />
+                {/* Block clicks on YouTube logo (bottom-right, above the control bar) */}
+                <div className="absolute bottom-10 right-0 w-24 h-10 z-10" aria-hidden="true" />
+                {paused && (
+                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/70 backdrop-blur-sm text-white">
+                    <h2 className="text-2xl font-display font-bold">{t("player.paused")}</h2>
+                    <Button
+                      size="lg"
+                      className="rounded-full"
+                      onClick={() => {
+                        try { playerRef.current?.playVideo?.(); } catch { /* ignore */ }
+                        setPaused(false);
+                      }}
+                    >
+                      <Play className="w-5 h-5 mr-2" /> {t("player.resume")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="rounded-full bg-transparent text-white border-white hover:bg-white/10 hover:text-white"
+                      onClick={() => navigate({ to: "/kids/$childId", params: { childId } as any })}
+                    >
+                      {t("common.back")}
+                    </Button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-white p-8 text-center gradient-warm">
                 <Lock className="w-16 h-16 mb-4" />
@@ -187,7 +215,10 @@ function WatchPage() {
             <div className="flex-1 min-w-0">
               <h1 className="text-xl md:text-2xl font-display font-bold">{video.title}</h1>
               <div className="mt-1 text-sm text-muted-foreground">{video.channel.channel_name}</div>
-              {video.description && <p className="mt-3 text-sm text-foreground/80 whitespace-pre-wrap line-clamp-6">{video.description}</p>}
+              {video.description && (() => {
+                const clean = sanitizeDescription(video.description);
+                return clean ? <p className="mt-3 text-sm text-foreground/80 whitespace-pre-wrap line-clamp-6">{clean}</p> : null;
+              })()}
             </div>
             <div className="flex flex-col items-end gap-2">
               <Button
