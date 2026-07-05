@@ -23,12 +23,10 @@ export type SafeVideo = {
   };
 };
 
-const CATEGORIES = ["cartoons", "education", "music", "science", "stories", "games", "arts", "sports"] as const;
-
 const filterInput = z.object({
   childId: z.string().uuid(),
   filter: z.enum(["recent", "popular", "recommended", "byChannel", "byCategory", "search"]).default("recent"),
-  category: z.enum(CATEGORIES).optional(),
+  category: z.string().min(1).max(60).optional(),
   channelId: z.string().uuid().optional(),
   query: z.string().max(120).optional(),
   limit: z.number().int().min(1).max(60).default(24),
