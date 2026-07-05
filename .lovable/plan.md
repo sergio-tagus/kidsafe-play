@@ -1,61 +1,53 @@
-## Objetivo
+## Diagnóstico
 
-En `/kids/$childId/watch/$videoId` no debe quedar ningún camino visible por el que un niño pueda salir a `youtube.com`. Hoy hay dos fuentes:
+Los botones siguen clicables por tres motivos concretos en `src/routes/_authenticated/kids/$childId/watch/$videoId.tsx`:
 
-1. **El iframe de YouTube** muestra al pausar/terminar: título con enlace al vídeo, logo de YouTube (esquina inferior derecha) y botón "Ver en YouTube" / compartir.
-2. **La descripción del vídeo** (`video.description`) se renderiza como texto plano, pero suele contener URLs `https://youtu.be/...`, `https://www.youtube.com/...`, `@handle`, enlaces a redes, etc.
+1. **Overlay del logo mal posicionado**: `absolute bottom-10 right-0 w-24 h-10` deja el bloqueador 40 px por encima de la barra de controles, donde el logo de YouTube realmente NO está. El logo vive dentro de la barra (bottom 0, altura ~48 px), a la izquierda del botón de fullscreen.
+2. **Overlay superior demasiado corto**: `h-16` (64 px) no cubre el botón "Ver en YouTube" que YouTube muestra en la esquina superior derecha al hacer hover (aparece hasta ~72–80 px).
+3. **Pantalla de pausa/fin con retardo**: el overlay `paused` se monta tras `setState`, mientras que la end-screen de YouTube (grid de "More videos" con enlaces externos) aparece inmediatamente. Hay un flash de ~50–100 ms en el que los enlaces son clicables. Y en algunos vídeos la end-screen persiste tras ENDED antes de que React reaccione.
+4. **Menú contextual del navegador**: click derecho sobre el iframe abre "Copiar URL del vídeo" → enlace directo a youtube.com.
 
 ## Cambios en `src/routes/_authenticated/kids/$childId/watch/$videoId.tsx`
 
-### 1. Endurecer `playerVars`
-- Mantener `rel: 0`, `modestbranding: 1`, `iv_load_policy: 3`.
-- Añadir `origin: window.location.origin` (mejora modestbranding).
-- Mantener `controls: 1` (el niño necesita play/pausa/volumen/fullscreen).
-
-Nota: incluso con estas opciones, YouTube sigue mostrando el título clicable arriba y el logo abajo-derecha al pausar. Se neutraliza con overlays (paso 2).
-
-### 2. Overlays que bloquean los click-throughs de YouTube
-Envolver el `<div ref={containerRef}>` en un contenedor `relative` y añadir capas `absolute` con `pointer-events-auto` sobre las zonas problemáticas, sin tapar los controles inferiores:
+### 1. Reposicionar y ampliar los overlays de bloqueo
 
 ```
-┌─────────────────────────────────┐
-│ [overlay título — bloquea]      │  ← top: 0, height: 60px, full width
-│                                 │
-│         vídeo (clicable)        │
-│                                 │
-│                    [logo YT ×]  │  ← bottom-right 80×40, encima del logo
-│ [barra de controles nativa]     │  ← NO tapada
-└─────────────────────────────────┘
+Top:     absolute inset-x-0 top-0 h-20 z-10   (era h-16)
+Logo YT: absolute bottom-0 right-14 w-20 h-12 z-10
+         ↑ dentro de la barra de controles, a la izquierda del botón fullscreen (que ocupa ~48 px a la derecha)
 ```
 
-Los overlays son `<div>` transparentes que capturan el click y no hacen nada (o hacen play/pause manual llamando a `playerRef.current`). Esto evita abrir `youtube.com/watch?v=...` cuando el usuario toca el título o el logo.
+Ambos con `pointer-events: auto` explícito y un `onClick` que llama a play/pause manual del player (no dejar el click "muerto" — mejor UX: tocar arriba del vídeo pausa/reanuda).
 
-### 3. Overlay al pausar / al terminar
-Cuando `e.data === YT.PlayerState.PAUSED` o `ENDED`, montar un overlay `absolute inset-0` con:
-- Botón grande "Reanudar" (llama a `playerRef.current.playVideo()`).
-- Botón "Volver" a `/kids/$childId`.
-- Fondo semitransparente que oculta por completo la pantalla de fin/pausa de YouTube (que es donde aparecen "Ver en YouTube", compartir y vídeos relacionados externos).
+### 2. Cerrar el flash de la end-screen
 
-Esto es lo único 100 % fiable para que no se vea ni el botón "Ver en YouTube" ni el share.
+En vez de esperar al `onStateChange`, montar un overlay `absolute inset-0 z-20` con `pointer-events: none` SIEMPRE presente, que se vuelve `pointer-events: auto` + visible cuando `paused === true`. Y adicionalmente:
+- Detectar el estado inicial y pintar el botón grande "Reanudar" ya desde el primer render.
+- Escuchar también `PlayerState.BUFFERING` y `CUED` para adelantarse (`setPaused(true)` cuando `!== PLAYING`).
 
-### 4. Sanear la descripción
-Nueva función local `sanitizeDescription(text: string)`:
-- Elimina URLs completas de dominios `youtube.com`, `youtu.be`, `youtube-nocookie.com`, `m.youtube.com`.
-- Elimina URLs genéricas `http(s)://...` (para no dejar tampoco enlaces a Instagram, TikTok, etc., coherente con el objetivo de no sacar al niño de la app).
-- Elimina menciones tipo `@handle` seguidas de enlace y líneas "Suscríbete: ...".
-- Colapsa saltos de línea múltiples.
+Esto elimina el flash porque el overlay ya está en el DOM y solo cambia visibilidad/pointer-events sin re-render costoso.
 
-Renderizar el resultado en el mismo `<p>` (ya es texto plano, no `dangerouslySetInnerHTML`, así que no puede haber `<a>`).
+### 3. Bloquear menú contextual
 
-### 5. Título y canal
-- `video.title` y `video.channel.channel_name` se siguen mostrando como texto (no son enlaces). ✅ ya está bien, no se toca.
-- Verificar que no hay `<a href>` a YouTube en `VideoCard` ni en la lista "Up next" (usan `<Link>` internas de TanStack).
+Añadir `onContextMenu={(e) => e.preventDefault()}` al contenedor `.relative aspect-video`. Elimina "Copiar URL del vídeo" y "Ver en YouTube.com" del menú del navegador.
+
+### 4. Endurecer el iframe post-creación
+
+Justo después de `new YT.Player(...)`, cuando YouTube inyecta el `<iframe>`, aplicar sobre el iframe:
+- `iframe.setAttribute('tabindex', '-1')` — evita foco por teclado que abriría atajos.
+- Wrapper con `onDragStart={(e)=>e.preventDefault()}` — evita arrastrar el vídeo como enlace.
+
+### 5. Verificación
+
+Después de implementar, abrir `/kids/:childId/watch/:videoId` en el preview, esperar a la reproducción, y comprobar con Playwright (o inspección DOM manual) que:
+- Click en la franja superior no navega a youtube.com.
+- Click en la esquina inferior-derecha (zona del logo) no navega.
+- Click derecho no muestra opciones de YouTube.
+- Al pausar, la end-screen de vídeos relacionados queda tapada sin flash.
 
 ## Fuera de alcance
-- Bloquear el modo "picture-in-picture" o el menú contextual del navegador (imposible de forma fiable).
-- Cambiar el reproductor de YouTube IFrame por otro backend.
-- Sanear títulos de vídeo (raramente contienen URLs; se puede añadir después si aparece un caso).
+- Reemplazar el reproductor por controles 100 % personalizados (requeriría reimplementar seek, volumen, fullscreen).
+- Bloquear atajos de teclado nativos del navegador (Cmd+Click, "Abrir en pestaña nueva" del menú OS) — no es posible desde web.
 
 ## Archivos tocados
 - `src/routes/_authenticated/kids/$childId/watch/$videoId.tsx` (único).
-- Posibles claves i18n nuevas en `src/lib/i18n.tsx`: `player.paused`, `player.resume`.
