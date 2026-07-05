@@ -16,6 +16,7 @@ import { Route as AuthenticatedParentIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedParentChildrenRouteImport } from './routes/_authenticated/parent/children'
 import { Route as AuthenticatedParentWhitelistIndexRouteImport } from './routes/_authenticated/parent/whitelist/index'
 import { Route as AuthenticatedKidsChildIdIndexRouteImport } from './routes/_authenticated/kids/$childId/index'
+import { Route as ApiPublicHooksSyncWhitelistRouteImport } from './routes/api/public/hooks/sync-whitelist'
 import { Route as AuthenticatedParentWhitelistChannelIdRouteImport } from './routes/_authenticated/parent/whitelist/$channelId'
 import { Route as AuthenticatedKidsChildIdSearchRouteImport } from './routes/_authenticated/kids/$childId/search'
 import { Route as AuthenticatedKidsChildIdHistoryRouteImport } from './routes/_authenticated/kids/$childId/history'
@@ -63,6 +64,12 @@ const AuthenticatedKidsChildIdIndexRoute =
     id: '/kids/$childId/',
     path: '/kids/$childId/',
     getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiPublicHooksSyncWhitelistRoute =
+  ApiPublicHooksSyncWhitelistRouteImport.update({
+    id: '/api/public/hooks/sync-whitelist',
+    path: '/api/public/hooks/sync-whitelist',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const AuthenticatedParentWhitelistChannelIdRoute =
   AuthenticatedParentWhitelistChannelIdRouteImport.update({
@@ -128,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
   '/kids/$childId/search': typeof AuthenticatedKidsChildIdSearchRoute
   '/parent/whitelist/$channelId': typeof AuthenticatedParentWhitelistChannelIdRoute
+  '/api/public/hooks/sync-whitelist': typeof ApiPublicHooksSyncWhitelistRoute
   '/kids/$childId/': typeof AuthenticatedKidsChildIdIndexRoute
   '/parent/whitelist/': typeof AuthenticatedParentWhitelistIndexRoute
   '/kids/$childId/categories/$category': typeof AuthenticatedKidsChildIdCategoriesCategoryRoute
@@ -145,6 +153,7 @@ export interface FileRoutesByTo {
   '/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
   '/kids/$childId/search': typeof AuthenticatedKidsChildIdSearchRoute
   '/parent/whitelist/$channelId': typeof AuthenticatedParentWhitelistChannelIdRoute
+  '/api/public/hooks/sync-whitelist': typeof ApiPublicHooksSyncWhitelistRoute
   '/kids/$childId': typeof AuthenticatedKidsChildIdIndexRoute
   '/parent/whitelist': typeof AuthenticatedParentWhitelistIndexRoute
   '/kids/$childId/categories/$category': typeof AuthenticatedKidsChildIdCategoriesCategoryRoute
@@ -164,6 +173,7 @@ export interface FileRoutesById {
   '/_authenticated/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
   '/_authenticated/kids/$childId/search': typeof AuthenticatedKidsChildIdSearchRoute
   '/_authenticated/parent/whitelist/$channelId': typeof AuthenticatedParentWhitelistChannelIdRoute
+  '/api/public/hooks/sync-whitelist': typeof ApiPublicHooksSyncWhitelistRoute
   '/_authenticated/kids/$childId/': typeof AuthenticatedKidsChildIdIndexRoute
   '/_authenticated/parent/whitelist/': typeof AuthenticatedParentWhitelistIndexRoute
   '/_authenticated/kids/$childId/categories/$category': typeof AuthenticatedKidsChildIdCategoriesCategoryRoute
@@ -183,6 +193,7 @@ export interface FileRouteTypes {
     | '/kids/$childId/history'
     | '/kids/$childId/search'
     | '/parent/whitelist/$channelId'
+    | '/api/public/hooks/sync-whitelist'
     | '/kids/$childId/'
     | '/parent/whitelist/'
     | '/kids/$childId/categories/$category'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/kids/$childId/history'
     | '/kids/$childId/search'
     | '/parent/whitelist/$channelId'
+    | '/api/public/hooks/sync-whitelist'
     | '/kids/$childId'
     | '/parent/whitelist'
     | '/kids/$childId/categories/$category'
@@ -218,6 +230,7 @@ export interface FileRouteTypes {
     | '/_authenticated/kids/$childId/history'
     | '/_authenticated/kids/$childId/search'
     | '/_authenticated/parent/whitelist/$channelId'
+    | '/api/public/hooks/sync-whitelist'
     | '/_authenticated/kids/$childId/'
     | '/_authenticated/parent/whitelist/'
     | '/_authenticated/kids/$childId/categories/$category'
@@ -231,6 +244,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicHooksSyncWhitelistRoute: typeof ApiPublicHooksSyncWhitelistRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -283,6 +297,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/kids/$childId/'
       preLoaderRoute: typeof AuthenticatedKidsChildIdIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/hooks/sync-whitelist': {
+      id: '/api/public/hooks/sync-whitelist'
+      path: '/api/public/hooks/sync-whitelist'
+      fullPath: '/api/public/hooks/sync-whitelist'
+      preLoaderRoute: typeof ApiPublicHooksSyncWhitelistRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/parent/whitelist/$channelId': {
       id: '/_authenticated/parent/whitelist/$channelId'
@@ -397,6 +418,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicHooksSyncWhitelistRoute: ApiPublicHooksSyncWhitelistRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
