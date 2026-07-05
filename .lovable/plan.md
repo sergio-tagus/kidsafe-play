@@ -1,64 +1,61 @@
-# Plan: PIN parental + recomendador de canales
+## Objetivo
 
-## 1. PIN parental (4 dígitos)
+En `/kids/$childId/watch/$videoId` no debe quedar ningún camino visible por el que un niño pueda salir a `youtube.com`. Hoy hay dos fuentes:
 
-**Base de datos** (nueva tabla `parent_pins`):
-- `user_id` (PK, FK a auth.users)
-- `pin_hash` (bcrypt/sha256 con salt)
-- `recovery_email` (por defecto el email del usuario)
-- RLS: solo el propio padre lee/edita su fila.
+1. **El iframe de YouTube** muestra al pausar/terminar: título con enlace al vídeo, logo de YouTube (esquina inferior derecha) y botón "Ver en YouTube" / compartir.
+2. **La descripción del vídeo** (`video.description`) se renderiza como texto plano, pero suele contener URLs `https://youtu.be/...`, `https://www.youtube.com/...`, `@handle`, enlaces a redes, etc.
 
-**Server functions** (`src/lib/pin.functions.ts`):
-- `hasPin()` → boolean, indica si ya está configurado.
-- `setPin({ pin })` → hash + guardar. También sirve para cambiarlo.
-- `verifyPin({ pin })` → devuelve `{ ok, token }` con un token corto (JWT firmado con `SESSION_SECRET`, exp ~10 min) que el cliente guarda en `sessionStorage`.
-- `requestPinReset()` → genera token de 1 uso (15 min), lo guarda en tabla `parent_pin_resets` y envía email vía `sendTransactionalEmail` con enlace a `/parent/reset-pin?token=...`.
-- `resetPin({ token, pin })` → valida y actualiza.
+## Cambios en `src/routes/_authenticated/kids/$childId/watch/$videoId.tsx`
 
-**UI**:
-- Nueva ruta `/_authenticated/parent/unlock.tsx`: teclado de 4 dígitos, botón "¿Olvidaste tu PIN?" y, si no hay PIN, flujo de creación (introducir + confirmar).
-- Nuevo layout `src/routes/_authenticated/parent/route.tsx` con `beforeLoad` que:
-  1. Comprueba `sessionStorage.getItem('parent_pin_token')` y su expiración.
-  2. Si no hay token válido → `redirect('/parent/unlock')` (con `search.next`).
-- Requisito del usuario: pedir PIN cada vez que se entra a `/parent`. El token se borra automáticamente al salir del área de padres (efecto en `parent-shell` que limpia al desmontar por navegación fuera de `/parent`).
-- Ruta pública dentro del layout: `/parent/reset-pin` acepta `token` por query y muestra formulario.
+### 1. Endurecer `playerVars`
+- Mantener `rel: 0`, `modestbranding: 1`, `iv_load_policy: 3`.
+- Añadir `origin: window.location.origin` (mejora modestbranding).
+- Mantener `controls: 1` (el niño necesita play/pausa/volumen/fullscreen).
 
-**Email**: plantilla nueva `parent-pin-reset.tsx` en `src/lib/email-templates/` con enlace de recuperación. Requiere que el dominio de email esté configurado (si no lo está, se avisa al usuario al pulsar "¿Olvidaste tu PIN?").
+Nota: incluso con estas opciones, YouTube sigue mostrando el título clicable arriba y el logo abajo-derecha al pausar. Se neutraliza con overlays (paso 2).
 
-**i18n**: claves `pin.title`, `pin.setup`, `pin.confirm`, `pin.wrong`, `pin.forgot`, `pin.emailSent`, `pin.reset.title`, `pin.reset.success` en ES/EN/PT.
+### 2. Overlays que bloquean los click-throughs de YouTube
+Envolver el `<div ref={containerRef}>` en un contenedor `relative` y añadir capas `absolute` con `pointer-events-auto` sobre las zonas problemáticas, sin tapar los controles inferiores:
 
-## 2. Recomendador de canales (IA)
+```
+┌─────────────────────────────────┐
+│ [overlay título — bloquea]      │  ← top: 0, height: 60px, full width
+│                                 │
+│         vídeo (clicable)        │
+│                                 │
+│                    [logo YT ×]  │  ← bottom-right 80×40, encima del logo
+│ [barra de controles nativa]     │  ← NO tapada
+└─────────────────────────────────┘
+```
 
-**Server function** (`src/lib/recommendations.functions.ts`):
-- `recommendChannels()` con `requireSupabaseAuth`:
-  1. Lee `whitelist_channels` activos del padre (nombre, handle, categoría) + edades de `child_profiles`.
-  2. Llama a Lovable AI Gateway (`google/gemini-3-flash-preview`) con salida estructurada (Output.object sin bounds) pidiendo 8 canales similares apropiados: `[{ channel_name, channel_handle, reason, suggested_category }]`.
-  3. Filtra los que ya están en la whitelist (por handle/nombre normalizado).
-  4. Devuelve la lista + `run_id` para telemetría.
-- Prompt en español/inglés según `lang` del cliente (pasado como input).
-- Cachea resultado durante 6h en tabla `channel_recommendations_cache` (`user_id`, `payload jsonb`, `generated_at`).
-- `approveRecommendation({ channel_handle, category })` → reutiliza `previewChannelFromUrl` con `https://youtube.com/@handle` para validar existencia y traer thumbnail, luego devuelve preview (no importa aún).
+Los overlays son `<div>` transparentes que capturan el click y no hacen nada (o hacen play/pause manual llamando a `playerRef.current`). Esto evita abrir `youtube.com/watch?v=...` cuando el usuario toca el título o el logo.
 
-**UI en `/parent/whitelist/index.tsx`**:
-- Nuevo botón "Recomendar canales" arriba, junto al de añadir.
-- Abre un `Dialog` con:
-  - Estado loading (spinner + "Analizando tu whitelist con IA…").
-  - Lista de tarjetas: nombre, handle, categoría sugerida (badge), razón (1-2 líneas), botón "Ver detalles" y "Descartar".
-  - "Ver detalles" abre segundo `Dialog` (preview): thumbnail, subs, videoCount, `Select` de categoría (usa `listCategories`), botón "Aprobar e importar" (llama a `importChannelFromUrl` con el handle) y "Cancelar".
-  - Toast al importar; se invalida `["whitelist"]` y se cierra el diálogo.
-- Botón "Regenerar" en el header del diálogo (fuerza recomputo saltando caché).
+### 3. Overlay al pausar / al terminar
+Cuando `e.data === YT.PlayerState.PAUSED` o `ENDED`, montar un overlay `absolute inset-0` con:
+- Botón grande "Reanudar" (llama a `playerRef.current.playVideo()`).
+- Botón "Volver" a `/kids/$childId`.
+- Fondo semitransparente que oculta por completo la pantalla de fin/pausa de YouTube (que es donde aparecen "Ver en YouTube", compartir y vídeos relacionados externos).
 
-**i18n**: `whitelist.recommend`, `whitelist.recommend.loading`, `whitelist.recommend.reason`, `whitelist.recommend.approve`, `whitelist.recommend.preview`, `whitelist.recommend.regenerate`, `whitelist.recommend.none`.
+Esto es lo único 100 % fiable para que no se vea ni el botón "Ver en YouTube" ni el share.
 
-## 3. Detalles técnicos
+### 4. Sanear la descripción
+Nueva función local `sanitizeDescription(text: string)`:
+- Elimina URLs completas de dominios `youtube.com`, `youtu.be`, `youtube-nocookie.com`, `m.youtube.com`.
+- Elimina URLs genéricas `http(s)://...` (para no dejar tampoco enlaces a Instagram, TikTok, etc., coherente con el objetivo de no sacar al niño de la app).
+- Elimina menciones tipo `@handle` seguidas de enlace y líneas "Suscríbete: ...".
+- Colapsa saltos de línea múltiples.
 
-- `SESSION_SECRET` para firmar tokens PIN: reutilizar variable existente o crear via `add_secret` si falta.
-- Hash del PIN con `bcryptjs` (edge-safe) — instalar dependencia.
-- Emails: si no hay dominio configurado, `requestPinReset` devuelve error legible y la UI muestra "Configura el dominio de email en Ajustes" (mensaje traducido).
-- Todo el flujo respeta RLS existente y el middleware `requireSupabaseAuth`.
+Renderizar el resultado en el mismo `<p>` (ya es texto plano, no `dangerouslySetInnerHTML`, así que no puede haber `<a>`).
+
+### 5. Título y canal
+- `video.title` y `video.channel.channel_name` se siguen mostrando como texto (no son enlaces). ✅ ya está bien, no se toca.
+- Verificar que no hay `<a href>` a YouTube en `VideoCard` ni en la lista "Up next" (usan `<Link>` internas de TanStack).
 
 ## Fuera de alcance
-- Bloqueo por intentos (rate limit) — se puede añadir después.
-- Biometría / WebAuthn.
-- Aprobación en batch de varias recomendaciones simultáneas.
-- Historial de canales descartados.
+- Bloquear el modo "picture-in-picture" o el menú contextual del navegador (imposible de forma fiable).
+- Cambiar el reproductor de YouTube IFrame por otro backend.
+- Sanear títulos de vídeo (raramente contienen URLs; se puede añadir después si aparece un caso).
+
+## Archivos tocados
+- `src/routes/_authenticated/kids/$childId/watch/$videoId.tsx` (único).
+- Posibles claves i18n nuevas en `src/lib/i18n.tsx`: `player.paused`, `player.resume`.
