@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedParentIndexRouteImport } from './routes/_authenticated/parent/index'
+import { Route as AuthenticatedParentChildrenRouteImport } from './routes/_authenticated/parent/children'
 import { Route as AuthenticatedKidsChildIdIndexRouteImport } from './routes/_authenticated/kids/$childId/index'
 import { Route as AuthenticatedKidsChildIdSearchRouteImport } from './routes/_authenticated/kids/$childId/search'
 import { Route as AuthenticatedKidsChildIdHistoryRouteImport } from './routes/_authenticated/kids/$childId/history'
@@ -41,6 +42,12 @@ const AuthenticatedParentIndexRoute =
   AuthenticatedParentIndexRouteImport.update({
     id: '/parent/',
     path: '/parent/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedParentChildrenRoute =
+  AuthenticatedParentChildrenRouteImport.update({
+    id: '/parent/children',
+    path: '/parent/children',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedKidsChildIdIndexRoute =
@@ -101,6 +108,7 @@ const AuthenticatedKidsChildIdCategoriesCategoryRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/parent/children': typeof AuthenticatedParentChildrenRoute
   '/parent/': typeof AuthenticatedParentIndexRoute
   '/kids/$childId/favorites': typeof AuthenticatedKidsChildIdFavoritesRoute
   '/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
@@ -115,6 +123,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/parent/children': typeof AuthenticatedParentChildrenRoute
   '/parent': typeof AuthenticatedParentIndexRoute
   '/kids/$childId/favorites': typeof AuthenticatedKidsChildIdFavoritesRoute
   '/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
@@ -131,6 +140,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/parent/children': typeof AuthenticatedParentChildrenRoute
   '/_authenticated/parent/': typeof AuthenticatedParentIndexRoute
   '/_authenticated/kids/$childId/favorites': typeof AuthenticatedKidsChildIdFavoritesRoute
   '/_authenticated/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/parent/children'
     | '/parent/'
     | '/kids/$childId/favorites'
     | '/kids/$childId/history'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/parent/children'
     | '/parent'
     | '/kids/$childId/favorites'
     | '/kids/$childId/history'
@@ -176,6 +188,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/parent/children'
     | '/_authenticated/parent/'
     | '/_authenticated/kids/$childId/favorites'
     | '/_authenticated/kids/$childId/history'
@@ -222,6 +235,13 @@ declare module '@tanstack/react-router' {
       path: '/parent'
       fullPath: '/parent/'
       preLoaderRoute: typeof AuthenticatedParentIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/parent/children': {
+      id: '/_authenticated/parent/children'
+      path: '/parent/children'
+      fullPath: '/parent/children'
+      preLoaderRoute: typeof AuthenticatedParentChildrenRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/kids/$childId/': {
@@ -291,6 +311,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedParentChildrenRoute: typeof AuthenticatedParentChildrenRoute
   AuthenticatedParentIndexRoute: typeof AuthenticatedParentIndexRoute
   AuthenticatedKidsChildIdFavoritesRoute: typeof AuthenticatedKidsChildIdFavoritesRoute
   AuthenticatedKidsChildIdHistoryRoute: typeof AuthenticatedKidsChildIdHistoryRoute
@@ -304,6 +325,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedParentChildrenRoute: AuthenticatedParentChildrenRoute,
   AuthenticatedParentIndexRoute: AuthenticatedParentIndexRoute,
   AuthenticatedKidsChildIdFavoritesRoute:
     AuthenticatedKidsChildIdFavoritesRoute,
