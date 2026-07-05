@@ -85,7 +85,7 @@ const channelInput = z.object({
   channel_name: z.string().min(1).max(200),
   channel_handle: z.string().max(200).nullable().optional(),
   channel_thumbnail_url: z.string().url().nullable().optional().or(z.literal("")),
-  category: z.enum(CATEGORIES),
+  category: categorySlug,
   active: z.boolean().default(true),
 });
 
