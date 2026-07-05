@@ -29,10 +29,8 @@ export const Route = createFileRoute("/_authenticated/parent/whitelist/")({
   component: WhitelistPage,
 });
 
-const CATEGORIES = ["cartoons", "education", "music", "science", "stories", "games", "arts", "sports"] as const;
-
 function WhitelistPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const qc = useQueryClient();
   const listFn = useServerFn(listWhitelistChannels);
   const upsertFn = useServerFn(upsertWhitelistChannel);
@@ -40,8 +38,16 @@ function WhitelistPage() {
   const previewFn = useServerFn(previewChannelFromUrl);
   const importFn = useServerFn(importChannelFromUrl);
   const refreshFn = useServerFn(refreshChannelVideos);
+  const updateCatFn = useServerFn(updateChannelCategory);
+  const catsFn = useServerFn(listCategories);
 
   const { data: channels = [] } = useQuery({ queryKey: ["wl"], queryFn: () => listFn() });
+  const { data: categories = [] } = useQuery<any[]>({ queryKey: ["categories"], queryFn: () => catsFn() as any });
+  const catName = (slug: string) => {
+    const c = categories.find((x) => x.slug === slug);
+    if (!c) return slug;
+    return lang === "es" ? c.name_es : lang === "pt" ? c.name_pt : c.name_en;
+  };
 
   const [autoOpen, setAutoOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
