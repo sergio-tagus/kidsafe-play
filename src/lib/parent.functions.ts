@@ -125,6 +125,22 @@ export const deleteWhitelistChannel = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const updateChannelCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ channelId: z.string().uuid(), category: categorySlug }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("whitelist_channels")
+      .update({ category: data.category })
+      .eq("id", data.channelId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
+
 // ---------- videos ----------
 export const listChannelVideos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
