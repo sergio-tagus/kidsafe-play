@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, apikey, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, x-cron-secret",
 };
 
 function json(body: unknown, status = 200) {
