@@ -39,7 +39,7 @@ export function KidShell({ childId, child, children }: { childId: string; child?
               <Link
                 key={n.to}
                 to={n.to as any}
-                params={{ childId }}
+                params={{ childId } as any}
                 className={`flex items-center gap-3 rounded-full px-4 py-3 text-sm font-semibold transition-colors ${active ? "bg-primary text-primary-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent"}`}
               >
                 <n.icon className="w-5 h-5" />
@@ -69,12 +69,12 @@ export function KidShell({ childId, child, children }: { childId: string; child?
           <Link to="/" className="md:hidden text-2xl">🦄</Link>
           <Link
             to="/kids/$childId/search"
-            params={{ childId }}
+            params={{ childId } as any}
             className="flex-1 flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm text-muted-foreground hover:bg-accent"
           >
             <Search className="w-4 h-4" /> {t("search.placeholder")}
           </Link>
-          <Link to="/kids/$childId/favorites" params={{ childId }} className="hidden sm:block">
+          <Link to="/kids/$childId/favorites" params={{ childId } as any} className="hidden sm:block">
             <Button variant="ghost" size="icon" className="rounded-full"><Heart className="w-5 h-5" /></Button>
           </Link>
           <LanguageSwitcher />
@@ -96,7 +96,7 @@ export function KidShell({ childId, child, children }: { childId: string; child?
               <Link
                 key={n.to}
                 to={n.to as any}
-                params={{ childId }}
+                params={{ childId } as any}
                 className={`flex flex-col items-center gap-1 px-3 py-1 rounded-xl text-xs font-semibold ${active ? "text-primary" : "text-muted-foreground"}`}
               >
                 <n.icon className="w-5 h-5" />
