@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireParentUnlocked } from "@/lib/parent-unlock";
 
 const slugRegex = /^[a-z0-9][a-z0-9-]{1,40}$/;
 
@@ -48,7 +49,7 @@ const upsertInput = z.object({
 });
 
 export const upsertCategory = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) => upsertInput.parse(d))
   .handler(async ({ data, context }) => {
     const payload = {
@@ -67,7 +68,7 @@ export const upsertCategory = createServerFn({ method: "POST" })
     }
     const { data: row, error } = await context.supabase
       .from("categories")
-      .insert({ ...payload, is_default: false })
+      .insert({ ...payload, is_default: false, created_by: context.userId })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
@@ -75,7 +76,7 @@ export const upsertCategory = createServerFn({ method: "POST" })
   });
 
 export const deleteCategory = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("categories").delete().eq("id", data.id);

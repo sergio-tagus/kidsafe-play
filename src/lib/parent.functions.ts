@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireParentUnlocked } from "@/lib/parent-unlock";
 
 // ---------- child profiles ----------
 export const listChildProfiles = createServerFn({ method: "GET" })
@@ -23,7 +24,7 @@ const childInput = z.object({
 });
 
 export const upsertChildProfile = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) => childInput.parse(d))
   .handler(async ({ data, context }) => {
     if (data.id) {
@@ -55,7 +56,7 @@ export const upsertChildProfile = createServerFn({ method: "POST" })
   });
 
 export const deleteChildProfile = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("child_profiles").delete().eq("id", data.id);
@@ -90,7 +91,7 @@ const channelInput = z.object({
 });
 
 export const upsertWhitelistChannel = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) => channelInput.parse(d))
   .handler(async ({ data, context }) => {
     const payload = {
@@ -117,7 +118,7 @@ export const upsertWhitelistChannel = createServerFn({ method: "POST" })
   });
 
 export const deleteWhitelistChannel = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("whitelist_channels").delete().eq("id", data.id);
@@ -126,7 +127,7 @@ export const deleteWhitelistChannel = createServerFn({ method: "POST" })
   });
 
 export const updateChannelCategory = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) =>
     z.object({ channelId: z.string().uuid(), category: categorySlug }).parse(d),
   )
@@ -168,7 +169,7 @@ const videoInput = z.object({
 });
 
 export const upsertVideo = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) => videoInput.parse(d))
   .handler(async ({ data, context }) => {
     const payload = {
@@ -196,7 +197,7 @@ export const upsertVideo = createServerFn({ method: "POST" })
   });
 
 export const deleteVideo = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("videos_cache").delete().eq("id", data.id);
@@ -270,7 +271,7 @@ async function importVideosForChannel(
 }
 
 export const importChannelFromUrl = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) =>
     z.object({
       url: z.string().min(1).max(500),
@@ -339,7 +340,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
   });
 
 export const refreshChannelVideos = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) =>
     z.object({
       channelId: z.string().uuid(),
