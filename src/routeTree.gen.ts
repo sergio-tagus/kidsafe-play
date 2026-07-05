@@ -20,6 +20,7 @@ import { Route as AuthenticatedKidsChildIdChannelsIndexRouteImport } from './rou
 import { Route as AuthenticatedKidsChildIdCategoriesIndexRouteImport } from './routes/_authenticated/kids/$childId/categories/index'
 import { Route as AuthenticatedKidsChildIdWatchVideoIdRouteImport } from './routes/_authenticated/kids/$childId/watch/$videoId'
 import { Route as AuthenticatedKidsChildIdChannelsChannelIdRouteImport } from './routes/_authenticated/kids/$childId/channels/$channelId'
+import { Route as AuthenticatedKidsChildIdCategoriesCategoryRouteImport } from './routes/_authenticated/kids/$childId/categories/$category'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -83,6 +84,12 @@ const AuthenticatedKidsChildIdChannelsChannelIdRoute =
     path: '/kids/$childId/channels/$channelId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedKidsChildIdCategoriesCategoryRoute =
+  AuthenticatedKidsChildIdCategoriesCategoryRouteImport.update({
+    id: '/kids/$childId/categories/$category',
+    path: '/kids/$childId/categories/$category',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
   '/kids/$childId/search': typeof AuthenticatedKidsChildIdSearchRoute
   '/kids/$childId/': typeof AuthenticatedKidsChildIdIndexRoute
+  '/kids/$childId/categories/$category': typeof AuthenticatedKidsChildIdCategoriesCategoryRoute
   '/kids/$childId/channels/$channelId': typeof AuthenticatedKidsChildIdChannelsChannelIdRoute
   '/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
   '/kids/$childId/categories/': typeof AuthenticatedKidsChildIdCategoriesIndexRoute
@@ -103,6 +111,7 @@ export interface FileRoutesByTo {
   '/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
   '/kids/$childId/search': typeof AuthenticatedKidsChildIdSearchRoute
   '/kids/$childId': typeof AuthenticatedKidsChildIdIndexRoute
+  '/kids/$childId/categories/$category': typeof AuthenticatedKidsChildIdCategoriesCategoryRoute
   '/kids/$childId/channels/$channelId': typeof AuthenticatedKidsChildIdChannelsChannelIdRoute
   '/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
   '/kids/$childId/categories': typeof AuthenticatedKidsChildIdCategoriesIndexRoute
@@ -117,6 +126,7 @@ export interface FileRoutesById {
   '/_authenticated/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
   '/_authenticated/kids/$childId/search': typeof AuthenticatedKidsChildIdSearchRoute
   '/_authenticated/kids/$childId/': typeof AuthenticatedKidsChildIdIndexRoute
+  '/_authenticated/kids/$childId/categories/$category': typeof AuthenticatedKidsChildIdCategoriesCategoryRoute
   '/_authenticated/kids/$childId/channels/$channelId': typeof AuthenticatedKidsChildIdChannelsChannelIdRoute
   '/_authenticated/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
   '/_authenticated/kids/$childId/categories/': typeof AuthenticatedKidsChildIdCategoriesIndexRoute
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/kids/$childId/history'
     | '/kids/$childId/search'
     | '/kids/$childId/'
+    | '/kids/$childId/categories/$category'
     | '/kids/$childId/channels/$channelId'
     | '/kids/$childId/watch/$videoId'
     | '/kids/$childId/categories/'
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/kids/$childId/history'
     | '/kids/$childId/search'
     | '/kids/$childId'
+    | '/kids/$childId/categories/$category'
     | '/kids/$childId/channels/$channelId'
     | '/kids/$childId/watch/$videoId'
     | '/kids/$childId/categories'
@@ -156,6 +168,7 @@ export interface FileRouteTypes {
     | '/_authenticated/kids/$childId/history'
     | '/_authenticated/kids/$childId/search'
     | '/_authenticated/kids/$childId/'
+    | '/_authenticated/kids/$childId/categories/$category'
     | '/_authenticated/kids/$childId/channels/$channelId'
     | '/_authenticated/kids/$childId/watch/$videoId'
     | '/_authenticated/kids/$childId/categories/'
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKidsChildIdChannelsChannelIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/kids/$childId/categories/$category': {
+      id: '/_authenticated/kids/$childId/categories/$category'
+      path: '/kids/$childId/categories/$category'
+      fullPath: '/kids/$childId/categories/$category'
+      preLoaderRoute: typeof AuthenticatedKidsChildIdCategoriesCategoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -255,6 +275,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedKidsChildIdHistoryRoute: typeof AuthenticatedKidsChildIdHistoryRoute
   AuthenticatedKidsChildIdSearchRoute: typeof AuthenticatedKidsChildIdSearchRoute
   AuthenticatedKidsChildIdIndexRoute: typeof AuthenticatedKidsChildIdIndexRoute
+  AuthenticatedKidsChildIdCategoriesCategoryRoute: typeof AuthenticatedKidsChildIdCategoriesCategoryRoute
   AuthenticatedKidsChildIdChannelsChannelIdRoute: typeof AuthenticatedKidsChildIdChannelsChannelIdRoute
   AuthenticatedKidsChildIdWatchVideoIdRoute: typeof AuthenticatedKidsChildIdWatchVideoIdRoute
   AuthenticatedKidsChildIdCategoriesIndexRoute: typeof AuthenticatedKidsChildIdCategoriesIndexRoute
@@ -267,6 +288,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedKidsChildIdHistoryRoute: AuthenticatedKidsChildIdHistoryRoute,
   AuthenticatedKidsChildIdSearchRoute: AuthenticatedKidsChildIdSearchRoute,
   AuthenticatedKidsChildIdIndexRoute: AuthenticatedKidsChildIdIndexRoute,
+  AuthenticatedKidsChildIdCategoriesCategoryRoute:
+    AuthenticatedKidsChildIdCategoriesCategoryRoute,
   AuthenticatedKidsChildIdChannelsChannelIdRoute:
     AuthenticatedKidsChildIdChannelsChannelIdRoute,
   AuthenticatedKidsChildIdWatchVideoIdRoute:
