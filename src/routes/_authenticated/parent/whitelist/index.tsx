@@ -347,9 +347,9 @@ function WhitelistPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {t(`categories.${c}`)}
+                    {categories.map((c: any) => (
+                      <SelectItem key={c.slug} value={c.slug}>
+                        {catName(c.slug)}
                       </SelectItem>
                     ))}
                   </SelectContent>
