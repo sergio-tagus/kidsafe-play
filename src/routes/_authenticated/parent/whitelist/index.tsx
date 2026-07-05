@@ -41,6 +41,7 @@ function WhitelistPage() {
   const refreshFn = useServerFn(refreshChannelVideos);
   const updateCatFn = useServerFn(updateChannelCategory);
   const catsFn = useServerFn(listCategories);
+  const recommendFn = useServerFn(recommendChannels);
 
   const { data: channels = [] } = useQuery({ queryKey: ["wl"], queryFn: () => listFn() });
   const { data: categories = [] } = useQuery<any[]>({ queryKey: ["categories"], queryFn: () => catsFn() as any });
