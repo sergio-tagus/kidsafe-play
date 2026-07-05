@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          icon: string
+          id: string
+          is_default: boolean
+          name_en: string
+          name_es: string
+          name_pt: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          icon?: string
+          id?: string
+          is_default?: boolean
+          name_en: string
+          name_es: string
+          name_pt: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          icon?: string
+          id?: string
+          is_default?: boolean
+          name_en?: string
+          name_es?: string
+          name_pt?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       child_profiles: {
         Row: {
           age: number | null
@@ -235,7 +277,7 @@ export type Database = {
       whitelist_channels: {
         Row: {
           active: boolean
-          category: Database["public"]["Enums"]["video_category"]
+          category: string
           channel_handle: string | null
           channel_name: string
           channel_thumbnail_url: string | null
@@ -246,7 +288,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
-          category?: Database["public"]["Enums"]["video_category"]
+          category: string
           channel_handle?: string | null
           channel_name: string
           channel_thumbnail_url?: string | null
@@ -257,7 +299,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
-          category?: Database["public"]["Enums"]["video_category"]
+          category?: string
           channel_handle?: string | null
           channel_name?: string
           channel_thumbnail_url?: string | null
@@ -266,7 +308,15 @@ export type Database = {
           parent_user_id?: string
           youtube_channel_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "whitelist_channels_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["slug"]
+          },
+        ]
       }
     }
     Views: {
@@ -277,15 +327,6 @@ export type Database = {
     }
     Enums: {
       sync_frequency: "off" | "daily" | "weekly" | "monthly"
-      video_category:
-        | "cartoons"
-        | "education"
-        | "music"
-        | "science"
-        | "stories"
-        | "games"
-        | "arts"
-        | "sports"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -414,16 +455,6 @@ export const Constants = {
   public: {
     Enums: {
       sync_frequency: ["off", "daily", "weekly", "monthly"],
-      video_category: [
-        "cartoons",
-        "education",
-        "music",
-        "science",
-        "stories",
-        "games",
-        "arts",
-        "sports",
-      ],
     },
   },
 } as const

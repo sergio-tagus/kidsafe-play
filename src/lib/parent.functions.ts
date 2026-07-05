@@ -64,7 +64,9 @@ export const deleteChildProfile = createServerFn({ method: "POST" })
   });
 
 // ---------- whitelist channels ----------
-const CATEGORIES = ["cartoons", "education", "music", "science", "stories", "games", "arts", "sports"] as const;
+// Categories are now stored in `public.categories` (see categories.functions.ts).
+// We validate via slug shape and rely on the FK on whitelist_channels.category.
+const categorySlug = z.string().min(1).max(60);
 
 export const listWhitelistChannels = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -83,7 +85,7 @@ const channelInput = z.object({
   channel_name: z.string().min(1).max(200),
   channel_handle: z.string().max(200).nullable().optional(),
   channel_thumbnail_url: z.string().url().nullable().optional().or(z.literal("")),
-  category: z.enum(CATEGORIES),
+  category: categorySlug,
   active: z.boolean().default(true),
 });
 
@@ -122,6 +124,22 @@ export const deleteWhitelistChannel = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const updateChannelCategory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ channelId: z.string().uuid(), category: categorySlug }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("whitelist_channels")
+      .update({ category: data.category })
+      .eq("id", data.channelId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
 
 // ---------- videos ----------
 export const listChannelVideos = createServerFn({ method: "GET" })
@@ -187,7 +205,7 @@ export const deleteVideo = createServerFn({ method: "POST" })
   });
 
 // ---------- YouTube auto-import ----------
-const CATEGORY_ENUM = ["cartoons", "education", "music", "science", "stories", "games", "arts", "sports"] as const;
+// Category slugs live in `public.categories`; validated by shape + FK.
 
 export const previewChannelFromUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -256,7 +274,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({
       url: z.string().min(1).max(500),
-      category: z.enum(CATEGORY_ENUM).optional(),
+      category: categorySlug.optional(),
       videoLimit: z.number().int().min(1).max(500).default(200),
     }).parse(d),
   )

@@ -9,7 +9,9 @@ import {
   previewChannelFromUrl,
   importChannelFromUrl,
   refreshChannelVideos,
+  updateChannelCategory,
 } from "@/lib/parent.functions";
+import { listCategories } from "@/lib/categories.functions";
 import { ParentShell } from "@/components/parent-shell";
 import { useI18n } from "@/lib/i18n";
 import { parseYouTubeChannel } from "@/lib/youtube";
@@ -27,10 +29,8 @@ export const Route = createFileRoute("/_authenticated/parent/whitelist/")({
   component: WhitelistPage,
 });
 
-const CATEGORIES = ["cartoons", "education", "music", "science", "stories", "games", "arts", "sports"] as const;
-
 function WhitelistPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const qc = useQueryClient();
   const listFn = useServerFn(listWhitelistChannels);
   const upsertFn = useServerFn(upsertWhitelistChannel);
@@ -38,8 +38,16 @@ function WhitelistPage() {
   const previewFn = useServerFn(previewChannelFromUrl);
   const importFn = useServerFn(importChannelFromUrl);
   const refreshFn = useServerFn(refreshChannelVideos);
+  const updateCatFn = useServerFn(updateChannelCategory);
+  const catsFn = useServerFn(listCategories);
 
   const { data: channels = [] } = useQuery({ queryKey: ["wl"], queryFn: () => listFn() });
+  const { data: categories = [] } = useQuery<any[]>({ queryKey: ["categories"], queryFn: () => catsFn() as any });
+  const catName = (slug: string) => {
+    const c = categories.find((x) => x.slug === slug);
+    if (!c) return slug;
+    return lang === "es" ? c.name_es : lang === "pt" ? c.name_pt : c.name_en;
+  };
 
   const [autoOpen, setAutoOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
@@ -191,10 +199,32 @@ function WhitelistPage() {
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="font-display font-bold truncate">{c.channel_name}</div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {c.channel_handle ? `@${c.channel_handle} · ` : ""}
-                    {t(`categories.${c.category}` as any)}
-                  </div>
+                  {c.channel_handle && (
+                    <div className="text-xs text-muted-foreground truncate">@{c.channel_handle}</div>
+                  )}
+                  <Select
+                    value={c.category ?? ""}
+                    onValueChange={async (v) => {
+                      try {
+                        await updateCatFn({ data: { channelId: c.id, category: v } });
+                        toast.success(t("parent.categoryUpdated"));
+                        qc.invalidateQueries({ queryKey: ["wl"] });
+                      } catch (e: any) {
+                        toast.error(e.message ?? "Error");
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-7 mt-1 text-xs w-auto min-w-[8rem]">
+                      <SelectValue placeholder={t("parent.category")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat: any) => (
+                        <SelectItem key={cat.slug} value={cat.slug}>
+                          {catName(cat.slug)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Switch checked={c.active} onCheckedChange={() => toggleActive(c)} />
                 <Button
@@ -273,9 +303,9 @@ function WhitelistPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {t(`categories.${c}`)}
+                    {categories.map((c: any) => (
+                      <SelectItem key={c.slug} value={c.slug}>
+                        {catName(c.slug)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -339,9 +369,9 @@ function WhitelistPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {t(`categories.${c}`)}
+                    {categories.map((c: any) => (
+                      <SelectItem key={c.slug} value={c.slug}>
+                        {catName(c.slug)}
                       </SelectItem>
                     ))}
                   </SelectContent>
