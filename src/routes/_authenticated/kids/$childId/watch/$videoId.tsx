@@ -108,11 +108,13 @@ function WatchPage() {
           iv_load_policy: 3,
           playsinline: 1,
           autoplay: 1,
+          origin: typeof window !== "undefined" ? window.location.origin : undefined,
         },
         events: {
           onStateChange: (e: any) => {
             const p = playerRef.current;
             if (e.data === YT.PlayerState.PLAYING) {
+              setPaused(false);
               if (heartbeatRef.current) return;
               heartbeatRef.current = window.setInterval(async () => {
                 try {
@@ -139,6 +141,9 @@ function WatchPage() {
                 }
               }, 15000);
             } else {
+              if (e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.ENDED) {
+                setPaused(true);
+              }
               if (heartbeatRef.current) { clearInterval(heartbeatRef.current); heartbeatRef.current = null; }
             }
           },
