@@ -86,6 +86,7 @@ function WatchPage() {
   const playerRef = useRef<any>(null);
   const heartbeatRef = useRef<number | null>(null);
   const [locked, setLocked] = useState(false);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     if (!video) return;
