@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedKidsChildIdIndexRouteImport } from './routes/_authenticated/kids/$childId/index'
+import { Route as AuthenticatedKidsChildIdHistoryRouteImport } from './routes/_authenticated/kids/$childId/history'
 import { Route as AuthenticatedKidsChildIdFavoritesRouteImport } from './routes/_authenticated/kids/$childId/favorites'
 import { Route as AuthenticatedKidsChildIdWatchVideoIdRouteImport } from './routes/_authenticated/kids/$childId/watch/$videoId'
 
@@ -36,6 +37,12 @@ const AuthenticatedKidsChildIdIndexRoute =
     path: '/kids/$childId/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedKidsChildIdHistoryRoute =
+  AuthenticatedKidsChildIdHistoryRouteImport.update({
+    id: '/kids/$childId/history',
+    path: '/kids/$childId/history',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedKidsChildIdFavoritesRoute =
   AuthenticatedKidsChildIdFavoritesRouteImport.update({
     id: '/kids/$childId/favorites',
@@ -53,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/kids/$childId/favorites': typeof AuthenticatedKidsChildIdFavoritesRoute
+  '/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
   '/kids/$childId/': typeof AuthenticatedKidsChildIdIndexRoute
   '/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
@@ -60,6 +68,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/kids/$childId/favorites': typeof AuthenticatedKidsChildIdFavoritesRoute
+  '/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
   '/kids/$childId': typeof AuthenticatedKidsChildIdIndexRoute
   '/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
@@ -69,6 +78,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/kids/$childId/favorites': typeof AuthenticatedKidsChildIdFavoritesRoute
+  '/_authenticated/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
   '/_authenticated/kids/$childId/': typeof AuthenticatedKidsChildIdIndexRoute
   '/_authenticated/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
@@ -78,6 +88,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/kids/$childId/favorites'
+    | '/kids/$childId/history'
     | '/kids/$childId/'
     | '/kids/$childId/watch/$videoId'
   fileRoutesByTo: FileRoutesByTo
@@ -85,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/kids/$childId/favorites'
+    | '/kids/$childId/history'
     | '/kids/$childId'
     | '/kids/$childId/watch/$videoId'
   id:
@@ -93,6 +105,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/kids/$childId/favorites'
+    | '/_authenticated/kids/$childId/history'
     | '/_authenticated/kids/$childId/'
     | '/_authenticated/kids/$childId/watch/$videoId'
   fileRoutesById: FileRoutesById
@@ -133,6 +146,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKidsChildIdIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/kids/$childId/history': {
+      id: '/_authenticated/kids/$childId/history'
+      path: '/kids/$childId/history'
+      fullPath: '/kids/$childId/history'
+      preLoaderRoute: typeof AuthenticatedKidsChildIdHistoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/kids/$childId/favorites': {
       id: '/_authenticated/kids/$childId/favorites'
       path: '/kids/$childId/favorites'
@@ -152,6 +172,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedKidsChildIdFavoritesRoute: typeof AuthenticatedKidsChildIdFavoritesRoute
+  AuthenticatedKidsChildIdHistoryRoute: typeof AuthenticatedKidsChildIdHistoryRoute
   AuthenticatedKidsChildIdIndexRoute: typeof AuthenticatedKidsChildIdIndexRoute
   AuthenticatedKidsChildIdWatchVideoIdRoute: typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
@@ -159,6 +180,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedKidsChildIdFavoritesRoute:
     AuthenticatedKidsChildIdFavoritesRoute,
+  AuthenticatedKidsChildIdHistoryRoute: AuthenticatedKidsChildIdHistoryRoute,
   AuthenticatedKidsChildIdIndexRoute: AuthenticatedKidsChildIdIndexRoute,
   AuthenticatedKidsChildIdWatchVideoIdRoute:
     AuthenticatedKidsChildIdWatchVideoIdRoute,
