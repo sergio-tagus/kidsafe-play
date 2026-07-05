@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedKidsChildIdIndexRouteImport } from './routes/_authenticated/kids/$childId/index'
+import { Route as AuthenticatedKidsChildIdSearchRouteImport } from './routes/_authenticated/kids/$childId/search'
 import { Route as AuthenticatedKidsChildIdHistoryRouteImport } from './routes/_authenticated/kids/$childId/history'
 import { Route as AuthenticatedKidsChildIdFavoritesRouteImport } from './routes/_authenticated/kids/$childId/favorites'
 import { Route as AuthenticatedKidsChildIdWatchVideoIdRouteImport } from './routes/_authenticated/kids/$childId/watch/$videoId'
@@ -35,6 +36,12 @@ const AuthenticatedKidsChildIdIndexRoute =
   AuthenticatedKidsChildIdIndexRouteImport.update({
     id: '/kids/$childId/',
     path: '/kids/$childId/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedKidsChildIdSearchRoute =
+  AuthenticatedKidsChildIdSearchRouteImport.update({
+    id: '/kids/$childId/search',
+    path: '/kids/$childId/search',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedKidsChildIdHistoryRoute =
@@ -61,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/kids/$childId/favorites': typeof AuthenticatedKidsChildIdFavoritesRoute
   '/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
+  '/kids/$childId/search': typeof AuthenticatedKidsChildIdSearchRoute
   '/kids/$childId/': typeof AuthenticatedKidsChildIdIndexRoute
   '/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/kids/$childId/favorites': typeof AuthenticatedKidsChildIdFavoritesRoute
   '/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
+  '/kids/$childId/search': typeof AuthenticatedKidsChildIdSearchRoute
   '/kids/$childId': typeof AuthenticatedKidsChildIdIndexRoute
   '/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
@@ -79,6 +88,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/kids/$childId/favorites': typeof AuthenticatedKidsChildIdFavoritesRoute
   '/_authenticated/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
+  '/_authenticated/kids/$childId/search': typeof AuthenticatedKidsChildIdSearchRoute
   '/_authenticated/kids/$childId/': typeof AuthenticatedKidsChildIdIndexRoute
   '/_authenticated/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
@@ -89,6 +99,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/kids/$childId/favorites'
     | '/kids/$childId/history'
+    | '/kids/$childId/search'
     | '/kids/$childId/'
     | '/kids/$childId/watch/$videoId'
   fileRoutesByTo: FileRoutesByTo
@@ -97,6 +108,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/kids/$childId/favorites'
     | '/kids/$childId/history'
+    | '/kids/$childId/search'
     | '/kids/$childId'
     | '/kids/$childId/watch/$videoId'
   id:
@@ -106,6 +118,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/kids/$childId/favorites'
     | '/_authenticated/kids/$childId/history'
+    | '/_authenticated/kids/$childId/search'
     | '/_authenticated/kids/$childId/'
     | '/_authenticated/kids/$childId/watch/$videoId'
   fileRoutesById: FileRoutesById
@@ -146,6 +159,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKidsChildIdIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/kids/$childId/search': {
+      id: '/_authenticated/kids/$childId/search'
+      path: '/kids/$childId/search'
+      fullPath: '/kids/$childId/search'
+      preLoaderRoute: typeof AuthenticatedKidsChildIdSearchRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/kids/$childId/history': {
       id: '/_authenticated/kids/$childId/history'
       path: '/kids/$childId/history'
@@ -173,6 +193,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedKidsChildIdFavoritesRoute: typeof AuthenticatedKidsChildIdFavoritesRoute
   AuthenticatedKidsChildIdHistoryRoute: typeof AuthenticatedKidsChildIdHistoryRoute
+  AuthenticatedKidsChildIdSearchRoute: typeof AuthenticatedKidsChildIdSearchRoute
   AuthenticatedKidsChildIdIndexRoute: typeof AuthenticatedKidsChildIdIndexRoute
   AuthenticatedKidsChildIdWatchVideoIdRoute: typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
@@ -181,6 +202,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedKidsChildIdFavoritesRoute:
     AuthenticatedKidsChildIdFavoritesRoute,
   AuthenticatedKidsChildIdHistoryRoute: AuthenticatedKidsChildIdHistoryRoute,
+  AuthenticatedKidsChildIdSearchRoute: AuthenticatedKidsChildIdSearchRoute,
   AuthenticatedKidsChildIdIndexRoute: AuthenticatedKidsChildIdIndexRoute,
   AuthenticatedKidsChildIdWatchVideoIdRoute:
     AuthenticatedKidsChildIdWatchVideoIdRoute,
