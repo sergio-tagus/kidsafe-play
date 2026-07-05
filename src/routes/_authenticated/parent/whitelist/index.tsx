@@ -12,6 +12,7 @@ import {
   updateChannelCategory,
 } from "@/lib/parent.functions";
 import { listCategories } from "@/lib/categories.functions";
+import { recommendChannels, type ChannelRecommendation } from "@/lib/recommendations.functions";
 import { ParentShell } from "@/components/parent-shell";
 import { useI18n } from "@/lib/i18n";
 import { parseYouTubeChannel } from "@/lib/youtube";
@@ -22,7 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Trash2, ExternalLink, Search, RefreshCw, Loader2 } from "lucide-react";
+import { Plus, Trash2, ExternalLink, Search, RefreshCw, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/parent/whitelist/")({
