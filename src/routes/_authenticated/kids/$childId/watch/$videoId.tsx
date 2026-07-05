@@ -111,6 +111,14 @@ function WatchPage() {
           origin: typeof window !== "undefined" ? window.location.origin : undefined,
         },
         events: {
+          onReady: () => {
+            try {
+              const iframe = containerRef.current?.tagName === "IFRAME"
+                ? (containerRef.current as unknown as HTMLIFrameElement)
+                : (playerRef.current?.getIframe?.() as HTMLIFrameElement | undefined);
+              iframe?.setAttribute("tabindex", "-1");
+            } catch { /* ignore */ }
+          },
           onStateChange: (e: any) => {
             const p = playerRef.current;
             if (e.data === YT.PlayerState.PLAYING) {
@@ -141,9 +149,9 @@ function WatchPage() {
                 }
               }, 15000);
             } else {
-              if (e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.ENDED) {
-                setPaused(true);
-              }
+              // Anything that isn't PLAYING (PAUSED, ENDED, BUFFERING, CUED, UNSTARTED)
+              // triggers the block overlay to preempt YouTube's end-screen flash.
+              setPaused(true);
               if (heartbeatRef.current) { clearInterval(heartbeatRef.current); heartbeatRef.current = null; }
             }
           },
@@ -172,36 +180,60 @@ function WatchPage() {
         </div>
       ) : (
         <div className="max-w-6xl mx-auto">
-          <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl">
+          <div
+            className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl"
+            onContextMenu={(e) => e.preventDefault()}
+            onDragStart={(e) => e.preventDefault()}
+          >
             {!locked ? (
               <>
-                <div ref={containerRef} className="w-full h-full pointer-events-auto" />
-                {/* Block clicks on YouTube title bar (top) */}
-                <div className="absolute top-0 left-0 right-0 h-16 z-10" aria-hidden="true" />
-                {/* Block clicks on YouTube logo (bottom-right, above the control bar) */}
-                <div className="absolute bottom-10 right-0 w-24 h-10 z-10" aria-hidden="true" />
-                {paused && (
-                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/70 backdrop-blur-sm text-white">
-                    <h2 className="text-2xl font-display font-bold">{t("player.paused")}</h2>
-                    <Button
-                      size="lg"
-                      className="rounded-full"
-                      onClick={() => {
-                        try { playerRef.current?.playVideo?.(); } catch { /* ignore */ }
-                        setPaused(false);
-                      }}
-                    >
-                      <Play className="w-5 h-5 mr-2" /> {t("player.resume")}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="rounded-full bg-transparent text-white border-white hover:bg-white/10 hover:text-white"
-                      onClick={() => navigate({ to: "/kids/$childId", params: { childId } as any })}
-                    >
-                      {t("common.back")}
-                    </Button>
-                  </div>
-                )}
+                <div ref={containerRef} className="w-full h-full" />
+                {/* Block clicks on YouTube title bar (title + share + more) */}
+                <div
+                  className="absolute inset-x-0 top-0 h-20 z-10 cursor-pointer"
+                  aria-hidden="true"
+                  onClick={() => {
+                    try {
+                      const p = playerRef.current;
+                      if (!p) return;
+                      const state = p.getPlayerState?.();
+                      if (state === 1) p.pauseVideo?.(); else p.playVideo?.();
+                    } catch { /* ignore */ }
+                  }}
+                />
+                {/* Block clicks on the YouTube wordmark inside the control bar
+                    (sits to the left of the fullscreen button, which is ~48px wide) */}
+                <div
+                  className="absolute bottom-0 right-14 w-20 h-12 z-10"
+                  aria-hidden="true"
+                  onClick={(e) => e.stopPropagation()}
+                />
+                {/* Always-mounted overlay that covers YouTube's end-screen /
+                    pause overlay to prevent the click-through flash. */}
+                <div
+                  className={`absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/70 backdrop-blur-sm text-white transition-opacity ${
+                    paused ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                  }`}
+                >
+                  <h2 className="text-2xl font-display font-bold">{t("player.paused")}</h2>
+                  <Button
+                    size="lg"
+                    className="rounded-full"
+                    onClick={() => {
+                      try { playerRef.current?.playVideo?.(); } catch { /* ignore */ }
+                      setPaused(false);
+                    }}
+                  >
+                    <Play className="w-5 h-5 mr-2" /> {t("player.resume")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="rounded-full bg-transparent text-white border-white hover:bg-white/10 hover:text-white"
+                    onClick={() => navigate({ to: "/kids/$childId", params: { childId } as any })}
+                  >
+                    {t("common.back")}
+                  </Button>
+                </div>
               </>
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-white p-8 text-center gradient-warm">
