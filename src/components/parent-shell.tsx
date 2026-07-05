@@ -1,20 +1,15 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { LanguageSwitcher } from "./language-switcher";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags } from "lucide-react";
-import { clearParentUnlock } from "@/routes/_authenticated/parent/route";
 
 export function ParentShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const { signOut } = useSession();
   const path = useRouterState({ select: (s) => s.location.pathname });
-
-  useEffect(() => {
-    return () => clearParentUnlock();
-  }, []);
 
   const nav = [
     { to: "/parent", label: t("parent.overview"), icon: LayoutDashboard, exact: true },
