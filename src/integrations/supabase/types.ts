@@ -14,7 +14,236 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      child_profiles: {
+        Row: {
+          age: number | null
+          avatar_emoji: string
+          created_at: string
+          daily_screen_time_minutes: number
+          id: string
+          parent_user_id: string
+          profile_name: string
+        }
+        Insert: {
+          age?: number | null
+          avatar_emoji?: string
+          created_at?: string
+          daily_screen_time_minutes?: number
+          id?: string
+          parent_user_id: string
+          profile_name: string
+        }
+        Update: {
+          age?: number | null
+          avatar_emoji?: string
+          created_at?: string
+          daily_screen_time_minutes?: number
+          id?: string
+          parent_user_id?: string
+          profile_name?: string
+        }
+        Relationships: []
+      }
+      favorites: {
+        Row: {
+          child_profile_id: string
+          created_at: string
+          id: string
+          youtube_video_id: string
+        }
+        Insert: {
+          child_profile_id: string
+          created_at?: string
+          id?: string
+          youtube_video_id: string
+        }
+        Update: {
+          child_profile_id?: string
+          created_at?: string
+          id?: string
+          youtube_video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          id: string
+          name?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+        }
+        Relationships: []
+      }
+      screen_time_daily: {
+        Row: {
+          child_profile_id: string
+          date: string
+          id: string
+          minutes_watched: number
+        }
+        Insert: {
+          child_profile_id: string
+          date: string
+          id?: string
+          minutes_watched?: number
+        }
+        Update: {
+          child_profile_id?: string
+          date?: string
+          id?: string
+          minutes_watched?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screen_time_daily_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      videos_cache: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          id: string
+          parent_user_id: string
+          published_at: string | null
+          thumbnail_url: string | null
+          title: string
+          whitelist_channel_id: string
+          youtube_video_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          parent_user_id: string
+          published_at?: string | null
+          thumbnail_url?: string | null
+          title: string
+          whitelist_channel_id: string
+          youtube_video_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          id?: string
+          parent_user_id?: string
+          published_at?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          whitelist_channel_id?: string
+          youtube_video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_cache_whitelist_channel_id_fkey"
+            columns: ["whitelist_channel_id"]
+            isOneToOne: false
+            referencedRelation: "whitelist_channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      watch_history: {
+        Row: {
+          child_profile_id: string
+          id: string
+          total_seconds: number | null
+          watch_progress_seconds: number
+          watched_at: string
+          youtube_video_id: string
+        }
+        Insert: {
+          child_profile_id: string
+          id?: string
+          total_seconds?: number | null
+          watch_progress_seconds?: number
+          watched_at?: string
+          youtube_video_id: string
+        }
+        Update: {
+          child_profile_id?: string
+          id?: string
+          total_seconds?: number | null
+          watch_progress_seconds?: number
+          watched_at?: string
+          youtube_video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watch_history_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whitelist_channels: {
+        Row: {
+          active: boolean
+          category: Database["public"]["Enums"]["video_category"]
+          channel_handle: string | null
+          channel_name: string
+          channel_thumbnail_url: string | null
+          created_at: string
+          id: string
+          parent_user_id: string
+          youtube_channel_id: string
+        }
+        Insert: {
+          active?: boolean
+          category?: Database["public"]["Enums"]["video_category"]
+          channel_handle?: string | null
+          channel_name: string
+          channel_thumbnail_url?: string | null
+          created_at?: string
+          id?: string
+          parent_user_id: string
+          youtube_channel_id: string
+        }
+        Update: {
+          active?: boolean
+          category?: Database["public"]["Enums"]["video_category"]
+          channel_handle?: string | null
+          channel_name?: string
+          channel_thumbnail_url?: string | null
+          created_at?: string
+          id?: string
+          parent_user_id?: string
+          youtube_channel_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +252,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      video_category:
+        | "cartoons"
+        | "education"
+        | "music"
+        | "science"
+        | "stories"
+        | "games"
+        | "arts"
+        | "sports"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +387,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      video_category: [
+        "cartoons",
+        "education",
+        "music",
+        "science",
+        "stories",
+        "games",
+        "arts",
+        "sports",
+      ],
+    },
   },
 } as const
