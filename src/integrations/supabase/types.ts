@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           color: string | null
           created_at: string
+          created_by: string | null
           icon: string
           id: string
           is_default: boolean
@@ -31,6 +32,7 @@ export type Database = {
         Insert: {
           color?: string | null
           created_at?: string
+          created_by?: string | null
           icon?: string
           id?: string
           is_default?: boolean
@@ -44,6 +46,7 @@ export type Database = {
         Update: {
           color?: string | null
           created_at?: string
+          created_by?: string | null
           icon?: string
           id?: string
           is_default?: boolean
@@ -137,18 +140,21 @@ export type Database = {
         Row: {
           created_at: string
           pin_hash: string
+          unlocked_until: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
           pin_hash: string
+          unlocked_until?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
           pin_hash?: string
+          unlocked_until?: string | null
           updated_at?: string
           user_id?: string
         }
