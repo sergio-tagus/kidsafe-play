@@ -9,7 +9,9 @@ import {
   previewChannelFromUrl,
   importChannelFromUrl,
   refreshChannelVideos,
+  updateChannelCategory,
 } from "@/lib/parent.functions";
+import { listCategories } from "@/lib/categories.functions";
 import { ParentShell } from "@/components/parent-shell";
 import { useI18n } from "@/lib/i18n";
 import { parseYouTubeChannel } from "@/lib/youtube";
