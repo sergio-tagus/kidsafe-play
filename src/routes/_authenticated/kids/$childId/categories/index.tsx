@@ -20,9 +20,9 @@ function CategoriesPage() {
   const { childId } = Route.useParams();
   const { t, lang } = useI18n();
   const kidsFn = useServerFn(listChildProfiles);
-  const catsFn = useServerFn(listCategories);
+  const catsFn = useServerFn(listCategoriesWithContent);
   const { data: kids = [] } = useQuery({ queryKey: ["kids"], queryFn: () => kidsFn() });
-  const { data: cats = [] } = useQuery<any[]>({ queryKey: ["categories"], queryFn: () => catsFn() as any });
+  const { data: cats = [] } = useQuery<any[]>({ queryKey: ["categories", "with-content"], queryFn: () => catsFn() as any });
   const child = kids.find((k: any) => k.id === childId) ?? null;
 
   const nameFor = (c: any) => (lang === "es" ? c.name_es : lang === "pt" ? c.name_pt : c.name_en);
