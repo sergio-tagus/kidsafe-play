@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedKidsChildIdIndexRouteImport } from './routes/_authenticated/kids/$childId/index'
+import { Route as AuthenticatedKidsChildIdFavoritesRouteImport } from './routes/_authenticated/kids/$childId/favorites'
 import { Route as AuthenticatedKidsChildIdWatchVideoIdRouteImport } from './routes/_authenticated/kids/$childId/watch/$videoId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -35,6 +36,12 @@ const AuthenticatedKidsChildIdIndexRoute =
     path: '/kids/$childId/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedKidsChildIdFavoritesRoute =
+  AuthenticatedKidsChildIdFavoritesRouteImport.update({
+    id: '/kids/$childId/favorites',
+    path: '/kids/$childId/favorites',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedKidsChildIdWatchVideoIdRoute =
   AuthenticatedKidsChildIdWatchVideoIdRouteImport.update({
     id: '/kids/$childId/watch/$videoId',
@@ -45,12 +52,14 @@ const AuthenticatedKidsChildIdWatchVideoIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/kids/$childId/favorites': typeof AuthenticatedKidsChildIdFavoritesRoute
   '/kids/$childId/': typeof AuthenticatedKidsChildIdIndexRoute
   '/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/kids/$childId/favorites': typeof AuthenticatedKidsChildIdFavoritesRoute
   '/kids/$childId': typeof AuthenticatedKidsChildIdIndexRoute
   '/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
@@ -59,19 +68,31 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/kids/$childId/favorites': typeof AuthenticatedKidsChildIdFavoritesRoute
   '/_authenticated/kids/$childId/': typeof AuthenticatedKidsChildIdIndexRoute
   '/_authenticated/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/kids/$childId/' | '/kids/$childId/watch/$videoId'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/kids/$childId/favorites'
+    | '/kids/$childId/'
+    | '/kids/$childId/watch/$videoId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/kids/$childId' | '/kids/$childId/watch/$videoId'
+  to:
+    | '/'
+    | '/auth'
+    | '/kids/$childId/favorites'
+    | '/kids/$childId'
+    | '/kids/$childId/watch/$videoId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/kids/$childId/favorites'
     | '/_authenticated/kids/$childId/'
     | '/_authenticated/kids/$childId/watch/$videoId'
   fileRoutesById: FileRoutesById
@@ -112,6 +133,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKidsChildIdIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/kids/$childId/favorites': {
+      id: '/_authenticated/kids/$childId/favorites'
+      path: '/kids/$childId/favorites'
+      fullPath: '/kids/$childId/favorites'
+      preLoaderRoute: typeof AuthenticatedKidsChildIdFavoritesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/kids/$childId/watch/$videoId': {
       id: '/_authenticated/kids/$childId/watch/$videoId'
       path: '/kids/$childId/watch/$videoId'
@@ -123,11 +151,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedKidsChildIdFavoritesRoute: typeof AuthenticatedKidsChildIdFavoritesRoute
   AuthenticatedKidsChildIdIndexRoute: typeof AuthenticatedKidsChildIdIndexRoute
   AuthenticatedKidsChildIdWatchVideoIdRoute: typeof AuthenticatedKidsChildIdWatchVideoIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedKidsChildIdFavoritesRoute:
+    AuthenticatedKidsChildIdFavoritesRoute,
   AuthenticatedKidsChildIdIndexRoute: AuthenticatedKidsChildIdIndexRoute,
   AuthenticatedKidsChildIdWatchVideoIdRoute:
     AuthenticatedKidsChildIdWatchVideoIdRoute,
