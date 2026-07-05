@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedParentIndexRouteImport } from './routes/_authenticated/parent/index'
 import { Route as AuthenticatedParentChildrenRouteImport } from './routes/_authenticated/parent/children'
+import { Route as AuthenticatedParentWhitelistIndexRouteImport } from './routes/_authenticated/parent/whitelist/index'
 import { Route as AuthenticatedKidsChildIdIndexRouteImport } from './routes/_authenticated/kids/$childId/index'
 import { Route as AuthenticatedKidsChildIdSearchRouteImport } from './routes/_authenticated/kids/$childId/search'
 import { Route as AuthenticatedKidsChildIdHistoryRouteImport } from './routes/_authenticated/kids/$childId/history'
@@ -48,6 +49,12 @@ const AuthenticatedParentChildrenRoute =
   AuthenticatedParentChildrenRouteImport.update({
     id: '/parent/children',
     path: '/parent/children',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedParentWhitelistIndexRoute =
+  AuthenticatedParentWhitelistIndexRouteImport.update({
+    id: '/parent/whitelist/',
+    path: '/parent/whitelist/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedKidsChildIdIndexRoute =
@@ -114,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
   '/kids/$childId/search': typeof AuthenticatedKidsChildIdSearchRoute
   '/kids/$childId/': typeof AuthenticatedKidsChildIdIndexRoute
+  '/parent/whitelist/': typeof AuthenticatedParentWhitelistIndexRoute
   '/kids/$childId/categories/$category': typeof AuthenticatedKidsChildIdCategoriesCategoryRoute
   '/kids/$childId/channels/$channelId': typeof AuthenticatedKidsChildIdChannelsChannelIdRoute
   '/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
@@ -129,6 +137,7 @@ export interface FileRoutesByTo {
   '/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
   '/kids/$childId/search': typeof AuthenticatedKidsChildIdSearchRoute
   '/kids/$childId': typeof AuthenticatedKidsChildIdIndexRoute
+  '/parent/whitelist': typeof AuthenticatedParentWhitelistIndexRoute
   '/kids/$childId/categories/$category': typeof AuthenticatedKidsChildIdCategoriesCategoryRoute
   '/kids/$childId/channels/$channelId': typeof AuthenticatedKidsChildIdChannelsChannelIdRoute
   '/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
@@ -146,6 +155,7 @@ export interface FileRoutesById {
   '/_authenticated/kids/$childId/history': typeof AuthenticatedKidsChildIdHistoryRoute
   '/_authenticated/kids/$childId/search': typeof AuthenticatedKidsChildIdSearchRoute
   '/_authenticated/kids/$childId/': typeof AuthenticatedKidsChildIdIndexRoute
+  '/_authenticated/parent/whitelist/': typeof AuthenticatedParentWhitelistIndexRoute
   '/_authenticated/kids/$childId/categories/$category': typeof AuthenticatedKidsChildIdCategoriesCategoryRoute
   '/_authenticated/kids/$childId/channels/$channelId': typeof AuthenticatedKidsChildIdChannelsChannelIdRoute
   '/_authenticated/kids/$childId/watch/$videoId': typeof AuthenticatedKidsChildIdWatchVideoIdRoute
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/kids/$childId/history'
     | '/kids/$childId/search'
     | '/kids/$childId/'
+    | '/parent/whitelist/'
     | '/kids/$childId/categories/$category'
     | '/kids/$childId/channels/$channelId'
     | '/kids/$childId/watch/$videoId'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/kids/$childId/history'
     | '/kids/$childId/search'
     | '/kids/$childId'
+    | '/parent/whitelist'
     | '/kids/$childId/categories/$category'
     | '/kids/$childId/channels/$channelId'
     | '/kids/$childId/watch/$videoId'
@@ -194,6 +206,7 @@ export interface FileRouteTypes {
     | '/_authenticated/kids/$childId/history'
     | '/_authenticated/kids/$childId/search'
     | '/_authenticated/kids/$childId/'
+    | '/_authenticated/parent/whitelist/'
     | '/_authenticated/kids/$childId/categories/$category'
     | '/_authenticated/kids/$childId/channels/$channelId'
     | '/_authenticated/kids/$childId/watch/$videoId'
@@ -242,6 +255,13 @@ declare module '@tanstack/react-router' {
       path: '/parent/children'
       fullPath: '/parent/children'
       preLoaderRoute: typeof AuthenticatedParentChildrenRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/parent/whitelist/': {
+      id: '/_authenticated/parent/whitelist/'
+      path: '/parent/whitelist'
+      fullPath: '/parent/whitelist/'
+      preLoaderRoute: typeof AuthenticatedParentWhitelistIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/kids/$childId/': {
@@ -317,6 +337,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedKidsChildIdHistoryRoute: typeof AuthenticatedKidsChildIdHistoryRoute
   AuthenticatedKidsChildIdSearchRoute: typeof AuthenticatedKidsChildIdSearchRoute
   AuthenticatedKidsChildIdIndexRoute: typeof AuthenticatedKidsChildIdIndexRoute
+  AuthenticatedParentWhitelistIndexRoute: typeof AuthenticatedParentWhitelistIndexRoute
   AuthenticatedKidsChildIdCategoriesCategoryRoute: typeof AuthenticatedKidsChildIdCategoriesCategoryRoute
   AuthenticatedKidsChildIdChannelsChannelIdRoute: typeof AuthenticatedKidsChildIdChannelsChannelIdRoute
   AuthenticatedKidsChildIdWatchVideoIdRoute: typeof AuthenticatedKidsChildIdWatchVideoIdRoute
@@ -332,6 +353,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedKidsChildIdHistoryRoute: AuthenticatedKidsChildIdHistoryRoute,
   AuthenticatedKidsChildIdSearchRoute: AuthenticatedKidsChildIdSearchRoute,
   AuthenticatedKidsChildIdIndexRoute: AuthenticatedKidsChildIdIndexRoute,
+  AuthenticatedParentWhitelistIndexRoute:
+    AuthenticatedParentWhitelistIndexRoute,
   AuthenticatedKidsChildIdCategoriesCategoryRoute:
     AuthenticatedKidsChildIdCategoriesCategoryRoute,
   AuthenticatedKidsChildIdChannelsChannelIdRoute:
