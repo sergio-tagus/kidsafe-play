@@ -15,8 +15,6 @@ export function KidShell({ childId, child, children }: { childId: string; child?
     { to: "/kids/$childId", label: t("nav.home"), icon: Home, exact: true },
     { to: "/kids/$childId/channels", label: t("nav.channels"), icon: Tv, exact: false },
     { to: "/kids/$childId/categories", label: t("nav.categories"), icon: LayoutGrid, exact: false },
-    { to: "/kids/$childId/favorites", label: t("nav.favorites"), icon: Heart, exact: true },
-    { to: "/kids/$childId/history", label: t("nav.history"), icon: History, exact: true },
   ] as const;
 
   const isActive = (to: string, exact: boolean) => {
