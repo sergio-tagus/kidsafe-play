@@ -111,6 +111,14 @@ function WatchPage() {
           origin: typeof window !== "undefined" ? window.location.origin : undefined,
         },
         events: {
+          onReady: () => {
+            try {
+              const iframe = containerRef.current?.tagName === "IFRAME"
+                ? (containerRef.current as unknown as HTMLIFrameElement)
+                : (playerRef.current?.getIframe?.() as HTMLIFrameElement | undefined);
+              iframe?.setAttribute("tabindex", "-1");
+            } catch { /* ignore */ }
+          },
           onStateChange: (e: any) => {
             const p = playerRef.current;
             if (e.data === YT.PlayerState.PLAYING) {
@@ -141,9 +149,9 @@ function WatchPage() {
                 }
               }, 15000);
             } else {
-              if (e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.ENDED) {
-                setPaused(true);
-              }
+              // Anything that isn't PLAYING (PAUSED, ENDED, BUFFERING, CUED, UNSTARTED)
+              // triggers the block overlay to preempt YouTube's end-screen flash.
+              setPaused(true);
               if (heartbeatRef.current) { clearInterval(heartbeatRef.current); heartbeatRef.current = null; }
             }
           },
