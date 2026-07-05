@@ -12,6 +12,7 @@ import {
   updateChannelCategory,
 } from "@/lib/parent.functions";
 import { listCategories } from "@/lib/categories.functions";
+import { recommendChannels, type ChannelRecommendation } from "@/lib/recommendations.functions";
 import { ParentShell } from "@/components/parent-shell";
 import { useI18n } from "@/lib/i18n";
 import { parseYouTubeChannel } from "@/lib/youtube";
@@ -22,7 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Trash2, ExternalLink, Search, RefreshCw, Loader2 } from "lucide-react";
+import { Plus, Trash2, ExternalLink, Search, RefreshCw, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/parent/whitelist/")({
@@ -40,6 +41,7 @@ function WhitelistPage() {
   const refreshFn = useServerFn(refreshChannelVideos);
   const updateCatFn = useServerFn(updateChannelCategory);
   const catsFn = useServerFn(listCategories);
+  const recommendFn = useServerFn(recommendChannels);
 
   const { data: channels = [] } = useQuery({ queryKey: ["wl"], queryFn: () => listFn() });
   const { data: categories = [] } = useQuery<any[]>({ queryKey: ["categories"], queryFn: () => catsFn() as any });
@@ -60,6 +62,66 @@ function WhitelistPage() {
   const [looking, setLooking] = useState(false);
   const [importing, setImporting] = useState(false);
   const [refreshingId, setRefreshingId] = useState<string | null>(null);
+
+  // Recommendations state
+  const [recOpen, setRecOpen] = useState(false);
+  const [recLoading, setRecLoading] = useState(false);
+  const [recItems, setRecItems] = useState<ChannelRecommendation[]>([]);
+  const [recEmpty, setRecEmpty] = useState(false);
+  const [recPreview, setRecPreview] = useState<any>(null);
+  const [recPreviewCat, setRecPreviewCat] = useState<string>("education");
+  const [recPreviewLoading, setRecPreviewLoading] = useState(false);
+  const [recImporting, setRecImporting] = useState(false);
+
+  const openRecommend = async (force = false) => {
+    setRecOpen(true);
+    setRecLoading(true);
+    setRecEmpty(false);
+    try {
+      const res: any = await recommendFn({ data: { lang, force } });
+      setRecItems(res.items ?? []);
+      setRecEmpty(!!res.empty);
+    } catch (e: any) {
+      toast.error(e.message ?? "Error");
+      setRecOpen(false);
+    } finally {
+      setRecLoading(false);
+    }
+  };
+
+  const openRecPreview = async (rec: ChannelRecommendation) => {
+    setRecPreviewLoading(true);
+    setRecPreview({ __rec: rec });
+    setRecPreviewCat(rec.suggested_category);
+    try {
+      const p = await previewFn({ data: { url: `https://youtube.com/@${rec.channel_handle}` } });
+      setRecPreview({ ...p, __rec: rec });
+      setRecPreviewCat(rec.suggested_category || p.category);
+    } catch (e: any) {
+      toast.error(e.message ?? "Error");
+      setRecPreview(null);
+    } finally {
+      setRecPreviewLoading(false);
+    }
+  };
+
+  const importRecommendation = async () => {
+    if (!recPreview?.__rec) return;
+    setRecImporting(true);
+    try {
+      const res = await importFn({
+        data: { url: `https://youtube.com/@${recPreview.__rec.channel_handle}`, category: recPreviewCat as any },
+      });
+      toast.success(t("parent.autoImportDone", { n: res.videosImported }));
+      setRecItems((items) => items.filter((x) => x.channel_handle !== recPreview.__rec.channel_handle));
+      setRecPreview(null);
+      qc.invalidateQueries({ queryKey: ["wl"] });
+    } catch (e: any) {
+      toast.error(e.message ?? "Error");
+    } finally {
+      setRecImporting(false);
+    }
+  };
 
   const openAuto = () => {
     setUrlInput("");
@@ -175,7 +237,10 @@ function WhitelistPage() {
     <ParentShell>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-3xl font-display font-bold">{t("parent.whitelist")}</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" className="rounded-full" onClick={() => openRecommend(false)} disabled={channels.length === 0}>
+            <Sparkles className="w-4 h-4 mr-1" /> {t("whitelist.recommend")}
+          </Button>
           <Button variant="outline" className="rounded-full" onClick={openManual}>
             {t("parent.manualAdd")}
           </Button>
@@ -387,6 +452,103 @@ function WhitelistPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Recommendations dialog */}
+      <Dialog open={recOpen} onOpenChange={setRecOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between gap-2 pr-6">
+              <DialogTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" /> {t("whitelist.recommend")}
+              </DialogTitle>
+              <Button size="sm" variant="ghost" onClick={() => openRecommend(true)} disabled={recLoading}>
+                <RefreshCw className={`w-4 h-4 mr-1 ${recLoading ? "animate-spin" : ""}`} />
+                {t("whitelist.regenerate")}
+              </Button>
+            </div>
+          </DialogHeader>
+          {recLoading ? (
+            <div className="flex flex-col items-center py-12 gap-3 text-muted-foreground">
+              <Loader2 className="w-8 h-8 animate-spin" />
+              <span className="text-sm">{t("whitelist.recommendLoading")}</span>
+            </div>
+          ) : recEmpty ? (
+            <div className="text-center py-8 text-muted-foreground">{t("whitelist.recommendNeedList")}</div>
+          ) : recItems.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">{t("whitelist.recommendNone")}</div>
+          ) : (
+            <div className="space-y-3">
+              {recItems.map((rec) => (
+                <Card key={rec.channel_handle + rec.channel_name}>
+                  <CardContent className="p-4 flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-display font-bold truncate">{rec.channel_name}</div>
+                      <div className="text-xs text-muted-foreground">@{rec.channel_handle} · {catName(rec.suggested_category)}</div>
+                      <div className="text-sm mt-2">{rec.reason}</div>
+                    </div>
+                    <Button size="sm" onClick={() => openRecPreview(rec)}>
+                      {t("whitelist.recommendPreview")}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Recommendation preview */}
+      <Dialog open={!!recPreview} onOpenChange={(o) => !o && setRecPreview(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{recPreview?.__rec?.channel_name}</DialogTitle>
+          </DialogHeader>
+          {recPreviewLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          ) : recPreview && recPreview.youtube_channel_id ? (
+            <div className="space-y-4">
+              <Card>
+                <CardContent className="p-4 flex gap-3">
+                  {recPreview.channel_thumbnail_url && (
+                    <img src={recPreview.channel_thumbnail_url} alt="" className="w-16 h-16 rounded-full object-cover" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-display font-bold truncate">{recPreview.channel_name}</div>
+                    {recPreview.channel_handle && (
+                      <div className="text-xs text-muted-foreground">@{recPreview.channel_handle}</div>
+                    )}
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {Number(recPreview.subscriberCount).toLocaleString()} {t("parent.subscribers")} · {recPreview.videoCount} videos
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <div className="text-sm text-muted-foreground italic">{recPreview.__rec.reason}</div>
+              <div>
+                <Label>{t("parent.autoCategory")}</Label>
+                <Select value={recPreviewCat} onValueChange={setRecPreviewCat}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c: any) => (
+                      <SelectItem key={c.slug} value={c.slug}>{catName(c.slug)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground py-4">{t("common.error")}</div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRecPreview(null)}>{t("profile.cancel")}</Button>
+            <Button onClick={importRecommendation} disabled={!recPreview?.youtube_channel_id || recImporting}>
+              {recImporting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+              {t("parent.autoImport")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ParentShell>
   );
 }
+
