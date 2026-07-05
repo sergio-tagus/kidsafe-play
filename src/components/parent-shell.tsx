@@ -4,7 +4,7 @@ import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { LanguageSwitcher } from "./language-switcher";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags } from "lucide-react";
+import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags, History } from "lucide-react";
 
 export function ParentShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
@@ -16,6 +16,7 @@ export function ParentShell({ children }: { children: ReactNode }) {
     { to: "/parent/children", label: t("parent.children"), icon: Users, exact: false },
     { to: "/parent/whitelist", label: t("parent.whitelist"), icon: ListChecks, exact: false },
     { to: "/parent/categories", label: t("parent.categories"), icon: Tags, exact: false },
+    { to: "/parent/history", label: t("parent.history"), icon: History, exact: false },
   ] as const;
 
   return (

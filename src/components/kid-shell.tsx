@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { type ReactNode } from "react";
-import { Home, Tv, LayoutGrid, Heart, History, Settings, Search, LogOut, ArrowLeft } from "lucide-react";
+import { Home, Tv, LayoutGrid, Heart, Search, LogOut, ArrowLeft } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { LanguageSwitcher } from "./language-switcher";
@@ -15,8 +15,6 @@ export function KidShell({ childId, child, children }: { childId: string; child?
     { to: "/kids/$childId", label: t("nav.home"), icon: Home, exact: true },
     { to: "/kids/$childId/channels", label: t("nav.channels"), icon: Tv, exact: false },
     { to: "/kids/$childId/categories", label: t("nav.categories"), icon: LayoutGrid, exact: false },
-    { to: "/kids/$childId/favorites", label: t("nav.favorites"), icon: Heart, exact: true },
-    { to: "/kids/$childId/history", label: t("nav.history"), icon: History, exact: true },
   ] as const;
 
   const isActive = (to: string, exact: boolean) => {
@@ -47,13 +45,6 @@ export function KidShell({ childId, child, children }: { childId: string; child?
               </Link>
             );
           })}
-          <Link
-            to="/parent"
-            className="flex items-center gap-3 rounded-full px-4 py-3 text-sm font-semibold text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <Settings className="w-5 h-5" />
-            {t("nav.parent")}
-          </Link>
         </nav>
         {child && (
           <div className="mt-4 rounded-2xl bg-sidebar-accent p-3 text-center">
