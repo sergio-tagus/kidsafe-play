@@ -188,9 +188,10 @@ function WatchPage() {
             {!locked ? (
               <>
                 <div ref={containerRef} className="w-full h-full" />
-                {/* Block clicks on YouTube title bar (title + share + more) */}
+                {/* Top-left: block title + channel avatar (both link to YouTube).
+                    Right third is left free for volume / CC / settings icons. */}
                 <div
-                  className="absolute inset-x-0 top-0 h-20 z-10 cursor-pointer"
+                  className="absolute top-0 left-0 h-16 right-1/3 z-10 cursor-pointer"
                   aria-hidden="true"
                   onClick={() => {
                     try {
@@ -201,10 +202,11 @@ function WatchPage() {
                     } catch { /* ignore */ }
                   }}
                 />
-                {/* Block clicks on the YouTube wordmark inside the control bar
-                    (sits to the left of the fullscreen button, which is ~48px wide) */}
+                {/* Bottom strip: covers Share/Link icon, "More videos" pill and
+                    YouTube wordmark. The progress bar, time and fullscreen
+                    button sit above this strip and remain interactive. */}
                 <div
-                  className="absolute bottom-0 right-14 w-20 h-12 z-10"
+                  className="absolute bottom-0 inset-x-0 h-14 z-10"
                   aria-hidden="true"
                   onClick={(e) => e.stopPropagation()}
                 />
