@@ -12,7 +12,7 @@ export function clearParentUnlock() {
 export const Route = createFileRoute("/_authenticated/parent")({
   beforeLoad: ({ location }) => {
     if (typeof window === "undefined") return;
-    if (location.pathname === "/parent/unlock") return;
+    if (location.pathname === "/parent/unlock" || location.pathname === "/parent/reset-pin") return;
     if (sessionStorage.getItem(PIN_KEY) === "1") return;
     throw redirect({ to: "/parent/unlock", search: { next: location.pathname } as any });
   },
