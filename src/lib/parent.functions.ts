@@ -64,7 +64,9 @@ export const deleteChildProfile = createServerFn({ method: "POST" })
   });
 
 // ---------- whitelist channels ----------
-const CATEGORIES = ["cartoons", "education", "music", "science", "stories", "games", "arts", "sports"] as const;
+// Categories are now stored in `public.categories` (see categories.functions.ts).
+// We validate via slug shape and rely on the FK on whitelist_channels.category.
+const categorySlug = z.string().min(1).max(60);
 
 export const listWhitelistChannels = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
