@@ -161,6 +161,21 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+
+  /* TV / D-pad focus — visible ring on every interactive element */
+  :where(a, button, [role="button"], [role="link"], [role="menuitem"], [role="option"], [role="tab"], input, select, textarea, [tabindex]):focus-visible {
+    outline: 3px solid var(--color-primary, #FF6B9D);
+    outline-offset: 3px;
+    border-radius: 8px;
+  }
+
+  /* Large screens / TV — scale up type and hit targets */
+  @media (min-width: 1920px) {
+    html { font-size: 20px; }
+  }
+  @media (min-width: 2560px) {
+    html { font-size: 22px; }
+  }
 }
 
 @utility gradient-fun {
