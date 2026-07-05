@@ -63,6 +63,66 @@ function WhitelistPage() {
   const [importing, setImporting] = useState(false);
   const [refreshingId, setRefreshingId] = useState<string | null>(null);
 
+  // Recommendations state
+  const [recOpen, setRecOpen] = useState(false);
+  const [recLoading, setRecLoading] = useState(false);
+  const [recItems, setRecItems] = useState<ChannelRecommendation[]>([]);
+  const [recEmpty, setRecEmpty] = useState(false);
+  const [recPreview, setRecPreview] = useState<any>(null);
+  const [recPreviewCat, setRecPreviewCat] = useState<string>("education");
+  const [recPreviewLoading, setRecPreviewLoading] = useState(false);
+  const [recImporting, setRecImporting] = useState(false);
+
+  const openRecommend = async (force = false) => {
+    setRecOpen(true);
+    setRecLoading(true);
+    setRecEmpty(false);
+    try {
+      const res: any = await recommendFn({ data: { lang, force } });
+      setRecItems(res.items ?? []);
+      setRecEmpty(!!res.empty);
+    } catch (e: any) {
+      toast.error(e.message ?? "Error");
+      setRecOpen(false);
+    } finally {
+      setRecLoading(false);
+    }
+  };
+
+  const openRecPreview = async (rec: ChannelRecommendation) => {
+    setRecPreviewLoading(true);
+    setRecPreview({ __rec: rec });
+    setRecPreviewCat(rec.suggested_category);
+    try {
+      const p = await previewFn({ data: { url: `https://youtube.com/@${rec.channel_handle}` } });
+      setRecPreview({ ...p, __rec: rec });
+      setRecPreviewCat(rec.suggested_category || p.category);
+    } catch (e: any) {
+      toast.error(e.message ?? "Error");
+      setRecPreview(null);
+    } finally {
+      setRecPreviewLoading(false);
+    }
+  };
+
+  const importRecommendation = async () => {
+    if (!recPreview?.__rec) return;
+    setRecImporting(true);
+    try {
+      const res = await importFn({
+        data: { url: `https://youtube.com/@${recPreview.__rec.channel_handle}`, category: recPreviewCat as any },
+      });
+      toast.success(t("parent.autoImportDone", { n: res.videosImported }));
+      setRecItems((items) => items.filter((x) => x.channel_handle !== recPreview.__rec.channel_handle));
+      setRecPreview(null);
+      qc.invalidateQueries({ queryKey: ["wl"] });
+    } catch (e: any) {
+      toast.error(e.message ?? "Error");
+    } finally {
+      setRecImporting(false);
+    }
+  };
+
   const openAuto = () => {
     setUrlInput("");
     setPreview(null);
