@@ -55,6 +55,8 @@ const dict: Record<Lang, Dict> = {
     "player.locked": "Se alcanzó el límite de tiempo de hoy",
     "player.lockedDesc": "Vuelve mañana para ver más videos.",
     "player.remaining": "Te quedan {min} min hoy",
+    "player.paused": "En pausa",
+    "player.resume": "Reanudar",
     "favorites.title": "Mis favoritos",
     "favorites.empty": "Aún no hay favoritos",
     "history.title": "Historial",
