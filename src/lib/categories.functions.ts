@@ -48,7 +48,7 @@ const upsertInput = z.object({
 });
 
 export const upsertCategory = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) => upsertInput.parse(d))
   .handler(async ({ data, context }) => {
     const payload = {
@@ -75,7 +75,7 @@ export const upsertCategory = createServerFn({ method: "POST" })
   });
 
 export const deleteCategory = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.from("categories").delete().eq("id", data.id);

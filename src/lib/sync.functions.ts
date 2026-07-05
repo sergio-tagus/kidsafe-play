@@ -17,7 +17,7 @@ export const getSyncSettings = createServerFn({ method: "GET" })
   });
 
 export const upsertSyncSettings = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) => z.object({ frequency: z.enum(FREQ) }).parse(d))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
