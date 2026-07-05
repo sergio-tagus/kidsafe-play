@@ -189,7 +189,7 @@ export const deleteVideo = createServerFn({ method: "POST" })
   });
 
 // ---------- YouTube auto-import ----------
-const CATEGORY_ENUM = ["cartoons", "education", "music", "science", "stories", "games", "arts", "sports"] as const;
+// Category slugs live in `public.categories`; validated by shape + FK.
 
 export const previewChannelFromUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
