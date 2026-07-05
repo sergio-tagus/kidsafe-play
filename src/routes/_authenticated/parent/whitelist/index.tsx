@@ -452,6 +452,103 @@ function WhitelistPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Recommendations dialog */}
+      <Dialog open={recOpen} onOpenChange={setRecOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between gap-2 pr-6">
+              <DialogTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" /> {t("whitelist.recommend")}
+              </DialogTitle>
+              <Button size="sm" variant="ghost" onClick={() => openRecommend(true)} disabled={recLoading}>
+                <RefreshCw className={`w-4 h-4 mr-1 ${recLoading ? "animate-spin" : ""}`} />
+                {t("whitelist.regenerate")}
+              </Button>
+            </div>
+          </DialogHeader>
+          {recLoading ? (
+            <div className="flex flex-col items-center py-12 gap-3 text-muted-foreground">
+              <Loader2 className="w-8 h-8 animate-spin" />
+              <span className="text-sm">{t("whitelist.recommendLoading")}</span>
+            </div>
+          ) : recEmpty ? (
+            <div className="text-center py-8 text-muted-foreground">{t("whitelist.recommendNeedList")}</div>
+          ) : recItems.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">{t("whitelist.recommendNone")}</div>
+          ) : (
+            <div className="space-y-3">
+              {recItems.map((rec) => (
+                <Card key={rec.channel_handle + rec.channel_name}>
+                  <CardContent className="p-4 flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-display font-bold truncate">{rec.channel_name}</div>
+                      <div className="text-xs text-muted-foreground">@{rec.channel_handle} · {catName(rec.suggested_category)}</div>
+                      <div className="text-sm mt-2">{rec.reason}</div>
+                    </div>
+                    <Button size="sm" onClick={() => openRecPreview(rec)}>
+                      {t("whitelist.recommendPreview")}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Recommendation preview */}
+      <Dialog open={!!recPreview} onOpenChange={(o) => !o && setRecPreview(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{recPreview?.__rec?.channel_name}</DialogTitle>
+          </DialogHeader>
+          {recPreviewLoading ? (
+            <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+          ) : recPreview && recPreview.youtube_channel_id ? (
+            <div className="space-y-4">
+              <Card>
+                <CardContent className="p-4 flex gap-3">
+                  {recPreview.channel_thumbnail_url && (
+                    <img src={recPreview.channel_thumbnail_url} alt="" className="w-16 h-16 rounded-full object-cover" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-display font-bold truncate">{recPreview.channel_name}</div>
+                    {recPreview.channel_handle && (
+                      <div className="text-xs text-muted-foreground">@{recPreview.channel_handle}</div>
+                    )}
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {Number(recPreview.subscriberCount).toLocaleString()} {t("parent.subscribers")} · {recPreview.videoCount} videos
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <div className="text-sm text-muted-foreground italic">{recPreview.__rec.reason}</div>
+              <div>
+                <Label>{t("parent.autoCategory")}</Label>
+                <Select value={recPreviewCat} onValueChange={setRecPreviewCat}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c: any) => (
+                      <SelectItem key={c.slug} value={c.slug}>{catName(c.slug)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground py-4">{t("common.error")}</div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRecPreview(null)}>{t("profile.cancel")}</Button>
+            <Button onClick={importRecommendation} disabled={!recPreview?.youtube_channel_id || recImporting}>
+              {recImporting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+              {t("parent.autoImport")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ParentShell>
   );
 }
+
