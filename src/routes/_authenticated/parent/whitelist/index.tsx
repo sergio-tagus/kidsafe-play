@@ -237,7 +237,10 @@ function WhitelistPage() {
     <ParentShell>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="text-3xl font-display font-bold">{t("parent.whitelist")}</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" className="rounded-full" onClick={() => openRecommend(false)} disabled={channels.length === 0}>
+            <Sparkles className="w-4 h-4 mr-1" /> {t("whitelist.recommend")}
+          </Button>
           <Button variant="outline" className="rounded-full" onClick={openManual}>
             {t("parent.manualAdd")}
           </Button>
