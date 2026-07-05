@@ -126,6 +126,30 @@ export type Database = {
           },
         ]
       }
+      sync_settings: {
+        Row: {
+          created_at: string
+          frequency: Database["public"]["Enums"]["sync_frequency"]
+          last_run_at: string | null
+          parent_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          frequency?: Database["public"]["Enums"]["sync_frequency"]
+          last_run_at?: string | null
+          parent_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          frequency?: Database["public"]["Enums"]["sync_frequency"]
+          last_run_at?: string | null
+          parent_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       videos_cache: {
         Row: {
           created_at: string
@@ -252,6 +276,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      sync_frequency: "off" | "daily" | "weekly" | "monthly"
       video_category:
         | "cartoons"
         | "education"
@@ -388,6 +413,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      sync_frequency: ["off", "daily", "weekly", "monthly"],
       video_category: [
         "cartoons",
         "education",

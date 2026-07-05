@@ -1,11 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getParentStats } from "@/lib/kids.functions";
+import { getSyncSettings, upsertSyncSettings } from "@/lib/sync.functions";
 import { ParentShell } from "@/components/parent-shell";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/parent/")({
   component: ParentDashboard,
@@ -113,7 +117,59 @@ function ParentDashboard() {
           )}
         </CardContent>
       </Card>
+
+      <SyncSettingsCard />
     </ParentShell>
+  );
+}
+
+function SyncSettingsCard() {
+  const { t } = useI18n();
+  const qc = useQueryClient();
+  const getFn = useServerFn(getSyncSettings);
+  const saveFn = useServerFn(upsertSyncSettings);
+  const { data: s } = useQuery({ queryKey: ["sync-settings"], queryFn: () => getFn() });
+  const freq = s?.frequency ?? "weekly";
+
+  const save = async (v: string) => {
+    try {
+      await saveFn({ data: { frequency: v as any } });
+      toast.success(t("parent.syncSaved"));
+      qc.invalidateQueries({ queryKey: ["sync-settings"] });
+    } catch (e: any) {
+      toast.error(e.message ?? "Error");
+    }
+  };
+
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle>{t("parent.syncSettings")}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground mb-4">{t("parent.syncDesc")}</p>
+        <RadioGroup value={freq} onValueChange={save} className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { v: "off", label: t("parent.syncOff") },
+            { v: "daily", label: t("parent.syncDaily") },
+            { v: "weekly", label: t("parent.syncWeekly") },
+            { v: "monthly", label: t("parent.syncMonthly") },
+          ].map((opt) => (
+            <Label
+              key={opt.v}
+              className="flex items-center gap-2 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/50 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5"
+            >
+              <RadioGroupItem value={opt.v} />
+              <span className="font-semibold">{opt.label}</span>
+            </Label>
+          ))}
+        </RadioGroup>
+        <div className="text-xs text-muted-foreground mt-3">
+          {t("parent.syncLastRun")}:{" "}
+          {s?.last_run_at ? new Date(s.last_run_at).toLocaleString() : t("parent.syncNever")}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
