@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { type ReactNode } from "react";
-import { Home, Tv, LayoutGrid, Heart, History, Settings, Search, LogOut, ArrowLeft } from "lucide-react";
+import { Home, Tv, LayoutGrid, Heart, Search, LogOut, ArrowLeft } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { LanguageSwitcher } from "./language-switcher";
