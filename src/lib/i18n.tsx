@@ -343,6 +343,8 @@ const dict: Record<Lang, Dict> = {
     "player.locked": "Você atingiu o limite de tempo de hoje",
     "player.lockedDesc": "Volte amanhã para mais vídeos.",
     "player.remaining": "Faltam {min} min hoje",
+    "player.paused": "Pausado",
+    "player.resume": "Retomar",
     "favorites.title": "Meus favoritos",
     "favorites.empty": "Sem favoritos ainda",
     "history.title": "Histórico",
