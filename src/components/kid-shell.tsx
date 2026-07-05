@@ -45,13 +45,6 @@ export function KidShell({ childId, child, children }: { childId: string; child?
               </Link>
             );
           })}
-          <Link
-            to="/parent"
-            className="flex items-center gap-3 rounded-full px-4 py-3 text-sm font-semibold text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <Settings className="w-5 h-5" />
-            {t("nav.parent")}
-          </Link>
         </nav>
         {child && (
           <div className="mt-4 rounded-2xl bg-sidebar-accent p-3 text-center">
