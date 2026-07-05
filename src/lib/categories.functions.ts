@@ -68,7 +68,7 @@ export const upsertCategory = createServerFn({ method: "POST" })
     }
     const { data: row, error } = await context.supabase
       .from("categories")
-      .insert({ ...payload, is_default: false })
+      .insert({ ...payload, is_default: false, created_by: context.userId })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
