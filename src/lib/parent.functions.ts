@@ -258,7 +258,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({
       url: z.string().min(1).max(500),
-      category: z.enum(CATEGORY_ENUM).optional(),
+      category: categorySlug.optional(),
       videoLimit: z.number().int().min(1).max(500).default(200),
     }).parse(d),
   )
