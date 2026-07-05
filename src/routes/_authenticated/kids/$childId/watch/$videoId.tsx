@@ -8,8 +8,26 @@ import { KidShell } from "@/components/kid-shell";
 import { VideoCard } from "@/components/video-card";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { Heart, Lock } from "lucide-react";
+import { Heart, Lock, Play } from "lucide-react";
 import { toast } from "sonner";
+
+function sanitizeDescription(text: string): string {
+  if (!text) return "";
+  return text
+    // strip full URLs
+    .replace(/https?:\/\/\S+/gi, "")
+    .replace(/www\.\S+/gi, "")
+    // strip bare youtube/social domains
+    .replace(/\b(?:youtube\.com|youtu\.be|youtube-nocookie\.com|m\.youtube\.com|instagram\.com|tiktok\.com|facebook\.com|twitter\.com|x\.com)\S*/gi, "")
+    // strip @handles
+    .replace(/(^|\s)@[\w.\-]+/g, "$1")
+    // strip common "subscribe" lines
+    .replace(/^.*(?:suscr[íi]bete|subscribe|sígueme|follow me|redes sociales|social media).*$/gim, "")
+    // collapse whitespace
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
 
 export const Route = createFileRoute("/_authenticated/kids/$childId/watch/$videoId")({
   component: WatchPage,
