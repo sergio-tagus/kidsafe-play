@@ -21,9 +21,15 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: "always",
     limitsNavigationsToAppBoundDomains: false,
+    // Disable AirPlay routing for <video> media. Kids should not be able to
+    // send playback to an Apple TV or AirPlay receiver.
+    allowsAirPlayForMediaPlayback: false,
   },
   android: {
     allowMixedContent: false,
+    // Require a user gesture before any media plays; combined with the
+    // no-cast controlsList this blocks silent Chromecast handoffs.
+    initialFocus: false,
   },
   plugins: {
     SplashScreen: {
