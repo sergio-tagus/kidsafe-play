@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import * as Icons from "lucide-react";
-import { listCategories, upsertCategory, deleteCategory } from "@/lib/categories.functions";
+import { listCategoriesWithCounts, upsertCategory, deleteCategory } from "@/lib/categories.functions";
 import { ParentShell } from "@/components/parent-shell";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
