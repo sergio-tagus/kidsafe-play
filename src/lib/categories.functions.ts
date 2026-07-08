@@ -101,6 +101,20 @@ export const deleteCategory = createServerFn({ method: "POST" })
   .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    const { data: cat, error: catErr } = await context.supabase
+      .from("categories")
+      .select("slug, is_default")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (catErr) throw new Error(catErr.message);
+    if (!cat) throw new Error("Category not found");
+    if (cat.is_default) throw new Error("CATEGORY_DEFAULT");
+    const { count, error: cntErr } = await context.supabase
+      .from("whitelist_channels")
+      .select("id", { count: "exact", head: true })
+      .eq("category", cat.slug);
+    if (cntErr) throw new Error(cntErr.message);
+    if ((count ?? 0) > 0) throw new Error("CATEGORY_HAS_CHANNELS");
     const { error } = await context.supabase.from("categories").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
