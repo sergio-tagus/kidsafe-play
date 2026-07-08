@@ -79,6 +79,7 @@ export function ParentShell({ children }: { children: ReactNode }) {
 
         <main className="flex-1 px-4 md:px-8 py-6">{children}</main>
       </div>
+      <ParentUnlockGuard />
     </div>
   );
 }
