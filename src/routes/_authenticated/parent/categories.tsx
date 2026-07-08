@@ -162,11 +162,17 @@ function CategoriesPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                disabled={c.is_default}
+                disabled={c.is_default || c.channel_count > 0}
                 onClick={() => remove(c)}
-                title={c.is_default ? t("parent.categoryLocked") : ""}
+                title={
+                  c.is_default
+                    ? t("parent.categoryLocked")
+                    : c.channel_count > 0
+                      ? t("parent.categoryHasChannels")
+                      : ""
+                }
               >
-                <Trash2 className={`w-4 h-4 ${c.is_default ? "opacity-30" : "text-destructive"}`} />
+                <Trash2 className={`w-4 h-4 ${c.is_default || c.channel_count > 0 ? "opacity-30" : "text-destructive"}`} />
               </Button>
             </CardContent>
           </Card>
