@@ -108,13 +108,20 @@ function CategoriesPage() {
 
   const remove = async (c: CatRow) => {
     if (c.is_default) return;
+    if (c.channel_count > 0) {
+      toast.error(t("parent.categoryHasChannels"));
+      return;
+    }
     if (!confirm(t("common.confirmDelete"))) return;
     try {
       await delFn({ data: { id: c.id } });
       qc.invalidateQueries({ queryKey: ["categories"] });
       qc.invalidateQueries({ queryKey: ["wl"] });
     } catch (e: any) {
-      toast.error(e.message ?? "Error");
+      const msg = e?.message ?? "Error";
+      if (msg.includes("CATEGORY_HAS_CHANNELS")) toast.error(t("parent.categoryHasChannels"));
+      else if (msg.includes("CATEGORY_DEFAULT")) toast.error(t("parent.categoryLocked"));
+      else toast.error(msg);
     }
   };
 
