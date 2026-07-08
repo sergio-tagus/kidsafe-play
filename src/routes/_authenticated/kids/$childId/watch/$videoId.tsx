@@ -122,7 +122,7 @@ function WatchPage() {
               iframe?.setAttribute("disableRemotePlayback", "true");
               iframe?.setAttribute("x-webkit-airplay", "deny");
               iframe?.setAttribute("controlsList", "nodownload noremoteplayback noplaybackrate");
-              iframe?.setAttribute("allow", "autoplay; encrypted-media; fullscreen; picture-in-picture");
+              iframe?.setAttribute("allow", "autoplay; encrypted-media; fullscreen");
             } catch { /* ignore */ }
           },
           onStateChange: (e: any) => {
