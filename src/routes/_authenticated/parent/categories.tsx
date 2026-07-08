@@ -28,6 +28,7 @@ type CatRow = {
   color: string | null;
   sort_order: number;
   is_default: boolean;
+  channel_count: number;
 };
 
 function slugify(s: string) {
