@@ -117,6 +117,12 @@ function WatchPage() {
                 ? (containerRef.current as unknown as HTMLIFrameElement)
                 : (playerRef.current?.getIframe?.() as HTMLIFrameElement | undefined);
               iframe?.setAttribute("tabindex", "-1");
+              // Block AirPlay / Chromecast / remote playback on the iframe and any
+              // inner <video> element the browser may expose.
+              iframe?.setAttribute("disableRemotePlayback", "true");
+              iframe?.setAttribute("x-webkit-airplay", "deny");
+              iframe?.setAttribute("controlsList", "nodownload noremoteplayback noplaybackrate");
+              iframe?.setAttribute("allow", "autoplay; encrypted-media; fullscreen");
             } catch { /* ignore */ }
           },
           onStateChange: (e: any) => {

@@ -17,6 +17,28 @@ export const listCategories = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+export const listCategoriesWithCounts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const [catsRes, wlRes] = await Promise.all([
+      context.supabase
+        .from("categories")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .order("name_en", { ascending: true }),
+      context.supabase.from("whitelist_channels").select("category").eq("active", true),
+    ]);
+    if (catsRes.error) throw new Error(catsRes.error.message);
+    if (wlRes.error) throw new Error(wlRes.error.message);
+    const counts = new Map<string, number>();
+    for (const row of wlRes.data ?? []) {
+      const slug = (row as any).category as string | null;
+      if (!slug) continue;
+      counts.set(slug, (counts.get(slug) ?? 0) + 1);
+    }
+    return (catsRes.data ?? []).map((c: any) => ({ ...c, channel_count: counts.get(c.slug) ?? 0 }));
+  });
+
 export const listCategoriesWithContent = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

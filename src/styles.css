@@ -187,3 +187,13 @@
 @utility gradient-warm {
   background-image: linear-gradient(135deg, var(--color-fun-orange), var(--color-fun-red));
 }
+
+/* Hide AirPlay / Chromecast / cast controls on any native <video> element.
+   Prevents kids from sending YouTube playback to external devices. */
+video::-webkit-media-controls-cast-button,
+video::-internal-media-controls-cast-button,
+video::-internal-media-controls-overflow-button {
+  display: none !important;
+}
+video::part(cast-button) { display: none !important; }
+

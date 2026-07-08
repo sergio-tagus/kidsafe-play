@@ -125,7 +125,7 @@ function ParentChildren() {
                   <Select value={String(editing.daily_screen_time_minutes)} onValueChange={(v) => setEditing({ ...editing, daily_screen_time_minutes: Number(v) })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {[15, 30, 45, 60, 90, 120, 180].map((m) => <SelectItem key={m} value={String(m)}>{m} min</SelectItem>)}
+                      {[15, 30, 45, 60, 90, 120, 180, 240, 300].map((m) => <SelectItem key={m} value={String(m)}>{m} min</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>

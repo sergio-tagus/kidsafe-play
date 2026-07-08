@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import * as Icons from "lucide-react";
-import { listCategories, upsertCategory, deleteCategory } from "@/lib/categories.functions";
+import { listCategoriesWithCounts, upsertCategory, deleteCategory } from "@/lib/categories.functions";
 import { ParentShell } from "@/components/parent-shell";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +28,7 @@ type CatRow = {
   color: string | null;
   sort_order: number;
   is_default: boolean;
+  channel_count: number;
 };
 
 function slugify(s: string) {
@@ -48,7 +49,7 @@ function CatIcon({ name, className }: { name: string; className?: string }) {
 function CategoriesPage() {
   const { t, lang } = useI18n();
   const qc = useQueryClient();
-  const listFn = useServerFn(listCategories);
+  const listFn = useServerFn(listCategoriesWithCounts);
   const upsertFn = useServerFn(upsertCategory);
   const delFn = useServerFn(deleteCategory);
 
@@ -144,6 +145,9 @@ function CategoriesPage() {
                   {c.is_default && <Lock className="w-3 h-3 text-muted-foreground" />}
                 </div>
                 <div className="text-xs text-muted-foreground truncate">{c.slug}</div>
+                <div className="text-xs font-medium text-primary mt-0.5">
+                  {t("parent.categoryChannelCount", { count: String(c.channel_count) })}
+                </div>
               </div>
               <Button variant="ghost" size="icon" onClick={() => openEdit(c)}>
                 <Pencil className="w-4 h-4" />

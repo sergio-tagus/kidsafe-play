@@ -163,3 +163,22 @@ Y en Capacitor añade el `CFBundleURLTypes` (iOS) e `intent-filter` con `android
 3. Genera un nuevo binario firmado y súbelo a la store correspondiente.
 
 Los **cambios solo web** (PWA) se despliegan al hacer *Publish* en Lovable — sin re-subir binarios.
+
+## AirPlay / Chromecast blocking
+
+The kids' video player blocks casting to external devices at multiple layers:
+
+- **Web / PWA**: the YouTube iframe is set with `disableRemotePlayback`,
+  `x-webkit-airplay="deny"`, `controlsList="nodownload noremoteplayback"`
+  and its `allow` attribute omits `picture-in-picture`. Global CSS in
+  `src/styles.css` also hides `::-webkit-media-controls-cast-button` on any
+  native `<video>`.
+- **iOS (Capacitor)**: `capacitor.config.ts` sets
+  `ios.allowsAirPlayForMediaPlayback: false`, so the WKWebView will not
+  advertise media to AirPlay receivers. The system Control Center mirror
+  toggle cannot be blocked from an app — parents relying on that vector
+  should enable Screen Time > "Don't Allow" for AirPlay.
+- **Android (Capacitor)**: cast is not offered by the WebView unless the
+  page requests it; the controlsList and CSS above cover the WebView
+  chrome. Screen mirroring from Quick Settings is an OS-level action
+  outside the app.
