@@ -145,6 +145,9 @@ function CategoriesPage() {
                   {c.is_default && <Lock className="w-3 h-3 text-muted-foreground" />}
                 </div>
                 <div className="text-xs text-muted-foreground truncate">{c.slug}</div>
+                <div className="text-xs font-medium text-primary mt-0.5">
+                  {t("parent.categoryChannelCount", { count: String(c.channel_count) })}
+                </div>
               </div>
               <Button variant="ghost" size="icon" onClick={() => openEdit(c)}>
                 <Pencil className="w-4 h-4" />
