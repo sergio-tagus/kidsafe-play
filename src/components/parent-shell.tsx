@@ -5,6 +5,7 @@ import { useSession } from "@/lib/session";
 import { LanguageSwitcher } from "./language-switcher";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags, History } from "lucide-react";
+import { ParentUnlockGuard } from "./parent-unlock-guard";
 
 export function ParentShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
