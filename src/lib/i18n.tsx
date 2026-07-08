@@ -420,6 +420,7 @@ const dict: Record<Lang, Dict> = {
     "parent.categoryLocked": "Categoria padrão (não pode ser excluída)",
     "parent.categoryUpdated": "Categoria atualizada",
     "parent.categoryChannelCount": "{count} canais",
+    "parent.categoryHasChannels": "Não é possível excluir: mova ou remova primeiro os canais.",
     "pin.expired": "Sessão dos pais expirada",
     "pin.expiredDesc": "Por segurança, digite seu PIN de 4 dígitos para continuar.",
     "pin.enter": "Digite o PIN",
