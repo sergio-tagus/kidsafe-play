@@ -18,6 +18,25 @@ export const hasPin = createServerFn({ method: "GET" })
     return { hasPin: !!data };
   });
 
+export const getParentUnlockStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("parent_pins")
+      .select("user_id, unlocked_until")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return { hasPin: false as const, unlocked: true as const, expiresAt: null };
+    const until = data.unlocked_until ? new Date(data.unlocked_until as string).getTime() : 0;
+    const unlocked = until > Date.now();
+    return {
+      hasPin: true as const,
+      unlocked,
+      expiresAt: unlocked ? new Date(until).toISOString() : null,
+    };
+  });
+
 export const setPin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => pinSchema.parse(d))
