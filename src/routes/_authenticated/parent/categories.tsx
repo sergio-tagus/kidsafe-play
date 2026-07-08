@@ -49,7 +49,7 @@ function CatIcon({ name, className }: { name: string; className?: string }) {
 function CategoriesPage() {
   const { t, lang } = useI18n();
   const qc = useQueryClient();
-  const listFn = useServerFn(listCategories);
+  const listFn = useServerFn(listCategoriesWithCounts);
   const upsertFn = useServerFn(upsertCategory);
   const delFn = useServerFn(deleteCategory);
 
