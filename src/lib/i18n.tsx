@@ -272,6 +272,7 @@ const dict: Record<Lang, Dict> = {
     "parent.categoryLocked": "Default category (cannot be deleted)",
     "parent.categoryUpdated": "Category updated",
     "parent.categoryChannelCount": "{count} channels",
+    "parent.categoryHasChannels": "Cannot delete: move or remove its channels first.",
     "pin.expired": "Parent session expired",
     "pin.expiredDesc": "For safety, enter your 4-digit PIN to continue.",
     "pin.enter": "Enter your PIN",
