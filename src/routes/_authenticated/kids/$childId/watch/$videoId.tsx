@@ -1,14 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listChildProfiles } from "@/lib/parent.functions";
 import { getSafeVideo, listSafeVideos, toggleFavorite, isFavorite, recordWatchTick, checkScreenTime } from "@/lib/kids.functions";
 import { KidShell } from "@/components/kid-shell";
 import { VideoCard } from "@/components/video-card";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { Heart, Lock, Play } from "lucide-react";
+import { Heart, Lock, Play, Pause, RotateCcw, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 
 function sanitizeDescription(text: string): string {
@@ -32,6 +32,8 @@ function sanitizeDescription(text: string): string {
 export const Route = createFileRoute("/_authenticated/kids/$childId/watch/$videoId")({
   component: WatchPage,
 });
+
+const SEEK_SECONDS = 10;
 
 // Load YouTube IFrame API once
 let ytPromise: Promise<any> | null = null;
@@ -174,6 +176,72 @@ function WatchPage() {
 
   const remaining = useMemo(() => screen?.remaining ?? 0, [screen]);
 
+  const seekBy = useCallback((delta: number) => {
+    try {
+      const p = playerRef.current;
+      if (!p?.seekTo) return;
+      const current = p.getCurrentTime?.() ?? 0;
+      const total = p.getDuration?.() ?? 0;
+      const next = Math.min(total > 0 ? total : Infinity, Math.max(0, current + delta));
+      p.seekTo(next, true);
+    } catch { /* ignore */ }
+  }, []);
+
+  const togglePlay = useCallback(() => {
+    try {
+      const p = playerRef.current;
+      if (!p) return;
+      if (p.getPlayerState?.() === 1) p.pauseVideo?.();
+      else { p.playVideo?.(); setPaused(false); }
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    if (locked) return;
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el && ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName)) return;
+      if (e.key === "ArrowLeft") { e.preventDefault(); seekBy(-SEEK_SECONDS); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); seekBy(SEEK_SECONDS); }
+      else if (e.key === " " || e.key === "Enter") { e.preventDefault(); togglePlay(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [locked, seekBy, togglePlay]);
+
+  const seekControls = (variant: "bar" | "overlay") => (
+    <div className={`flex items-center justify-center gap-3 ${variant === "bar" ? "mt-3" : ""}`}>
+      <Button
+        size="lg"
+        variant={variant === "overlay" ? "secondary" : "outline"}
+        className="rounded-full h-14 px-6 text-base font-semibold shadow-lg"
+        aria-label={t("player.rewind", { s: SEEK_SECONDS })}
+        onClick={() => seekBy(-SEEK_SECONDS)}
+      >
+        <RotateCcw className="w-6 h-6 mr-2" /> {SEEK_SECONDS}s
+      </Button>
+      <Button
+        size="lg"
+        className="rounded-full h-16 w-16 p-0 shadow-lg"
+        aria-label={t("player.playPause")}
+        onClick={togglePlay}
+      >
+        {paused ? <Play className="w-7 h-7" /> : <Pause className="w-7 h-7" />}
+      </Button>
+      <Button
+        size="lg"
+        variant={variant === "overlay" ? "secondary" : "outline"}
+        className="rounded-full h-14 px-6 text-base font-semibold shadow-lg"
+        aria-label={t("player.forward", { s: SEEK_SECONDS })}
+        onClick={() => seekBy(SEEK_SECONDS)}
+      >
+        {SEEK_SECONDS}s <RotateCw className="w-6 h-6 ml-2" />
+      </Button>
+    </div>
+  );
+
+
+
   return (
     <KidShell childId={childId} child={child}>
       {isLoading ? (
@@ -219,14 +287,15 @@ function WatchPage() {
                 {/* Always-mounted overlay that covers YouTube's end-screen /
                     pause overlay to prevent the click-through flash. */}
                 <div
-                  className={`absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/70 backdrop-blur-sm text-white transition-opacity ${
+                  className={`absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 text-white transition-opacity ${
                     paused ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                   }`}
                 >
-                  <h2 className="text-2xl font-display font-bold">{t("player.paused")}</h2>
+                  <h2 className="text-2xl font-display font-bold [text-shadow:0_2px_8px_rgba(0,0,0,0.85)]">{t("player.paused")}</h2>
+                  {seekControls("overlay")}
                   <Button
                     size="lg"
-                    className="rounded-full"
+                    className="rounded-full shadow-lg"
                     onClick={() => {
                       try { playerRef.current?.playVideo?.(); } catch { /* ignore */ }
                       setPaused(false);
@@ -235,13 +304,14 @@ function WatchPage() {
                     <Play className="w-5 h-5 mr-2" /> {t("player.resume")}
                   </Button>
                   <Button
-                    variant="outline"
-                    className="rounded-full bg-transparent text-white border-white hover:bg-white/10 hover:text-white"
+                    variant="secondary"
+                    className="rounded-full shadow-lg"
                     onClick={() => navigate({ to: "/kids/$childId", params: { childId } as any })}
                   >
                     {t("common.back")}
                   </Button>
                 </div>
+
               </>
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-white p-8 text-center gradient-warm">
@@ -251,6 +321,8 @@ function WatchPage() {
               </div>
             )}
           </div>
+          {!locked && seekControls("bar")}
+
           <div className="mt-4 flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <h1 className="text-xl md:text-2xl font-display font-bold">{video.title}</h1>
