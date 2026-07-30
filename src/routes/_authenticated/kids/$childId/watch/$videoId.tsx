@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listChildProfiles } from "@/lib/parent.functions";
 import { getSafeVideo, listSafeVideos, toggleFavorite, isFavorite, recordWatchTick, checkScreenTime } from "@/lib/kids.functions";
 import { KidShell } from "@/components/kid-shell";
@@ -287,14 +287,15 @@ function WatchPage() {
                 {/* Always-mounted overlay that covers YouTube's end-screen /
                     pause overlay to prevent the click-through flash. */}
                 <div
-                  className={`absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/70 backdrop-blur-sm text-white transition-opacity ${
+                  className={`absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 text-white transition-opacity ${
                     paused ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                   }`}
                 >
-                  <h2 className="text-2xl font-display font-bold">{t("player.paused")}</h2>
+                  <h2 className="text-2xl font-display font-bold [text-shadow:0_2px_8px_rgba(0,0,0,0.85)]">{t("player.paused")}</h2>
+                  {seekControls("overlay")}
                   <Button
                     size="lg"
-                    className="rounded-full"
+                    className="rounded-full shadow-lg"
                     onClick={() => {
                       try { playerRef.current?.playVideo?.(); } catch { /* ignore */ }
                       setPaused(false);
@@ -303,13 +304,14 @@ function WatchPage() {
                     <Play className="w-5 h-5 mr-2" /> {t("player.resume")}
                   </Button>
                   <Button
-                    variant="outline"
-                    className="rounded-full bg-transparent text-white border-white hover:bg-white/10 hover:text-white"
+                    variant="secondary"
+                    className="rounded-full shadow-lg"
                     onClick={() => navigate({ to: "/kids/$childId", params: { childId } as any })}
                   >
                     {t("common.back")}
                   </Button>
                 </div>
+
               </>
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-white p-8 text-center gradient-warm">
