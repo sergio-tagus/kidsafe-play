@@ -8,7 +8,7 @@ import { KidShell } from "@/components/kid-shell";
 import { VideoCard } from "@/components/video-card";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { Heart, Lock, Play, Pause, RotateCcw, RotateCw } from "lucide-react";
+import { Heart, Lock, Play, Pause, RotateCcw, RotateCw, Maximize, Minimize } from "lucide-react";
 import { toast } from "sonner";
 
 function sanitizeDescription(text: string): string {
@@ -85,10 +85,12 @@ function WatchPage() {
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const heartbeatRef = useRef<number | null>(null);
   const [locked, setLocked] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     if (!video) return;
@@ -106,7 +108,9 @@ function WatchPage() {
           modestbranding: 1,
           controls: 1,
           disablekb: 1,
-          fs: 1,
+          // Use our own fullscreen (on the wrapper) so the custom controls and
+          // the pause overlay stay visible instead of being hidden by the iframe.
+          fs: 0,
           iv_load_policy: 3,
           playsinline: 1,
           autoplay: 1,
@@ -209,6 +213,21 @@ function WatchPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [locked, seekBy, togglePlay]);
 
+  const toggleFullscreen = useCallback(async () => {
+    try {
+      const el = stageRef.current;
+      if (!el) return;
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await (el.requestFullscreen?.() ?? (el as any).webkitRequestFullscreen?.());
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
   const seekControls = (variant: "bar" | "overlay") => (
     <div className={`flex items-center justify-center gap-3 ${variant === "bar" ? "mt-3" : ""}`}>
       <Button
@@ -237,6 +256,15 @@ function WatchPage() {
       >
         {SEEK_SECONDS}s <RotateCw className="w-6 h-6 ml-2" />
       </Button>
+      <Button
+        size="lg"
+        variant={variant === "overlay" ? "secondary" : "outline"}
+        className="rounded-full h-14 w-14 p-0 shadow-lg"
+        aria-label={isFullscreen ? t("player.exitFullscreen") : t("player.fullscreen")}
+        onClick={toggleFullscreen}
+      >
+        {isFullscreen ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
+      </Button>
     </div>
   );
 
@@ -255,7 +283,13 @@ function WatchPage() {
       ) : (
         <div className="max-w-6xl mx-auto">
           <div
-            className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl"
+            ref={stageRef}
+            className={isFullscreen ? "bg-black flex flex-col items-center justify-center gap-4 w-full h-full p-4" : ""}
+          >
+          <div
+            className={`relative rounded-2xl overflow-hidden bg-black shadow-2xl ${
+              isFullscreen ? "w-full max-w-[min(100%,calc((100vh-11rem)*16/9))] aspect-video" : "aspect-video"
+            }`}
             onContextMenu={(e) => e.preventDefault()}
             onDragStart={(e) => e.preventDefault()}
           >
@@ -322,6 +356,7 @@ function WatchPage() {
             )}
           </div>
           {!locked && seekControls("bar")}
+          </div>
 
           <div className="mt-4 flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
