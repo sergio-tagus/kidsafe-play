@@ -321,6 +321,8 @@ function WatchPage() {
               </div>
             )}
           </div>
+          {!locked && seekControls("bar")}
+
           <div className="mt-4 flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <h1 className="text-xl md:text-2xl font-display font-bold">{video.title}</h1>
