@@ -283,7 +283,13 @@ function WatchPage() {
       ) : (
         <div className="max-w-6xl mx-auto">
           <div
-            className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl"
+            ref={stageRef}
+            className={isFullscreen ? "bg-black flex flex-col items-center justify-center gap-4 w-full h-full p-4" : ""}
+          >
+          <div
+            className={`relative rounded-2xl overflow-hidden bg-black shadow-2xl ${
+              isFullscreen ? "w-full max-w-[min(100%,calc((100vh-11rem)*16/9))] aspect-video" : "aspect-video"
+            }`}
             onContextMenu={(e) => e.preventDefault()}
             onDragStart={(e) => e.preventDefault()}
           >
