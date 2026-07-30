@@ -356,6 +356,7 @@ function WatchPage() {
             )}
           </div>
           {!locked && seekControls("bar")}
+          </div>
 
           <div className="mt-4 flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
