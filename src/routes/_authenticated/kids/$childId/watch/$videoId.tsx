@@ -8,7 +8,7 @@ import { KidShell } from "@/components/kid-shell";
 import { VideoCard } from "@/components/video-card";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { Heart, Lock, Play, Pause, RotateCcw, RotateCw } from "lucide-react";
+import { Heart, Lock, Play, Pause, RotateCcw, RotateCw, Maximize, Minimize } from "lucide-react";
 import { toast } from "sonner";
 
 function sanitizeDescription(text: string): string {
@@ -106,7 +106,9 @@ function WatchPage() {
           modestbranding: 1,
           controls: 1,
           disablekb: 1,
-          fs: 1,
+          // Use our own fullscreen (on the wrapper) so the custom controls and
+          // the pause overlay stay visible instead of being hidden by the iframe.
+          fs: 0,
           iv_load_policy: 3,
           playsinline: 1,
           autoplay: 1,
