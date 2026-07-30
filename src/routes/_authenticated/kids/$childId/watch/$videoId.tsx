@@ -176,6 +176,72 @@ function WatchPage() {
 
   const remaining = useMemo(() => screen?.remaining ?? 0, [screen]);
 
+  const seekBy = useCallback((delta: number) => {
+    try {
+      const p = playerRef.current;
+      if (!p?.seekTo) return;
+      const current = p.getCurrentTime?.() ?? 0;
+      const total = p.getDuration?.() ?? 0;
+      const next = Math.min(total > 0 ? total : Infinity, Math.max(0, current + delta));
+      p.seekTo(next, true);
+    } catch { /* ignore */ }
+  }, []);
+
+  const togglePlay = useCallback(() => {
+    try {
+      const p = playerRef.current;
+      if (!p) return;
+      if (p.getPlayerState?.() === 1) p.pauseVideo?.();
+      else { p.playVideo?.(); setPaused(false); }
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    if (locked) return;
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el && ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName)) return;
+      if (e.key === "ArrowLeft") { e.preventDefault(); seekBy(-SEEK_SECONDS); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); seekBy(SEEK_SECONDS); }
+      else if (e.key === " " || e.key === "Enter") { e.preventDefault(); togglePlay(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [locked, seekBy, togglePlay]);
+
+  const seekControls = (variant: "bar" | "overlay") => (
+    <div className={`flex items-center justify-center gap-3 ${variant === "bar" ? "mt-3" : ""}`}>
+      <Button
+        size="lg"
+        variant={variant === "overlay" ? "secondary" : "outline"}
+        className="rounded-full h-14 px-6 text-base font-semibold shadow-lg"
+        aria-label={t("player.rewind", { s: SEEK_SECONDS })}
+        onClick={() => seekBy(-SEEK_SECONDS)}
+      >
+        <RotateCcw className="w-6 h-6 mr-2" /> {SEEK_SECONDS}s
+      </Button>
+      <Button
+        size="lg"
+        className="rounded-full h-16 w-16 p-0 shadow-lg"
+        aria-label={t("player.playPause")}
+        onClick={togglePlay}
+      >
+        {paused ? <Play className="w-7 h-7" /> : <Pause className="w-7 h-7" />}
+      </Button>
+      <Button
+        size="lg"
+        variant={variant === "overlay" ? "secondary" : "outline"}
+        className="rounded-full h-14 px-6 text-base font-semibold shadow-lg"
+        aria-label={t("player.forward", { s: SEEK_SECONDS })}
+        onClick={() => seekBy(SEEK_SECONDS)}
+      >
+        {SEEK_SECONDS}s <RotateCw className="w-6 h-6 ml-2" />
+      </Button>
+    </div>
+  );
+
+
+
   return (
     <KidShell childId={childId} child={child}>
       {isLoading ? (
