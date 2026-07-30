@@ -85,10 +85,12 @@ function WatchPage() {
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const heartbeatRef = useRef<number | null>(null);
   const [locked, setLocked] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     if (!video) return;
@@ -211,6 +213,21 @@ function WatchPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [locked, seekBy, togglePlay]);
 
+  const toggleFullscreen = useCallback(async () => {
+    try {
+      const el = stageRef.current;
+      if (!el) return;
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await (el.requestFullscreen?.() ?? (el as any).webkitRequestFullscreen?.());
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
   const seekControls = (variant: "bar" | "overlay") => (
     <div className={`flex items-center justify-center gap-3 ${variant === "bar" ? "mt-3" : ""}`}>
       <Button
@@ -238,6 +255,15 @@ function WatchPage() {
         onClick={() => seekBy(SEEK_SECONDS)}
       >
         {SEEK_SECONDS}s <RotateCw className="w-6 h-6 ml-2" />
+      </Button>
+      <Button
+        size="lg"
+        variant={variant === "overlay" ? "secondary" : "outline"}
+        className="rounded-full h-14 w-14 p-0 shadow-lg"
+        aria-label={isFullscreen ? t("player.exitFullscreen") : t("player.fullscreen")}
+        onClick={toggleFullscreen}
+      >
+        {isFullscreen ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
       </Button>
     </div>
   );
