@@ -8,7 +8,7 @@ import { KidShell } from "@/components/kid-shell";
 import { VideoCard } from "@/components/video-card";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { Heart, Lock, Play } from "lucide-react";
+import { Heart, Lock, Play, Pause, RotateCcw, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 
 function sanitizeDescription(text: string): string {
@@ -32,6 +32,8 @@ function sanitizeDescription(text: string): string {
 export const Route = createFileRoute("/_authenticated/kids/$childId/watch/$videoId")({
   component: WatchPage,
 });
+
+const SEEK_SECONDS = 10;
 
 // Load YouTube IFrame API once
 let ytPromise: Promise<any> | null = null;
