@@ -5,6 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { LanguageSwitcher } from "./language-switcher";
 import { Button } from "@/components/ui/button";
+import { OfflineBanner } from "@/components/offline-banner";
 
 export function KidShell({ childId, child, children }: { childId: string; child?: { profile_name: string; avatar_emoji: string } | null; children: ReactNode }) {
   const { t } = useI18n();
@@ -26,7 +27,7 @@ export function KidShell({ childId, child, children }: { childId: string; child?
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
       {/* Sidebar - desktop */}
       <aside className="hidden md:flex md:w-60 md:flex-col md:sticky md:top-0 md:h-screen bg-sidebar border-r border-sidebar-border p-4">
-        <Link to="/" className="flex items-center gap-2 px-2 py-3 mb-4">
+        <Link to="/" search={{ switch: true } as any} className="flex items-center gap-2 px-2 py-3 mb-4">
           <span className="text-3xl">🦄</span>
           <span className="font-display font-bold text-lg text-sidebar-foreground">SafeTube</span>
         </Link>
@@ -57,7 +58,7 @@ export function KidShell({ childId, child, children }: { childId: string; child?
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
         <header className="sticky top-0 z-30 flex items-center gap-2 bg-background/95 backdrop-blur border-b border-border px-4 py-3">
-          <Link to="/" className="md:hidden text-2xl">🦄</Link>
+          <Link to="/" search={{ switch: true } as any} className="md:hidden text-2xl">🦄</Link>
           <Link
             to="/kids/$childId/search"
             params={{ childId } as any}
@@ -69,7 +70,7 @@ export function KidShell({ childId, child, children }: { childId: string; child?
             <Button variant="ghost" size="icon" className="rounded-full"><Heart className="w-5 h-5" /></Button>
           </Link>
           <LanguageSwitcher />
-          <Link to="/">
+          <Link to="/" search={{ switch: true } as any} title={t("profile.switch")}>
             <Button variant="ghost" size="icon" className="rounded-full"><ArrowLeft className="w-5 h-5" /></Button>
           </Link>
           <Button variant="ghost" size="icon" className="rounded-full hidden sm:inline-flex" onClick={() => signOut()}>
@@ -77,6 +78,7 @@ export function KidShell({ childId, child, children }: { childId: string; child?
           </Button>
         </header>
 
+        <OfflineBanner />
         <main className="flex-1 px-4 md:px-8 py-6 pb-24 md:pb-6">{children}</main>
 
         {/* Bottom nav - mobile */}
