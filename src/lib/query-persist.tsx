@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import type { QueryClient } from "@tanstack/react-query";
+import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import type { PersistedClient, Persister } from "@tanstack/react-query-persist-client";
 import { get, set, del } from "idb-keyval";
@@ -55,10 +55,10 @@ export function OfflinePersistProvider({
     setPersister(createIdbPersister());
   }, []);
 
-  // On the server (and on the very first client render) render the plain
-  // provider; persistence only makes sense in the browser.
+  // During SSR and the first client render there is no persister yet, so the
+  // plain provider keeps markup identical and avoids hydration mismatches.
   if (!persister) {
-    return <PlainProvider client={client}>{children}</PlainProvider>;
+    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   }
 
   return (
@@ -69,9 +69,4 @@ export function OfflinePersistProvider({
       {children}
     </PersistQueryClientProvider>
   );
-}
-
-function PlainProvider({ client, children }: { client: QueryClient; children: ReactNode }) {
-  const { QueryClientProvider } = require("@tanstack/react-query") as typeof import("@tanstack/react-query");
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }
