@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listChildProfiles } from "@/lib/parent.functions";
 import { getSafeVideo, listSafeVideos, toggleFavorite, isFavorite, recordWatchTick, checkScreenTime } from "@/lib/kids.functions";
 import { KidShell } from "@/components/kid-shell";
+import { useOnline } from "@/components/offline-banner";
 import { VideoCard } from "@/components/video-card";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,7 @@ function WatchPage() {
   const tickFn = useServerFn(recordWatchTick);
   const checkFn = useServerFn(checkScreenTime);
 
+  const online = useOnline();
   const { data: kids = [] } = useQuery({ queryKey: ["kids"], queryFn: () => kidsFn() });
   const child = kids.find((k: any) => k.id === childId) ?? null;
 
