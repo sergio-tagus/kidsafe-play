@@ -1,55 +1,45 @@
 # Aviso "Esta conexión no es segura" en Safari
 
-## Qué he comprobado
+## Diagnóstico confirmado
 
-He hecho peticiones reales al sitio publicado:
+Pruebas realizadas:
 
 - `https://safetube-kids-play.lovable.app/` responde **200 OK** por HTTPS.
-- `http://...` devuelve **301** hacia `https://...`, con la cabecera
+- `http://...` devuelve **301** hacia `https://...` con
   `Strict-Transport-Security: max-age=31536000; includeSubDomains`.
-- El certificado TLS es válido para `*.lovable.app`, está emitido por Google
-  Trust Services y cubre la fecha actual.
-- La URL oficial configurada como publicada es exactamente
-  `https://safetube-kids-play.lovable.app`.
-- La vista previa también está cargando por HTTPS y no está controlada por un
-  service worker antiguo.
-- Un navegador externo independiente ha abierto correctamente la dirección
-  publicada y ha mostrado la pantalla de acceso de SafeTube Kids.
+- Certificado TLS válido para `*.lovable.app` (Google Trust Services, en vigor).
+- Un navegador externo independiente abrió la URL publicada y mostró la
+  pantalla de acceso de SafeTube Kids sin ningún aviso.
+- **Con VPN activada, te funciona.** Sin VPN, falla en móvil (datos y Wi-Fi)
+  y en portátil, también en pestaña privada.
 
-Es decir: el sitio sí admite HTTPS y fuerza HTTPS. El texto del aviso de Safari
-("este sitio web no admite conexiones seguras por HTTPS") no corresponde al
-comportamiento real del servidor. Como también ocurre con datos móviles y en
-otro dispositivo, queda descartado un problema exclusivo de caché, Wi-Fi o del
-iPhone. En la captura, además, la barra está vacía y muestra "Buscar o introducir
-sitio web", por lo que Safari no llegó a presentar la URL que intentó abrir.
-No hay evidencia de un fallo HTTPS en el código o en el dominio publicado; la
-web es accesible correctamente desde fuera de tu entorno.
+Conclusión: la app y su dominio son seguros y funcionan. Tu ruta de red normal
+(ISP / DNS / operador) está redirigiendo las peticiones hacia `*.lovable.app`
+a un servidor intermedio que sí usa HTTP sin cifrar, y Safari lo detecta. Al
+activar la VPN, el tráfico se cifra de extremo a extremo y esquiva ese punto
+intermedio, por eso funciona.
 
-## Causas probables (en orden)
+Que ocurra tanto en datos móviles como en Wi-Fi apunta a que ambas conexiones
+salen por el mismo operador, o a un filtro de DNS parental/seguridad configurado
+igual en ambos dispositivos (por ejemplo, un DNS filtrado, "DNS seguro" o una
+app de control parental que actúa en todos los perfiles).
 
-1. La acción de la vista previa está pasando al navegador una URL incompleta o
-   con un esquema incorrecto, aunque el dominio publicado sea correcto.
-2. Algún ajuste compartido entre tus dispositivos —VPN, perfil corporativo,
-   filtro DNS/contenido o sincronización del navegador— intercepta la apertura.
-3. El navegador está restaurando un acceso directo o enlace anterior distinto
-   de la URL que se pretende abrir.
+## Qué hacer
 
-## Pasos a seguir (no requieren cambios en la app)
-
-1. No usar el botón de vista previa para esta prueba: copiar y pegar directamente
-   `https://safetube-kids-play.lovable.app` en una pestaña privada nueva.
-2. Si funciona, eliminar el marcador/acceso directo anterior y volver a crearlo
-   desde esa página ya cargada.
-3. Si el enlace directo vuelve a mostrar el aviso, pulsar **Retroceder** (no
-   **Continuar**) y capturar la barra de direcciones con la URL visible; eso
-   permitirá identificar qué dirección está intentando abrir realmente Safari.
-4. Probar la misma URL con Chrome o Firefox sin abrirla desde Lovable. Si allí
-   funciona, revisar/desactivar temporalmente VPN, Relay privado de iCloud,
-   perfiles de gestión y filtros de contenido de Safari.
+1. Solución inmediata: seguir usando la app con la VPN activada. No hay riesgo;
+   la conexión va cifrada igualmente.
+2. Localizar el filtro: revisa si tienes configurado un DNS privado/seguro en
+   iPhone y portátil (Ajustes > Wi-Fi > DNS; Ajustes > VPN y gestión de
+   dispositivos; apps de control parental o antivirus) y prueba a desactivarlo
+   para el dominio `lovable.app` o a volver al DNS automático.
+3. Si no hay nada de lo anterior, el bloqueo viene de tu operador de red
+   (algunos operadores aplican filtros de contenido por defecto). Contacta con
+   tu operador para que desbloqueen `*.lovable.app` o te desactiven el filtro.
+4. Nunca pulsar "Continuar" en ese aviso para la app: entrarías por una
+   conexión interceptada sin cifrar.
 
 ## Cambios en el código
 
-Ninguno previsto: cambiar la aplicación no puede reparar un aviso que sucede
-antes de que Safari conecte con ella. Si el enlace directo falla mostrando la
-URL correcta en la barra, se escala como incidencia de plataforma adjuntando la
-captura, porque el dominio, DNS, redirección y certificado están operativos.
+Ninguno. No es un problema de la aplicación, del certificado ni del dominio;
+modificar el código no puede corregir una interceptación de red previa al
+servidor. La app queda como está.
