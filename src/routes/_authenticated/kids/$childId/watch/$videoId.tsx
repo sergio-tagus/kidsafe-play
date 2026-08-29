@@ -280,7 +280,14 @@ function WatchPage() {
           <h2 className="text-xl font-display font-bold">Not available</h2>
           <Button className="mt-4 rounded-full" onClick={() => navigate({ to: "/kids/$childId", params: { childId } as any })}>{t("common.back")}</Button>
         </div>
+      ) : !online ? (
+        <div className="text-center py-20">
+          <div className="text-6xl mb-3">📡</div>
+          <h2 className="text-xl font-display font-bold">{t("offline.needsInternet")}</h2>
+          <Button className="mt-4 rounded-full" onClick={() => navigate({ to: "/kids/$childId", params: { childId } as any })}>{t("common.back")}</Button>
+        </div>
       ) : (
+
         <div className="max-w-6xl mx-auto">
           <div
             ref={stageRef}
