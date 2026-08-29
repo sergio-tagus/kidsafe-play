@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listChildProfiles } from "@/lib/parent.functions";
 import { getSafeVideo, listSafeVideos, toggleFavorite, isFavorite, recordWatchTick, checkScreenTime } from "@/lib/kids.functions";
 import { KidShell } from "@/components/kid-shell";
+import { useOnline } from "@/components/offline-banner";
 import { VideoCard } from "@/components/video-card";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,7 @@ function WatchPage() {
   const tickFn = useServerFn(recordWatchTick);
   const checkFn = useServerFn(checkScreenTime);
 
+  const online = useOnline();
   const { data: kids = [] } = useQuery({ queryKey: ["kids"], queryFn: () => kidsFn() });
   const child = kids.find((k: any) => k.id === childId) ?? null;
 
@@ -280,7 +282,14 @@ function WatchPage() {
           <h2 className="text-xl font-display font-bold">Not available</h2>
           <Button className="mt-4 rounded-full" onClick={() => navigate({ to: "/kids/$childId", params: { childId } as any })}>{t("common.back")}</Button>
         </div>
+      ) : !online ? (
+        <div className="text-center py-20">
+          <div className="text-6xl mb-3">📡</div>
+          <h2 className="text-xl font-display font-bold">{t("offline.needsInternet")}</h2>
+          <Button className="mt-4 rounded-full" onClick={() => navigate({ to: "/kids/$childId", params: { childId } as any })}>{t("common.back")}</Button>
+        </div>
       ) : (
+
         <div className="max-w-6xl mx-auto">
           <div
             ref={stageRef}

@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
@@ -15,6 +15,8 @@ import { I18nProvider } from "../lib/i18n";
 import { SessionProvider } from "../lib/session";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
+import { OfflinePersistProvider, clearOfflineCache } from "../lib/query-persist";
+import { registerServiceWorker } from "../lib/pwa";
 
 function NotFoundComponent() {
   return (
@@ -118,19 +120,28 @@ function RootComponent() {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      if (event === "SIGNED_OUT") {
+        // Never leave one account's cached catalogue behind for the next user.
+        void clearOfflineCache();
+        return;
+      }
+      queryClient.invalidateQueries();
     });
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
 
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
   return (
-    <QueryClientProvider client={queryClient}>
+    <OfflinePersistProvider client={queryClient}>
       <I18nProvider>
         <SessionProvider>
           <Outlet />
           <Toaster richColors position="top-center" />
         </SessionProvider>
       </I18nProvider>
-    </QueryClientProvider>
+    </OfflinePersistProvider>
   );
 }
