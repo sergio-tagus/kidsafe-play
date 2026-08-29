@@ -7,33 +7,42 @@ He hecho peticiones reales al sitio publicado:
 - `https://safetube-kids-play.lovable.app/` responde **200 OK** por HTTPS.
 - `http://...` devuelve **301** hacia `https://...`, con la cabecera
   `Strict-Transport-Security: max-age=31536000; includeSubDomains`.
+- El certificado TLS es válido para `*.lovable.app`, está emitido por Google
+  Trust Services y cubre la fecha actual.
+- La URL oficial configurada como publicada es exactamente
+  `https://safetube-kids-play.lovable.app`.
+- La vista previa también está cargando por HTTPS y no está controlada por un
+  service worker antiguo.
 
 Es decir: el sitio sí admite HTTPS y fuerza HTTPS. El texto del aviso de Safari
 ("este sitio web no admite conexiones seguras por HTTPS") no corresponde al
-comportamiento real del servidor, y en la captura la barra de direcciones está
-vacía (aún cargando). No es un fallo del código de la aplicación.
+comportamiento real del servidor. Como también ocurre con datos móviles y en
+otro dispositivo, queda descartado un problema exclusivo de caché, Wi-Fi o del
+iPhone. En la captura, además, la barra está vacía y muestra "Buscar o introducir
+sitio web", por lo que Safari no llegó a presentar la URL que intentó abrir.
+No hay evidencia de un fallo HTTPS en el código o en el dominio publicado.
 
 ## Causas probables (en orden)
 
-1. La dirección se abrió sin `https://` y Safari, con "Modo HTTPS" activado,
-   muestra el aviso antes de seguir la redirección.
-2. Red intermedia que intercepta el tráfico: Wi-Fi público, portal cautivo, VPN,
-   DNS familiar/filtro de contenido o antivirus con inspección SSL.
-3. Fecha/hora del dispositivo incorrecta, que invalida el certificado.
-4. Enlace antiguo de vista previa del editor ya caducado.
+1. La acción de la vista previa está pasando a Safari una URL incompleta o con
+   un esquema incorrecto, aunque el dominio publicado al copiarlo sea correcto.
+2. Safari está intentando restaurar un acceso directo o pestaña anterior con
+   una URL antigua/incompleta.
+3. Incidencia transitoria del navegador o del enlace generado por el editor.
 
 ## Pasos a seguir (no requieren cambios en la app)
 
-1. Escribir la URL completa con `https://` delante y volver a probar.
-2. Probar en datos móviles en lugar de Wi-Fi (descarta filtro/proxy de red).
-3. Ajustes > Safari > Borrar historial y datos, y reintentar.
-4. Comprobar que fecha y hora del iPhone están en automático.
-5. Si el acceso se hizo desde un icono guardado en la pantalla de inicio,
-   borrarlo y volver a añadirlo desde la URL publicada actual.
+1. No usar el botón de vista previa para esta prueba: copiar y pegar directamente
+   `https://safetube-kids-play.lovable.app` en una pestaña privada nueva.
+2. Si funciona, eliminar el marcador/acceso directo anterior y volver a crearlo
+   desde esa página ya cargada.
+3. Si el enlace directo vuelve a mostrar el aviso, pulsar **Retroceder** (no
+   **Continuar**) y capturar la barra de direcciones con la URL visible; eso
+   permitirá identificar qué dirección está intentando abrir realmente Safari.
 
 ## Cambios en el código
 
-Ninguno previsto. Si tras los pasos 1-4 el aviso persiste solo en tu dispositivo
-o red, el siguiente paso sería confirmar desde qué red/perfil ocurre; si
-ocurriera en varios dispositivos, revisaríamos la configuración de dominio y
-publicación del proyecto.
+Ninguno previsto: cambiar la aplicación no puede reparar un aviso que sucede
+antes de que Safari conecte con ella. Si el enlace directo falla mostrando la
+URL correcta en la barra, se escala como incidencia de plataforma adjuntando la
+captura, porque el dominio, DNS, redirección y certificado están operativos.
