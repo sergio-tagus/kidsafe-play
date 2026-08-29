@@ -90,7 +90,17 @@ function HomeSelector() {
             </button>
           </div>
         )}
+
+        <div className="mt-10 flex items-center justify-center gap-3 text-white/90 text-sm">
+          <Switch
+            id="auto-resume"
+            defaultChecked={typeof window !== "undefined" ? getAutoResume() : true}
+            onCheckedChange={(v) => setAutoResume(v)}
+          />
+          <label htmlFor="auto-resume">{t("offline.autoLogin")}</label>
+        </div>
       </div>
+
     </div>
   );
 }
