@@ -7,13 +7,27 @@ import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Plus, Settings, LogOut } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { Switch } from "@/components/ui/switch";
+import { getAutoResume, setAutoResume, getLastChildId } from "@/lib/auto-resume";
+import { z } from "zod";
 
 export const Route = createFileRoute("/")({
   ssr: false,
-  beforeLoad: async ({ location }) => {
-    const { supabase } = await import("@/integrations/supabase/client");
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) throw redirect({ to: "/auth", search: { next: location.href } });
+  validateSearch: (s) => z.object({ switch: z.boolean().optional() }).parse(s),
+  beforeLoad: async ({ location, search }) => {
+    // Offline: trust the persisted session instead of bouncing to /auth.
+    const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+    if (!offline) {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) throw redirect({ to: "/auth", search: { next: location.href } });
+    }
+
+    // Remember the last kid and go straight in, unless the user asked to switch.
+    if (!search.switch && getAutoResume()) {
+      const last = getLastChildId();
+      if (last) throw redirect({ to: "/kids/$childId", params: { childId: last } });
+    }
   },
   component: HomeSelector,
 });
@@ -29,6 +43,7 @@ function HomeSelector() {
     setActiveChildId(id);
     navigate({ to: "/kids/$childId", params: { childId: id } });
   };
+
 
   return (
     <div className="min-h-screen gradient-cool">
