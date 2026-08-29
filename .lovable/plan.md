@@ -1,26 +1,39 @@
-## Objetivo
+# Aviso "Esta conexión no es segura" en Safari
 
-1. Cuando el vídeo se pausa, la imagen debe verse nítida: sin capa oscura ni desenfoque. La protección contra los elementos de YouTube (pantalla final, "Más vídeos", enlaces) se mantiene.
-2. Añadir controles propios para retroceder y avanzar el vídeo X segundos (por defecto 10 s).
+## Qué he comprobado
 
-## Cambios
+He hecho peticiones reales al sitio publicado:
 
-### 1. Pausa sin oscurecido
+- `https://safetube-kids-play.lovable.app/` responde **200 OK** por HTTPS.
+- `http://...` devuelve **301** hacia `https://...`, con la cabecera
+  `Strict-Transport-Security: max-age=31536000; includeSubDomains`.
 
-En el reproductor (`src/routes/_authenticated/kids/$childId/watch/$videoId.tsx`), en la capa que aparece al pausar:
+Es decir: el sitio sí admite HTTPS y fuerza HTTPS. El texto del aviso de Safari
+("este sitio web no admite conexiones seguras por HTTPS") no corresponde al
+comportamiento real del servidor, y en la captura la barra de direcciones está
+vacía (aún cargando). No es un fallo del código de la aplicación.
 
-- Eliminar `bg-black/70` y `backdrop-blur-sm`: la capa pasa a ser transparente, así el fotograma se ve tal cual.
-- Seguir capturando los clics (mismo `pointer-events` condicional) para que no se pueda pulsar nada de la interfaz de YouTube que aparece al pausar.
-- Mantener los botones "Reanudar" y "Volver", con fondo sólido y sombra de texto suave para que sigan siendo legibles sobre la imagen.
+## Causas probables (en orden)
 
-### 2. Retroceder / avanzar X segundos
+1. La dirección se abrió sin `https://` y Safari, con "Modo HTTPS" activado,
+   muestra el aviso antes de seguir la redirección.
+2. Red intermedia que intercepta el tráfico: Wi-Fi público, portal cautivo, VPN,
+   DNS familiar/filtro de contenido o antivirus con inspección SSL.
+3. Fecha/hora del dispositivo incorrecta, que invalida el certificado.
+4. Enlace antiguo de vista previa del editor ya caducado.
 
-- Debajo del reproductor (barra propia, siempre visible): botón "−10 s", botón grande de reproducir/pausar y botón "+10 s", con iconos redondeados y tamaño táctil grande, adecuado para niños, móvil, tablet y TV (con foco visible para el mando).
-- Lógica: leer `getCurrentTime()` y llamar a `seekTo(t ± 10, true)`, acotando entre 0 y la duración del vídeo.
-- Atajos de teclado/mando: flecha izquierda/derecha para retroceder/avanzar, espacio para pausar/reanudar (solo en la página del reproductor).
-- Los mismos botones también se muestran dentro de la capa de pausa, para poder rebobinar sin reanudar antes.
-- Textos nuevos ("Retroceder 10 s", "Avanzar 10 s") añadidos a los tres idiomas en `src/lib/i18n.tsx`.
+## Pasos a seguir (no requieren cambios en la app)
 
-## Detalle técnico
+1. Escribir la URL completa con `https://` delante y volver a probar.
+2. Probar en datos móviles en lugar de Wi-Fi (descarta filtro/proxy de red).
+3. Ajustes > Safari > Borrar historial y datos, y reintentar.
+4. Comprobar que fecha y hora del iPhone están en automático.
+5. Si el acceso se hizo desde un icono guardado en la pantalla de inicio,
+   borrarlo y volver a añadirlo desde la URL publicada actual.
 
-El salto de segundos es una constante única (`SEEK_SECONDS = 10`) para poder cambiarla en un solo sitio. No se toca la lógica de tiempo de pantalla (heartbeat cada 15 s), ni el bloqueo de AirPlay/Chromecast, ni el filtrado por whitelist.
+## Cambios en el código
+
+Ninguno previsto. Si tras los pasos 1-4 el aviso persiste solo en tu dispositivo
+o red, el siguiente paso sería confirmar desde qué red/perfil ocurre; si
+ocurriera en varios dispositivos, revisaríamos la configuración de dominio y
+publicación del proyecto.
