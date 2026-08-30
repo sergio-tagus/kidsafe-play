@@ -53,5 +53,5 @@ export function useI18n() {
 export const LANGS: { code: Lang; label: string; flag: string }[] = [
   { code: "es", label: "Español", flag: "🇪🇸" },
   { code: "en", label: "English", flag: "🇺🇸" },
-  { code: "pt", label: "Português", flag: "🇧🇷" },
+  { code: "pt", label: "Português", flag: "🇵🇹" },
 ];
