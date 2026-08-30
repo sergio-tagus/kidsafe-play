@@ -104,6 +104,8 @@ export const en: Dict = {
   "parent.autoImportDone": "Imported {n} videos",
   "parent.autoCategory": "Detected category",
   "parent.subscribers": "subscribers",
+  "parent.missingFields": "Required fields are missing",
+  "parent.saved": "Saved",
   "parent.sync": "Sync",
   "parent.syncDone": "Refreshed: {n} videos",
   "parent.syncSettings": "Automatic sync",

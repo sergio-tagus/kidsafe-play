@@ -104,6 +104,8 @@ export const pt: Dict = {
   "parent.autoImportDone": "Importados {n} vídeos",
   "parent.autoCategory": "Categoria detectada",
   "parent.subscribers": "inscritos",
+  "parent.missingFields": "Faltam campos obrigatórios",
+  "parent.saved": "Guardado",
   "parent.sync": "Sincronizar",
   "parent.syncDone": "Atualizado: {n} vídeos",
   "parent.syncSettings": "Sincronização automática",
