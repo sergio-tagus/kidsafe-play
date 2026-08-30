@@ -157,4 +157,8 @@ export const pt: Dict = {
   "common.yes": "Sim",
   "common.no": "Não",
   "common.language": "Idioma",
+  "common.notAvailable": "Indisponível",
+  "common.retry": "Tente novamente",
+  "favorites.added": "Adicionado aos favoritos",
+  "favorites.removed": "Removido dos favoritos",
 };
