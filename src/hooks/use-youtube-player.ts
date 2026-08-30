@@ -240,6 +240,7 @@ export function useElementFullscreen<T extends HTMLElement>() {
       } catch {
         /* ignore */
       }
+      unlockOrientation();
       return;
     }
 
@@ -247,12 +248,14 @@ export function useElementFullscreen<T extends HTMLElement>() {
     if (typeof request === "function") {
       try {
         await request.call(el);
+        lockLandscape();
         return;
       } catch {
         /* fall through to simulated fullscreen */
       }
     }
     setSimulated(true);
+    lockLandscape();
   }, [simulated]);
 
   return { ref, isFullscreen: nativeFullscreen || simulated, isSimulatedFullscreen: simulated, toggle };
