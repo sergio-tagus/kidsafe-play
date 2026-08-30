@@ -92,7 +92,10 @@ function WatchPage() {
   const heartbeatRef = useRef<number | null>(null);
   const [locked, setLocked] = useState(false);
   const [paused, setPaused] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [nativeFullscreen, setNativeFullscreen] = useState(false);
+  const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
+  const isFullscreen = nativeFullscreen || pseudoFullscreen;
+
 
   useEffect(() => {
     if (!video) return;
@@ -216,19 +219,58 @@ function WatchPage() {
   }, [locked, seekBy, togglePlay]);
 
   const toggleFullscreen = useCallback(async () => {
+    const el = stageRef.current as any;
+    if (!el) return;
+    const canNative =
+      typeof document !== "undefined" &&
+      (document as any).fullscreenEnabled !== false &&
+      (typeof el.requestFullscreen === "function" || typeof el.webkitRequestFullscreen === "function");
+
+    if (!canNative) {
+      // iOS Safari/Chrome: no Fullscreen API on non-video elements → simulate it.
+      setPseudoFullscreen((v) => !v);
+      return;
+    }
     try {
-      const el = stageRef.current;
-      if (!el) return;
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else await (el.requestFullscreen?.() ?? (el as any).webkitRequestFullscreen?.());
-    } catch { /* ignore */ }
+      if (document.fullscreenElement || (document as any).webkitFullscreenElement) {
+        await (document.exitFullscreen?.() ?? (document as any).webkitExitFullscreen?.());
+      } else {
+        await (el.requestFullscreen?.() ?? el.webkitRequestFullscreen?.());
+      }
+    } catch {
+      setPseudoFullscreen((v) => !v);
+    }
   }, []);
 
   useEffect(() => {
-    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    const onChange = () =>
+      setNativeFullscreen(!!(document.fullscreenElement || (document as any).webkitFullscreenElement));
     document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange as EventListener);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange as EventListener);
+    };
   }, []);
+
+  // Simulated fullscreen: lock background scroll and allow Escape / back to exit.
+  useEffect(() => {
+    if (!pseudoFullscreen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" || e.key === "Backspace" || e.key === "GoBack") {
+        e.preventDefault();
+        setPseudoFullscreen(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [pseudoFullscreen]);
+
 
   const seekControls = (variant: "bar" | "overlay") => (
     <div className={`flex items-center justify-center gap-3 ${variant === "bar" ? "mt-3" : ""}`}>
@@ -293,8 +335,26 @@ function WatchPage() {
         <div className="max-w-6xl mx-auto">
           <div
             ref={stageRef}
-            className={isFullscreen ? "bg-black flex flex-col items-center justify-center gap-4 w-full h-full p-4" : ""}
+            style={
+              pseudoFullscreen
+                ? {
+                    paddingTop: "env(safe-area-inset-top)",
+                    paddingBottom: "env(safe-area-inset-bottom)",
+                    paddingLeft: "env(safe-area-inset-left)",
+                    paddingRight: "env(safe-area-inset-right)",
+                    height: "100dvh",
+                  }
+                : undefined
+            }
+            className={
+              pseudoFullscreen
+                ? "fixed inset-0 z-50 bg-black flex flex-col items-center justify-center gap-4 w-screen p-4"
+                : isFullscreen
+                  ? "bg-black flex flex-col items-center justify-center gap-4 w-full h-full p-4"
+                  : ""
+            }
           >
+
           <div
             className={`relative rounded-2xl overflow-hidden bg-black shadow-2xl ${
               isFullscreen ? "w-full max-w-[min(100%,calc((100vh-11rem)*16/9))] aspect-video" : "aspect-video"
