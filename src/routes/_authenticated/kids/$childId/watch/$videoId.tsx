@@ -222,14 +222,22 @@ function WatchPage() {
               )}
             </div>
             {!locked && (
-              <PlayerControls
-                variant="bar"
-                paused={paused}
-                isFullscreen={isFullscreen}
-                onSeek={seekBy}
-                onTogglePlay={togglePlay}
-                onToggleFullscreen={toggleFullscreen}
-              />
+              <div
+                className={
+                  isFullscreen
+                    ? "absolute bottom-3 left-1/2 -translate-x-1/2 z-30 rounded-full bg-black/50 backdrop-blur px-3 py-2"
+                    : ""
+                }
+              >
+                <PlayerControls
+                  variant={isFullscreen ? "overlay" : "bar"}
+                  paused={paused}
+                  isFullscreen={isFullscreen}
+                  onSeek={seekBy}
+                  onTogglePlay={togglePlay}
+                  onToggleFullscreen={toggleFullscreen}
+                />
+              </div>
             )}
           </div>
 
