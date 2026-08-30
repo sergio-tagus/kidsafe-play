@@ -8,13 +8,24 @@ export function VideoCard({ video, childId }: { video: SafeVideo; childId: strin
   return (
     <Link
       to="/kids/$childId/watch/$videoId"
-      params={{ childId, videoId: video.youtube_video_id } as any}
-      className="group block rounded-2xl overflow-hidden bg-card shadow-md hover:shadow-xl transition-all hover:-translate-y-1"
+      params={{ childId, videoId: video.youtube_video_id }}
+      className="group block rounded-2xl overflow-hidden bg-card shadow-md transition-all hover:shadow-xl hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
       <div className="relative aspect-video bg-muted overflow-hidden">
-        <img src={thumb} alt={video.title} loading="lazy" className="w-full h-full object-cover" />
+        <img
+          src={thumb}
+          alt={video.title}
+          loading="lazy"
+          decoding="async"
+          width={480}
+          height={270}
+          className="w-full h-full object-cover"
+        />
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-          <PlayCircle className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+          <PlayCircle
+            className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity"
+            aria-hidden="true"
+          />
         </div>
       </div>
       <div className="p-3">
@@ -39,6 +50,21 @@ export function VideoRow({ title, videos, childId }: { title: string; videos: Sa
   );
 }
 
+/** Skeleton grid used while a catalogue row is loading. */
+export function VideoGridSkeleton({ count = 8 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4" aria-hidden="true">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="animate-pulse">
+          <div className="aspect-video rounded-2xl bg-muted" />
+          <div className="mt-2 h-4 w-4/5 rounded-full bg-muted" />
+          <div className="mt-1 h-3 w-1/2 rounded-full bg-muted" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function FavoriteBadge({ favorited }: { favorited: boolean }) {
-  return <Heart className={`w-5 h-5 ${favorited ? "fill-fun-pink text-fun-pink" : ""}`} />;
+  return <Heart className={`w-5 h-5 ${favorited ? "fill-fun-pink text-fun-pink" : ""}`} aria-hidden="true" />;
 }
