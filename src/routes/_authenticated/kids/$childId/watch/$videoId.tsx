@@ -92,7 +92,10 @@ function WatchPage() {
   const heartbeatRef = useRef<number | null>(null);
   const [locked, setLocked] = useState(false);
   const [paused, setPaused] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [nativeFullscreen, setNativeFullscreen] = useState(false);
+  const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
+  const isFullscreen = nativeFullscreen || pseudoFullscreen;
+
 
   useEffect(() => {
     if (!video) return;
