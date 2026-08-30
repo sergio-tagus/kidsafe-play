@@ -94,7 +94,13 @@ function WatchPage() {
   });
 
   const locked = outOfTime || blocked;
-  const { ref: stageRef, isFullscreen, toggle: toggleFullscreen } = useElementFullscreen<HTMLDivElement>();
+  const {
+    ref: stageRef,
+    isFullscreen,
+    isSimulatedFullscreen,
+    toggle: toggleFullscreen,
+  } = useElementFullscreen<HTMLDivElement>();
+
 
   useEffect(() => {
     if (locked) return;
