@@ -335,8 +335,26 @@ function WatchPage() {
         <div className="max-w-6xl mx-auto">
           <div
             ref={stageRef}
-            className={isFullscreen ? "bg-black flex flex-col items-center justify-center gap-4 w-full h-full p-4" : ""}
+            style={
+              pseudoFullscreen
+                ? {
+                    paddingTop: "env(safe-area-inset-top)",
+                    paddingBottom: "env(safe-area-inset-bottom)",
+                    paddingLeft: "env(safe-area-inset-left)",
+                    paddingRight: "env(safe-area-inset-right)",
+                    height: "100dvh",
+                  }
+                : undefined
+            }
+            className={
+              pseudoFullscreen
+                ? "fixed inset-0 z-50 bg-black flex flex-col items-center justify-center gap-4 w-screen p-4"
+                : isFullscreen
+                  ? "bg-black flex flex-col items-center justify-center gap-4 w-full h-full p-4"
+                  : ""
+            }
           >
+
           <div
             className={`relative rounded-2xl overflow-hidden bg-black shadow-2xl ${
               isFullscreen ? "w-full max-w-[min(100%,calc((100vh-11rem)*16/9))] aspect-video" : "aspect-video"
