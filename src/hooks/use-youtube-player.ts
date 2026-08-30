@@ -206,6 +206,23 @@ export function useElementFullscreen<T extends HTMLElement>() {
     };
   }, [simulated]);
 
+  const lockLandscape = () => {
+    try {
+      const o = (window.screen as any)?.orientation;
+      if (o?.lock && window.matchMedia("(pointer: coarse)").matches) void o.lock("landscape")?.catch?.(() => {});
+    } catch {
+      /* not supported (iOS Safari) */
+    }
+  };
+
+  const unlockOrientation = () => {
+    try {
+      (window.screen as any)?.orientation?.unlock?.();
+    } catch {
+      /* ignore */
+    }
+  };
+
   const toggle = useCallback(async () => {
     const el = ref.current as any;
     if (!el) return;
@@ -213,6 +230,7 @@ export function useElementFullscreen<T extends HTMLElement>() {
 
     if (simulated) {
       setSimulated(false);
+      unlockOrientation();
       return;
     }
 
@@ -222,6 +240,7 @@ export function useElementFullscreen<T extends HTMLElement>() {
       } catch {
         /* ignore */
       }
+      unlockOrientation();
       return;
     }
 
@@ -229,12 +248,14 @@ export function useElementFullscreen<T extends HTMLElement>() {
     if (typeof request === "function") {
       try {
         await request.call(el);
+        lockLandscape();
         return;
       } catch {
         /* fall through to simulated fullscreen */
       }
     }
     setSimulated(true);
+    lockLandscape();
   }, [simulated]);
 
   return { ref, isFullscreen: nativeFullscreen || simulated, isSimulatedFullscreen: simulated, toggle };
