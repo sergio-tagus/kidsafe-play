@@ -160,16 +160,18 @@ function WatchPage() {
             ref={stageRef}
             className={
               isFullscreen
-                ? `bg-black flex flex-col items-center justify-center gap-4 w-full h-full p-4 ${
-                    isSimulatedFullscreen ? "fixed inset-0 z-50 h-[100dvh]" : ""
+                ? `bg-black relative flex flex-col items-center justify-center w-full h-full ${
+                    isSimulatedFullscreen ? "fixed inset-0 z-50 h-[100dvh] w-[100dvw]" : ""
                   }`
                 : ""
             }
           >
 
             <div
-              className={`relative rounded-2xl overflow-hidden bg-black shadow-2xl ${
-                isFullscreen ? "w-full max-w-[min(100%,calc((100vh-11rem)*16/9))] aspect-video" : "aspect-video"
+              className={`relative overflow-hidden bg-black ${
+                isFullscreen
+                  ? "w-full max-w-[min(100dvw,calc(100dvh*16/9))] aspect-video"
+                  : "aspect-video rounded-2xl shadow-2xl"
               }`}
               onContextMenu={(e) => e.preventDefault()}
               onDragStart={(e) => e.preventDefault()}
