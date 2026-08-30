@@ -1,26 +1,20 @@
-## Objetivo
+## Problema
 
-1. Cuando el vídeo se pausa, la imagen debe verse nítida: sin capa oscura ni desenfoque. La protección contra los elementos de YouTube (pantalla final, "Más vídeos", enlaces) se mantiene.
-2. Añadir controles propios para retroceder y avanzar el vídeo X segundos (por defecto 10 s).
+En el iPhone (Safari y Chrome, que usa el mismo motor) el botón de pantalla completa no hace nada. El reproductor pide pantalla completa sobre un `div` propio (`stageRef`) con la Fullscreen API; iOS solo permite pantalla completa nativa sobre elementos `<video>`, no sobre `div`. Por eso `requestFullscreen` no existe o falla en silencio.
 
-## Cambios
+## Solución
 
-### 1. Pausa sin oscurecido
+Añadir un modo "pantalla completa simulada" que se usa cuando la API nativa no está disponible (iPhone):
 
-En el reproductor (`src/routes/_authenticated/kids/$childId/watch/$videoId.tsx`), en la capa que aparece al pausar:
-
-- Eliminar `bg-black/70` y `backdrop-blur-sm`: la capa pasa a ser transparente, así el fotograma se ve tal cual.
-- Seguir capturando los clics (mismo `pointer-events` condicional) para que no se pueda pulsar nada de la interfaz de YouTube que aparece al pausar.
-- Mantener los botones "Reanudar" y "Volver", con fondo sólido y sombra de texto suave para que sigan siendo legibles sobre la imagen.
-
-### 2. Retroceder / avanzar X segundos
-
-- Debajo del reproductor (barra propia, siempre visible): botón "−10 s", botón grande de reproducir/pausar y botón "+10 s", con iconos redondeados y tamaño táctil grande, adecuado para niños, móvil, tablet y TV (con foco visible para el mando).
-- Lógica: leer `getCurrentTime()` y llamar a `seekTo(t ± 10, true)`, acotando entre 0 y la duración del vídeo.
-- Atajos de teclado/mando: flecha izquierda/derecha para retroceder/avanzar, espacio para pausar/reanudar (solo en la página del reproductor).
-- Los mismos botones también se muestran dentro de la capa de pausa, para poder rebobinar sin reanudar antes.
-- Textos nuevos ("Retroceder 10 s", "Avanzar 10 s") añadidos a los tres idiomas en `src/lib/i18n.tsx`.
+1. Detectar soporte: si el contenedor no tiene `requestFullscreen`/`webkitRequestFullscreen`, activar el modo simulado.
+2. Modo simulado: el contenedor del reproductor pasa a ocupar toda la ventana (posición fija, fondo negro, por encima del resto, respetando el notch con safe-area) y se bloquea el scroll de fondo mientras está activo.
+3. El botón alterna igual que ahora y muestra el icono correcto; también se sale con la tecla Escape / botón "atrás" del mando.
+4. Los controles propios (−10 s, reproducir/pausar, +10 s, salir de pantalla completa) y la capa de pausa siguen visibles y utilizables en ambos modos, igual que ya ocurre en escritorio.
+5. En navegadores con API nativa no cambia nada: se sigue usando la pantalla completa real.
 
 ## Detalle técnico
 
-El salto de segundos es una constante única (`SEEK_SECONDS = 10`) para poder cambiarla en un solo sitio. No se toca la lógica de tiempo de pantalla (heartbeat cada 15 s), ni el bloqueo de AirPlay/Chromecast, ni el filtrado por whitelist.
+- En `src/routes/_authenticated/kids/$childId/watch/$videoId.tsx`: añadir estado `pseudoFullscreen`, comprobar `document.fullscreenEnabled` y la existencia de `requestFullscreen`/`webkitRequestFullscreen` sobre `stageRef`, y usar el fallback CSS (`fixed inset-0 z-50 bg-black` + `padding` con `env(safe-area-inset-*)`) cuando no haya soporte.
+- Mantener `isFullscreen` como valor derivado (nativo o simulado) para no duplicar la lógica de los estilos ya existentes del escenario.
+- Bloquear `document.body` con `overflow: hidden` mientras el modo simulado esté activo y restaurarlo al salir/desmontar.
+- No se toca la lógica de tiempo de pantalla, el bloqueo de AirPlay/Chromecast ni el filtrado por whitelist. No hacen falta textos nuevos.
