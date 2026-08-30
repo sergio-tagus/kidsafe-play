@@ -166,27 +166,77 @@ export function useYouTubePlayer({ videoId, disabled, onHeartbeat, heartbeatMs =
   return { containerRef, paused, blocked, seekBy, togglePlay, play };
 }
 
-/** Fullscreens an arbitrary wrapper element so React overlays stay on top. */
+/**
+ * Fullscreens an arbitrary wrapper element so React overlays stay on top.
+ *
+ * iOS Safari has no element Fullscreen API (only `<video>.webkitEnterFullscreen`,
+ * which we cannot reach inside the YouTube iframe), so we fall back to a
+ * CSS-based fullscreen that fixes the wrapper over the viewport.
+ */
 export function useElementFullscreen<T extends HTMLElement>() {
   const ref = useRef<T>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [nativeFullscreen, setNativeFullscreen] = useState(false);
+  const [simulated, setSimulated] = useState(false);
 
   useEffect(() => {
-    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    const onChange = () => {
+      const d = document as any;
+      setNativeFullscreen(!!(document.fullscreenElement || d.webkitFullscreenElement));
+    };
     document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange as EventListener);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange as EventListener);
+    };
   }, []);
+
+  // Lock body scroll and allow Escape to leave the simulated mode.
+  useEffect(() => {
+    if (!simulated) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSimulated(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [simulated]);
 
   const toggle = useCallback(async () => {
-    try {
-      const el = ref.current;
-      if (!el) return;
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else await (el.requestFullscreen?.() ?? (el as any).webkitRequestFullscreen?.());
-    } catch {
-      /* ignore */
-    }
-  }, []);
+    const el = ref.current as any;
+    if (!el) return;
+    const d = document as any;
 
-  return { ref, isFullscreen, toggle };
+    if (simulated) {
+      setSimulated(false);
+      return;
+    }
+
+    if (document.fullscreenElement || d.webkitFullscreenElement) {
+      try {
+        await (document.exitFullscreen?.() ?? d.webkitExitFullscreen?.());
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+
+    const request = el.requestFullscreen ?? el.webkitRequestFullscreen ?? el.msRequestFullscreen;
+    if (typeof request === "function") {
+      try {
+        await request.call(el);
+        return;
+      } catch {
+        /* fall through to simulated fullscreen */
+      }
+    }
+    setSimulated(true);
+  }, [simulated]);
+
+  return { ref, isFullscreen: nativeFullscreen || simulated, isSimulatedFullscreen: simulated, toggle };
 }
+

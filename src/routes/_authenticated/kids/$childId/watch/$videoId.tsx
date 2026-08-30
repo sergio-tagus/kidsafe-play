@@ -94,7 +94,13 @@ function WatchPage() {
   });
 
   const locked = outOfTime || blocked;
-  const { ref: stageRef, isFullscreen, toggle: toggleFullscreen } = useElementFullscreen<HTMLDivElement>();
+  const {
+    ref: stageRef,
+    isFullscreen,
+    isSimulatedFullscreen,
+    toggle: toggleFullscreen,
+  } = useElementFullscreen<HTMLDivElement>();
+
 
   useEffect(() => {
     if (locked) return;
@@ -152,8 +158,15 @@ function WatchPage() {
         <div className="max-w-6xl mx-auto">
           <div
             ref={stageRef}
-            className={isFullscreen ? "bg-black flex flex-col items-center justify-center gap-4 w-full h-full p-4" : ""}
+            className={
+              isFullscreen
+                ? `bg-black flex flex-col items-center justify-center gap-4 w-full h-full p-4 ${
+                    isSimulatedFullscreen ? "fixed inset-0 z-50 h-[100dvh]" : ""
+                  }`
+                : ""
+            }
           >
+
             <div
               className={`relative rounded-2xl overflow-hidden bg-black shadow-2xl ${
                 isFullscreen ? "w-full max-w-[min(100%,calc((100vh-11rem)*16/9))] aspect-video" : "aspect-video"
