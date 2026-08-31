@@ -162,6 +162,7 @@ function WhitelistPage() {
     const startedAt = new Date().toISOString();
     setBulkRunning(true);
     setBulkCancel(false);
+    bulkCancelRef.current = false;
     let ok = 0, videos = 0, pending = 0, units = 0;
     const errs: { channel: string; error: string }[] = [];
     for (let i = 0; i < targets.length; i++) {
