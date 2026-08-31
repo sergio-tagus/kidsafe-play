@@ -124,13 +124,29 @@ export const Route = createFileRoute("/api/public/hooks/sync-whitelist")({
                   .upsert(rows, { onConflict: "parent_user_id,youtube_video_id" });
                 if (upErr) throw new Error(upErr.message);
                 importedVideos += rows.length;
+                runVideos += rows.length;
               }
               processedChannels++;
+              runChannels++;
             } catch (e: any) {
               errors.push({ parent: s.parent_user_id, channel: ch.youtube_channel_id, error: String(e?.message ?? e) });
+              runErrors.push({ channel: ch.youtube_channel_id, error: String(e?.message ?? e) });
               console.error("[sync-whitelist] channel failed", ch.youtube_channel_id, e);
+            } finally {
+              restoreMeter();
+              runUnits += meter.units;
+              await recordUsage(supabaseAdmin, s.parent_user_id, meter, ch.id);
             }
           }
+
+          await logSyncRun(supabaseAdmin, s.parent_user_id, {
+            source: "cron",
+            startedAt: runStartedAt,
+            channelsProcessed: runChannels,
+            videosImported: runVideos,
+            unitsUsed: runUnits,
+            errors: runErrors.length ? runErrors : null,
+          });
 
           await supabaseAdmin
             .from("sync_settings")
