@@ -18,6 +18,7 @@ export function ParentShell({ children }: { children: ReactNode }) {
     { to: "/parent/whitelist", label: t("parent.whitelist"), icon: ListChecks, exact: false },
     { to: "/parent/categories", label: t("parent.categories"), icon: Tags, exact: false },
     { to: "/parent/history", label: t("parent.history"), icon: History, exact: false },
+    { to: "/parent/api-usage", label: t("parent.apiUsage"), icon: Gauge, exact: false },
   ] as const;
 
   return (
