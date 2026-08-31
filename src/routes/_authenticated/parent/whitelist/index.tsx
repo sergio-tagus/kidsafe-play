@@ -83,7 +83,7 @@ function WhitelistPage() {
       if (fCategory !== "all" && c.category !== fCategory) return false;
       if (fStatus === "active" && !c.active) return false;
       if (fStatus === "inactive" && c.active) return false;
-      if (fLanguage !== "all" && (c.language || "").trim().toLowerCase() !== fLanguage) return false;
+      if (fLanguage !== "all" && langCode(c) !== fLanguage) return false;
       return true;
     });
     list = [...list].sort((a, b) => {
