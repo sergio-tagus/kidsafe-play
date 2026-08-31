@@ -401,7 +401,10 @@ function WhitelistPage() {
               <SelectItem value="all">{t("parent.filterAllM")}</SelectItem>
               {languages.map((code) => (
                 <SelectItem key={code} value={code}>
-                  {langLabel(code)}
+                  <span className="inline-flex items-center gap-2">
+                    <span>{langFlag(code)}</span>
+                    {langLabel(code)}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
