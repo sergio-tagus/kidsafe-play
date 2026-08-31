@@ -330,6 +330,7 @@ export type Database = {
           created_at: string
           id: string
           language: string
+          last_synced_at: string | null
           parent_user_id: string
           pending_updates: Json | null
           pending_updates_at: string | null
@@ -345,6 +346,7 @@ export type Database = {
           created_at?: string
           id?: string
           language?: string
+          last_synced_at?: string | null
           parent_user_id: string
           pending_updates?: Json | null
           pending_updates_at?: string | null
@@ -360,6 +362,7 @@ export type Database = {
           created_at?: string
           id?: string
           language?: string
+          last_synced_at?: string | null
           parent_user_id?: string
           pending_updates?: Json | null
           pending_updates_at?: string | null
