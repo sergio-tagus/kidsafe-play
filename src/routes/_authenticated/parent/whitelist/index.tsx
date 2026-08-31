@@ -20,6 +20,7 @@ import { parseYouTubeChannel } from "@/lib/youtube";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -133,6 +134,7 @@ function WhitelistPage() {
       channel_name: c.channel_name,
       channel_handle: c.channel_handle ?? "",
       channel_thumbnail_url: c.channel_thumbnail_url ?? "",
+      channel_description: c.channel_description ?? "",
       category: c.category,
       language: langCode(c),
       active: c.active,
@@ -149,6 +151,7 @@ function WhitelistPage() {
         data: {
           ...channels.find((x: any) => x.id === detailForm.id),
           channel_name: detailForm.channel_name.trim(),
+          channel_description: detailForm.channel_description?.trim() || null,
           active: detailForm.active,
         },
       });
@@ -564,7 +567,7 @@ function WhitelistPage() {
 
       {/* Channel detail dialog */}
       <Dialog open={!!detailForm} onOpenChange={(o) => !o && setDetailForm(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("parent.channelDetails")}</DialogTitle>
           </DialogHeader>
@@ -595,6 +598,15 @@ function WhitelistPage() {
                 <Input
                   value={detailForm.channel_name}
                   onChange={(e) => setDetailForm({ ...detailForm, channel_name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>{t("parent.channelDescription")}</Label>
+                <Textarea
+                  rows={5}
+                  value={detailForm.channel_description ?? ""}
+                  placeholder={t("parent.noDescription")}
+                  onChange={(e) => setDetailForm({ ...detailForm, channel_description: e.target.value })}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">

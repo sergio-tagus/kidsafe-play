@@ -1,0 +1,1 @@
+ALTER TABLE public.whitelist_channels ADD COLUMN IF NOT EXISTS channel_description text;

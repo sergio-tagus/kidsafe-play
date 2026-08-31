@@ -90,6 +90,7 @@ const channelInput = z.object({
   channel_name: z.string().min(1).max(200),
   channel_handle: z.string().max(200).nullable().optional(),
   channel_thumbnail_url: z.string().url().nullable().optional().or(z.literal("")),
+  channel_description: z.string().max(5000).nullable().optional(),
   category: categorySlug,
   active: z.boolean().default(true),
 });
@@ -104,6 +105,7 @@ export const upsertWhitelistChannel = createServerFn({ method: "POST" })
       channel_name: data.channel_name,
       channel_handle: data.channel_handle || null,
       channel_thumbnail_url: data.channel_thumbnail_url || null,
+      channel_description: data.channel_description?.trim() || null,
       category: data.category,
       active: data.active,
     };
@@ -260,6 +262,7 @@ export const previewChannelFromUrl = createServerFn({ method: "POST" })
       channel_name: ch.title,
       channel_handle: ch.handle,
       channel_thumbnail_url: ch.thumbnail,
+      channel_description: ch.description?.trim() || null,
       subscriberCount: ch.subscriberCount,
       videoCount: ch.videoCount,
       category,
@@ -314,7 +317,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
     // Upsert channel
     const { data: existing } = await context.supabase
       .from("whitelist_channels")
-      .select("id, language")
+      .select("id, language, channel_description")
       .eq("parent_user_id", context.userId)
       .eq("youtube_channel_id", ch.id)
       .maybeSingle();
@@ -322,12 +325,14 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
     let channelRowId: string;
     if (existing) {
       const keepLang = existing.language && existing.language !== "unknown";
+      const keepDesc = (existing as any).channel_description?.trim();
       const { error } = await context.supabase
         .from("whitelist_channels")
         .update({
           channel_name: ch.title,
           channel_handle: ch.handle,
           channel_thumbnail_url: ch.thumbnail,
+          channel_description: keepDesc || ch.description?.trim() || null,
           category,
           active: true,
           language: keepLang ? existing.language : (ch.language ?? "unknown"),
@@ -344,6 +349,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
           channel_name: ch.title,
           channel_handle: ch.handle,
           channel_thumbnail_url: ch.thumbnail,
+          channel_description: ch.description?.trim() || null,
           category,
           active: true,
           language: ch.language ?? "unknown",
@@ -376,7 +382,7 @@ export const refreshChannelVideos = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: ch, error } = await context.supabase
       .from("whitelist_channels")
-      .select("id, youtube_channel_id, language")
+      .select("id, youtube_channel_id, language, channel_description")
       .eq("id", data.channelId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -384,11 +390,16 @@ export const refreshChannelVideos = createServerFn({ method: "POST" })
 
     const { fetchChannel } = await import("@/lib/youtube.server");
     const yt = await fetchChannel(ch.youtube_channel_id);
-    // Never overwrite a language the parent set manually.
-    if (!ch.language || ch.language === "unknown") {
+    // Never overwrite a language / description the parent set manually.
+    const patch: { language?: string; channel_description?: string } = {};
+    if (!ch.language || ch.language === "unknown") patch.language = yt.language ?? "unknown";
+    if (!(ch as any).channel_description?.trim() && yt.description?.trim()) {
+      patch.channel_description = yt.description.trim();
+    }
+    if (Object.keys(patch).length) {
       const { error: updErr } = await context.supabase
         .from("whitelist_channels")
-        .update({ language: yt.language ?? "unknown" })
+        .update(patch)
         .eq("id", ch.id);
       if (updErr) throw new Error(updErr.message);
     }
