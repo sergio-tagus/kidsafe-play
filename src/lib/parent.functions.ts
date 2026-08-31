@@ -290,8 +290,10 @@ export const previewChannelUpdate = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!ch) throw new Error("Channel not found");
 
-    const { fetchChannel } = await import("@/lib/youtube.server");
-    const yt = await fetchChannel((ch as any).youtube_channel_id);
+    const { fetchChannel, withYtMeter } = await import("@/lib/youtube.server");
+    const { recordUsage } = await import("@/lib/api-usage.server");
+    const { result: yt, meter } = await withYtMeter(() => fetchChannel((ch as any).youtube_channel_id));
+    await recordUsage(context.supabase, context.userId, meter, (ch as any).id);
     const incoming = {
       channel_name: yt.title,
       channel_handle: yt.handle,
