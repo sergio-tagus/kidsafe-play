@@ -11,10 +11,69 @@ function key() {
   return k;
 }
 
+// ---------- Quota metering ----------
+// Official YouTube Data API v3 costs (units per call).
+const OPERATION_COST: Record<string, number> = {
+  "/search": 100,
+  "/channels": 1,
+  "/playlistItems": 1,
+  "/videos": 1,
+};
+
+export type YtMeter = {
+  units: number;
+  calls: number;
+  byOp: Record<string, { units: number; calls: number }>;
+};
+
+export function createMeter(): YtMeter {
+  return { units: 0, calls: 0, byOp: {} };
+}
+
+let activeMeter: YtMeter | null = null;
+
+/** Install a meter for subsequent calls; returns a function that restores the previous one. */
+export function setActiveMeter(meter: YtMeter): () => void {
+  const prev = activeMeter;
+  activeMeter = meter;
+  let done = false;
+  return () => {
+    if (done) return;
+    done = true;
+    activeMeter = prev;
+  };
+}
+
+/** Run `fn` while counting every YouTube API call it performs. */
+export async function withYtMeter<T>(fn: (meter: YtMeter) => Promise<T>): Promise<{ result: T; meter: YtMeter }> {
+  const meter = createMeter();
+  const prev = activeMeter;
+  activeMeter = meter;
+  try {
+    const result = await fn(meter);
+    return { result, meter };
+  } finally {
+    activeMeter = prev;
+  }
+}
+
+function meterCall(path: string) {
+  if (!activeMeter) return;
+  const op = path.replace(/^\//, "");
+  const units = OPERATION_COST[path] ?? 1;
+  activeMeter.units += units;
+  activeMeter.calls += 1;
+  const cur = activeMeter.byOp[op] ?? { units: 0, calls: 0 };
+  cur.units += units;
+  cur.calls += 1;
+  activeMeter.byOp[op] = cur;
+}
+
 async function ytFetch<T>(path: string, params: Record<string, string | number | undefined>): Promise<T> {
   const url = new URL(`${API_BASE}${path}`);
   url.searchParams.set("key", key());
   for (const [k, v] of Object.entries(params)) if (v !== undefined) url.searchParams.set(k, String(v));
+  meterCall(path);
   const res = await fetch(url.toString());
   if (!res.ok) {
     const body = await res.text().catch(() => "");

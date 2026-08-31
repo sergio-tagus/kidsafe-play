@@ -4,7 +4,7 @@ import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { LanguageSwitcher } from "./language-switcher";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags, History } from "lucide-react";
+import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags, History, Gauge } from "lucide-react";
 import { ParentUnlockGuard } from "./parent-unlock-guard";
 
 export function ParentShell({ children }: { children: ReactNode }) {
@@ -18,6 +18,7 @@ export function ParentShell({ children }: { children: ReactNode }) {
     { to: "/parent/whitelist", label: t("parent.whitelist"), icon: ListChecks, exact: false },
     { to: "/parent/categories", label: t("parent.categories"), icon: Tags, exact: false },
     { to: "/parent/history", label: t("parent.history"), icon: History, exact: false },
+    { to: "/parent/api-usage", label: t("parent.apiUsage"), icon: Gauge, exact: false },
   ] as const;
 
   return (

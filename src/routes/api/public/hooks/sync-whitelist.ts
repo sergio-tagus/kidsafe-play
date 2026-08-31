@@ -42,7 +42,8 @@ export const Route = createFileRoute("/api/public/hooks/sync-whitelist")({
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { fetchChannel, fetchRecentUploads } = await import("@/lib/youtube.server");
+        const { fetchChannel, fetchRecentUploads, createMeter, setActiveMeter } = await import("@/lib/youtube.server");
+        const { recordUsage, logSyncRun } = await import("@/lib/api-usage.server");
 
         const nowMs = Date.now();
         const { data: settings, error: sErr } = await supabaseAdmin
@@ -65,6 +66,11 @@ export const Route = createFileRoute("/api/public/hooks/sync-whitelist")({
 
         for (const s of due) {
           processedParents++;
+          const runStartedAt = new Date().toISOString();
+          let runChannels = 0;
+          let runVideos = 0;
+          let runUnits = 0;
+          const runErrors: Array<{ channel: string; error: string }> = [];
           const { data: channels } = await supabaseAdmin
             .from("whitelist_channels")
             .select("id, youtube_channel_id, channel_name, channel_handle, channel_thumbnail_url, channel_description, language")
@@ -72,6 +78,8 @@ export const Route = createFileRoute("/api/public/hooks/sync-whitelist")({
             .eq("active", true);
 
           for (const ch of channels ?? []) {
+            const meter = createMeter();
+            const restoreMeter = setActiveMeter(meter);
             try {
               const yt = await fetchChannel(ch.youtube_channel_id);
 
@@ -116,13 +124,29 @@ export const Route = createFileRoute("/api/public/hooks/sync-whitelist")({
                   .upsert(rows, { onConflict: "parent_user_id,youtube_video_id" });
                 if (upErr) throw new Error(upErr.message);
                 importedVideos += rows.length;
+                runVideos += rows.length;
               }
               processedChannels++;
+              runChannels++;
             } catch (e: any) {
               errors.push({ parent: s.parent_user_id, channel: ch.youtube_channel_id, error: String(e?.message ?? e) });
+              runErrors.push({ channel: ch.youtube_channel_id, error: String(e?.message ?? e) });
               console.error("[sync-whitelist] channel failed", ch.youtube_channel_id, e);
+            } finally {
+              restoreMeter();
+              runUnits += meter.units;
+              await recordUsage(supabaseAdmin, s.parent_user_id, meter, ch.id);
             }
           }
+
+          await logSyncRun(supabaseAdmin, s.parent_user_id, {
+            source: "cron",
+            startedAt: runStartedAt,
+            channelsProcessed: runChannels,
+            videosImported: runVideos,
+            unitsUsed: runUnits,
+            errors: runErrors.length ? runErrors : null,
+          });
 
           await supabaseAdmin
             .from("sync_settings")

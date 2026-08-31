@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   listWhitelistChannels,
   upsertWhitelistChannel,
@@ -14,6 +14,8 @@ import {
   previewChannelUpdate,
   applyChannelUpdate,
   dismissPendingUpdates,
+  bulkUpdateChannel,
+  logBulkSyncRun,
 } from "@/lib/parent.functions";
 import { listCategories } from "@/lib/categories.functions";
 import { recommendChannels, type ChannelRecommendation } from "@/lib/recommendations.functions";
@@ -130,6 +132,74 @@ function WhitelistPage() {
   const [autoOpen, setAutoOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualForm, setManualForm] = useState<any>(null);
+
+  // ---- bulk update ----
+  const bulkFn = useServerFn(bulkUpdateChannel);
+  const logBulkFn = useServerFn(logBulkSyncRun);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkMode, setBulkMode] = useState<"review" | "auto">("review");
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkCancel, setBulkCancel] = useState(false);
+  const bulkCancelRef = useRef(false);
+  const requestBulkCancel = () => {
+    bulkCancelRef.current = true;
+    setBulkCancel(true);
+  };
+  const [bulkProgress, setBulkProgress] = useState<{
+    i: number;
+    total: number;
+    name: string;
+    ok: number;
+    videos: number;
+    pending: number;
+    errors: number;
+    done: boolean;
+  } | null>(null);
+
+  const runBulkUpdate = async () => {
+    const targets = filteredChannels;
+    if (!targets.length) return;
+    const startedAt = new Date().toISOString();
+    setBulkRunning(true);
+    setBulkCancel(false);
+    bulkCancelRef.current = false;
+    let ok = 0, videos = 0, pending = 0, units = 0;
+    const errs: { channel: string; error: string }[] = [];
+    for (let i = 0; i < targets.length; i++) {
+      const c = targets[i];
+      setBulkProgress({
+        i: i + 1, total: targets.length, name: c.channel_name,
+        ok, videos, pending, errors: errs.length, done: false,
+      });
+      try {
+        const res: any = await bulkFn({ data: { channelId: c.id, mode: bulkMode } });
+        ok++;
+        videos += res.videosImported ?? 0;
+        units += res.unitsUsed ?? 0;
+        if (res.changedFields && !res.applied) pending++;
+      } catch (e: any) {
+        errs.push({ channel: c.channel_name, error: String(e?.message ?? e) });
+      }
+      if (bulkCancelRef.current) break;
+    }
+    try {
+      await logBulkFn({
+        data: {
+          startedAt,
+          channelsProcessed: ok,
+          videosImported: videos,
+          unitsUsed: units,
+          errors: errs,
+        },
+      });
+    } catch { /* logging is best-effort */ }
+    setBulkProgress((p) =>
+      p ? { ...p, ok, videos, pending, errors: errs.length, done: true } : p,
+    );
+    setBulkRunning(false);
+    qc.invalidateQueries({ queryKey: ["wl"] });
+    qc.invalidateQueries({ queryKey: ["api-usage"] });
+  };
 
   // Channel detail dialog state
   const [detailForm, setDetailForm] = useState<any>(null);
@@ -565,8 +635,110 @@ function WhitelistPage() {
               <X className="w-4 h-4 mr-1" /> {t("parent.clearFilters")}
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+            disabled={filteredChannels.length === 0}
+            onClick={() => {
+              setBulkProgress(null);
+              setBulkOpen(true);
+            }}
+          >
+            <RefreshCw className="w-4 h-4 mr-1" />
+            {t("parent.bulkUpdate", { n: filteredChannels.length })}
+          </Button>
         </div>
       )}
+
+      {/* Bulk update: mode selection */}
+      <Dialog open={bulkOpen} onOpenChange={(o) => !bulkRunning && setBulkOpen(o)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("parent.bulkTitle")}</DialogTitle>
+          </DialogHeader>
+          {!bulkProgress ? (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {t("parent.bulkIntro", { n: filteredChannels.length })}
+              </p>
+              <div className="space-y-2">
+                {(["review", "auto"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setBulkMode(m)}
+                    className={`w-full text-left rounded-xl border p-3 transition ${
+                      bulkMode === m ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="font-medium">
+                      {m === "review" ? t("parent.bulkModeReview") : t("parent.bulkModeAuto")}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {m === "review" ? t("parent.bulkModeReviewDesc") : t("parent.bulkModeAutoDesc")}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("parent.bulkEstimate", { n: filteredChannels.length * 5 })}
+              </p>
+              <DialogFooter>
+                <Button variant="outline" className="rounded-full" onClick={() => setBulkOpen(false)}>
+                  {t("profile.cancel")}
+                </Button>
+                <Button className="rounded-full" onClick={runBulkUpdate}>
+                  {t("parent.bulkStart")}
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {!bulkProgress.done && (
+                <>
+                  <div className="text-sm font-medium">
+                    {t("parent.bulkProgress", { i: bulkProgress.i, n: bulkProgress.total })}
+                  </div>
+                  <div className="text-sm text-muted-foreground truncate flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" /> {bulkProgress.name}
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all"
+                      style={{ width: `${Math.round((bulkProgress.i / bulkProgress.total) * 100)}%` }}
+                    />
+                  </div>
+                </>
+              )}
+              <p className="text-sm text-muted-foreground">
+                {t("parent.bulkSummary", {
+                  ok: bulkProgress.ok,
+                  v: bulkProgress.videos,
+                  p: bulkProgress.pending,
+                  e: bulkProgress.errors,
+                })}
+              </p>
+              <DialogFooter>
+                {bulkProgress.done ? (
+                  <Button className="rounded-full" onClick={() => setBulkOpen(false)}>
+                    {t("parent.bulkClose")}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="rounded-full"
+                    disabled={bulkCancel}
+                    onClick={requestBulkCancel}
+                  >
+                    {bulkCancel ? t("parent.bulkCancelling") : t("parent.bulkCancel")}
+                  </Button>
+                )}
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {channels.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">{t("parent.noChannels")}</div>
