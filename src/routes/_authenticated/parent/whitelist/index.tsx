@@ -635,8 +635,110 @@ function WhitelistPage() {
               <X className="w-4 h-4 mr-1" /> {t("parent.clearFilters")}
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+            disabled={filteredChannels.length === 0}
+            onClick={() => {
+              setBulkProgress(null);
+              setBulkOpen(true);
+            }}
+          >
+            <RefreshCw className="w-4 h-4 mr-1" />
+            {t("parent.bulkUpdate", { n: filteredChannels.length })}
+          </Button>
         </div>
       )}
+
+      {/* Bulk update: mode selection */}
+      <Dialog open={bulkOpen} onOpenChange={(o) => !bulkRunning && setBulkOpen(o)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("parent.bulkTitle")}</DialogTitle>
+          </DialogHeader>
+          {!bulkProgress ? (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {t("parent.bulkIntro", { n: filteredChannels.length })}
+              </p>
+              <div className="space-y-2">
+                {(["review", "auto"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setBulkMode(m)}
+                    className={`w-full text-left rounded-xl border p-3 transition ${
+                      bulkMode === m ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="font-medium">
+                      {m === "review" ? t("parent.bulkModeReview") : t("parent.bulkModeAuto")}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {m === "review" ? t("parent.bulkModeReviewDesc") : t("parent.bulkModeAutoDesc")}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("parent.bulkEstimate", { n: filteredChannels.length * 5 })}
+              </p>
+              <DialogFooter>
+                <Button variant="outline" className="rounded-full" onClick={() => setBulkOpen(false)}>
+                  {t("common.cancel")}
+                </Button>
+                <Button className="rounded-full" onClick={runBulkUpdate}>
+                  {t("parent.bulkStart")}
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {!bulkProgress.done && (
+                <>
+                  <div className="text-sm font-medium">
+                    {t("parent.bulkProgress", { i: bulkProgress.i, n: bulkProgress.total })}
+                  </div>
+                  <div className="text-sm text-muted-foreground truncate flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" /> {bulkProgress.name}
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all"
+                      style={{ width: `${Math.round((bulkProgress.i / bulkProgress.total) * 100)}%` }}
+                    />
+                  </div>
+                </>
+              )}
+              <p className="text-sm text-muted-foreground">
+                {t("parent.bulkSummary", {
+                  ok: bulkProgress.ok,
+                  v: bulkProgress.videos,
+                  p: bulkProgress.pending,
+                  e: bulkProgress.errors,
+                })}
+              </p>
+              <DialogFooter>
+                {bulkProgress.done ? (
+                  <Button className="rounded-full" onClick={() => setBulkOpen(false)}>
+                    {t("parent.bulkClose")}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="rounded-full"
+                    disabled={bulkCancel}
+                    onClick={requestBulkCancel}
+                  >
+                    {bulkCancel ? t("parent.bulkCancelling") : t("parent.bulkCancel")}
+                  </Button>
+                )}
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {channels.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">{t("parent.noChannels")}</div>
