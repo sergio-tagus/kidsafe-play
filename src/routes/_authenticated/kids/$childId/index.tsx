@@ -26,7 +26,7 @@ function KidHome() {
 
   const { data: cont = [] } = useQuery({ queryKey: ["cw", childId], queryFn: () => contFn({ data: { childId } }) });
   const { data: recent = [] } = useQuery({ queryKey: ["recent", childId], queryFn: () => videosFn({ data: { childId, filter: "recent", limit: 12 } }) });
-  const { data: reco = [] } = useQuery({ queryKey: ["reco", childId], queryFn: () => videosFn({ data: { childId, filter: "recommended", limit: 12 } }) });
+  const { data: reco = [] } = useQuery({ queryKey: ["reco", childId], queryFn: () => videosFn({ data: { childId, filter: "recommended", limit: 12 } }), staleTime: 0, refetchOnMount: "always" });
   const { data: pop = [] } = useQuery({ queryKey: ["pop", childId], queryFn: () => videosFn({ data: { childId, filter: "popular", limit: 12 } }) });
   const { data: channels = [] } = useQuery({ queryKey: ["chs"], queryFn: () => chFn() });
 
@@ -41,10 +41,10 @@ function KidHome() {
         </div>
       ) : (
         <>
-          <VideoRow title={t("home.continueWatching")} videos={cont} childId={childId} />
-          <VideoRow title={t("home.recommended")} videos={reco} childId={childId} />
-          <VideoRow title={t("home.newVideos")} videos={recent} childId={childId} />
-          <VideoRow title={t("home.popular")} videos={pop} childId={childId} />
+          <VideoRow title={t("home.continueWatching")} videos={cont} childId={childId} scroll />
+          <VideoRow title={t("home.recommended")} videos={reco} childId={childId} scroll />
+          <VideoRow title={t("home.newVideos")} videos={recent} childId={childId} scroll />
+          <VideoRow title={t("home.popular")} videos={pop} childId={childId} scroll />
           {channels.length > 0 && (
             <section className="mb-8">
               <h2 className="text-xl md:text-2xl font-display font-bold mb-3">{t("home.recentChannels")}</h2>

@@ -88,8 +88,21 @@ export const listSafeVideos = createServerFn({ method: "POST" })
       // recommended/popular use recency as MVP fallback (no telemetry aggregation yet client-side)
       q = q.order("created_at", { ascending: false });
     }
-    q = q.limit(data.limit);
 
+    if (data.filter === "recommended") {
+      // Fetch a wider pool and shuffle so each visit shows different picks.
+      q = q.limit(Math.min(data.limit * 4, 100));
+      const { data: rows, error } = await q;
+      if (error) throw new Error(error.message);
+      const pool = (rows ?? []).map(mapRow);
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      return pool.slice(0, data.limit);
+    }
+
+    q = q.limit(data.limit);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
     return (rows ?? []).map(mapRow);
