@@ -408,6 +408,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
       url: z.string().min(1).max(500),
       category: categorySlug.optional(),
       videoLimit: z.number().int().min(1).max(500).default(200),
+      confirmOverwrite: z.boolean().default(false),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -422,29 +423,38 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
     // Upsert channel
     const { data: existing } = await context.supabase
       .from("whitelist_channels")
-      .select("id, language, channel_description")
+      .select("*")
       .eq("parent_user_id", context.userId)
       .eq("youtube_channel_id", ch.id)
       .maybeSingle();
 
+    const incoming = {
+      channel_name: ch.title,
+      channel_handle: ch.handle,
+      channel_thumbnail_url: ch.thumbnail,
+      channel_description: ch.description,
+      language: ch.language ?? "unknown",
+    };
+
     let channelRowId: string;
     if (existing) {
-      const keepLang = existing.language && existing.language !== "unknown";
-      const keepDesc = (existing as any).channel_description?.trim();
+      const diff = buildChannelDiff(existing as any, incoming);
+      if (diff.length && !data.confirmOverwrite) {
+        return {
+          needsConfirm: true as const,
+          channelId: (existing as any).id as string,
+          channelName: (existing as any).channel_name as string,
+          diff,
+        };
+      }
+      const patch: Record<string, unknown> = { active: true, category };
+      for (const f of diff) patch[f.field] = f.incoming;
       const { error } = await context.supabase
         .from("whitelist_channels")
-        .update({
-          channel_name: ch.title,
-          channel_handle: ch.handle,
-          channel_thumbnail_url: ch.thumbnail,
-          channel_description: keepDesc || ch.description?.trim() || null,
-          category,
-          active: true,
-          language: keepLang ? existing.language : (ch.language ?? "unknown"),
-        })
-        .eq("id", existing.id);
+        .update(patch as never)
+        .eq("id", (existing as any).id);
       if (error) throw new Error(error.message);
-      channelRowId = existing.id;
+      channelRowId = (existing as any).id;
     } else {
       const { data: row, error } = await context.supabase
         .from("whitelist_channels")
@@ -464,6 +474,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       channelRowId = row.id;
     }
+
 
     const imported = await importVideosForChannel(
       context.supabase,
