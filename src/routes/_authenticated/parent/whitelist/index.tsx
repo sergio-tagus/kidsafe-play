@@ -304,11 +304,84 @@ function WhitelistPage() {
         </div>
       </div>
 
+      {channels.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-5">
+          <div className="relative flex-1 min-w-[12rem]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              placeholder={t("parent.filterSearchPlaceholder")}
+              value={fQuery}
+              onChange={(e) => setFQuery(e.target.value)}
+            />
+          </div>
+          <Select value={fCategory} onValueChange={setFCategory}>
+            <SelectTrigger className="w-auto min-w-[9rem]">
+              <SelectValue placeholder={t("parent.filterCategory")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("parent.filterAll")}</SelectItem>
+              {categories.map((cat: any) => (
+                <SelectItem key={cat.slug} value={cat.slug}>
+                  {catName(cat.slug)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={fStatus} onValueChange={setFStatus}>
+            <SelectTrigger className="w-auto min-w-[8rem]">
+              <SelectValue placeholder={t("parent.filterStatus")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("parent.filterAllM")}</SelectItem>
+              <SelectItem value="active">{t("parent.statusActive")}</SelectItem>
+              <SelectItem value="inactive">{t("parent.statusInactive")}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={fLanguage} onValueChange={setFLanguage}>
+            <SelectTrigger className="w-auto min-w-[8rem]">
+              <SelectValue placeholder={t("parent.filterLanguage")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("parent.filterAllM")}</SelectItem>
+              {languages.map((code) => (
+                <SelectItem key={code || "unknown"} value={code}>
+                  {langLabel(code)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={fSort} onValueChange={setFSort}>
+            <SelectTrigger className="w-auto min-w-[9rem]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">{t("parent.sortNewest")}</SelectItem>
+              <SelectItem value="mostVideos">{t("parent.sortMostVideos")}</SelectItem>
+              <SelectItem value="nameAsc">{t("parent.sortNameAsc")}</SelectItem>
+              <SelectItem value="nameDesc">{t("parent.sortNameDesc")}</SelectItem>
+            </SelectContent>
+          </Select>
+          {filtersActive && (
+            <Button variant="ghost" size="sm" className="rounded-full" onClick={clearFilters}>
+              <X className="w-4 h-4 mr-1" /> {t("parent.clearFilters")}
+            </Button>
+          )}
+        </div>
+      )}
+
       {channels.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">{t("parent.noChannels")}</div>
+      ) : filteredChannels.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground space-y-3">
+          <div>{t("parent.noFilterResults")}</div>
+          <Button variant="outline" className="rounded-full" onClick={clearFilters}>
+            <X className="w-4 h-4 mr-1" /> {t("parent.clearFilters")}
+          </Button>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {channels.map((c: any) => (
+          {filteredChannels.map((c: any) => (
             <Card key={c.id}>
               <CardContent className="p-5 flex items-center gap-4">
                 {c.channel_thumbnail_url ? (
