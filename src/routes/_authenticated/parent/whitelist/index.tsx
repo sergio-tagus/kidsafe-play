@@ -150,6 +150,7 @@ function WhitelistPage() {
         data: {
           ...channels.find((x: any) => x.id === detailForm.id),
           channel_name: detailForm.channel_name.trim(),
+          channel_description: detailForm.channel_description?.trim() || null,
           active: detailForm.active,
         },
       });
