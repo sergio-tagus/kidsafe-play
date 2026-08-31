@@ -10,6 +10,7 @@ import {
   importChannelFromUrl,
   refreshChannelVideos,
   updateChannelCategory,
+  updateChannelLanguage,
 } from "@/lib/parent.functions";
 import { listCategories } from "@/lib/categories.functions";
 import { recommendChannels, type ChannelRecommendation } from "@/lib/recommendations.functions";
@@ -40,6 +41,7 @@ function WhitelistPage() {
   const importFn = useServerFn(importChannelFromUrl);
   const refreshFn = useServerFn(refreshChannelVideos);
   const updateCatFn = useServerFn(updateChannelCategory);
+  const updateLangFn = useServerFn(updateChannelLanguage);
   const catsFn = useServerFn(listCategories);
   const recommendFn = useServerFn(recommendChannels);
 
@@ -65,6 +67,8 @@ function WhitelistPage() {
     for (const c of channels as any[]) set.add(langCode(c));
     return [...set].sort();
   }, [channels]);
+
+  const LANG_OPTIONS = ["es", "en", "pt", "fr", "de", "it", "ca", "gl", "eu", "ja", "ko", "zh", "ar", "ru"];
 
   const langLabel = (code: string) => {
     if (!code || code === "unknown") return t("parent.unknownLanguage");
@@ -340,21 +344,19 @@ function WhitelistPage() {
               <SelectItem value="inactive">{t("parent.statusInactive")}</SelectItem>
             </SelectContent>
           </Select>
-          {!(languages.length <= 1 && languages[0] === "unknown") && (
-            <Select value={fLanguage} onValueChange={setFLanguage}>
-              <SelectTrigger className="w-auto min-w-[8rem]">
-                <SelectValue placeholder={t("parent.filterLanguage")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("parent.filterAllM")}</SelectItem>
-                {languages.map((code) => (
-                  <SelectItem key={code} value={code}>
-                    {langLabel(code)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          <Select value={fLanguage} onValueChange={setFLanguage}>
+            <SelectTrigger className="w-auto min-w-[8rem]">
+              <SelectValue placeholder={t("parent.filterLanguage")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("parent.filterAllM")}</SelectItem>
+              {languages.map((code) => (
+                <SelectItem key={code} value={code}>
+                  {langLabel(code)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={fSort} onValueChange={setFSort}>
             <SelectTrigger className="w-auto min-w-[9rem]">
               <SelectValue />
@@ -398,29 +400,57 @@ function WhitelistPage() {
                   {c.channel_handle && (
                     <div className="text-xs text-muted-foreground truncate">@{c.channel_handle}</div>
                   )}
-                  <Select
-                    value={c.category ?? ""}
-                    onValueChange={async (v) => {
-                      try {
-                        await updateCatFn({ data: { channelId: c.id, category: v } });
-                        toast.success(t("parent.categoryUpdated"));
-                        qc.invalidateQueries({ queryKey: ["wl"] });
-                      } catch (e: any) {
-                        toast.error(e.message ?? "Error");
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="h-7 mt-1 text-xs w-auto min-w-[8rem]">
-                      <SelectValue placeholder={t("parent.category")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat: any) => (
-                        <SelectItem key={cat.slug} value={cat.slug}>
-                          {catName(cat.slug)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <Select
+                      value={c.category ?? ""}
+                      onValueChange={async (v) => {
+                        try {
+                          await updateCatFn({ data: { channelId: c.id, category: v } });
+                          toast.success(t("parent.categoryUpdated"));
+                          qc.invalidateQueries({ queryKey: ["wl"] });
+                        } catch (e: any) {
+                          toast.error(e.message ?? "Error");
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-7 text-xs w-auto min-w-[8rem]">
+                        <SelectValue placeholder={t("parent.category")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((cat: any) => (
+                          <SelectItem key={cat.slug} value={cat.slug}>
+                            {catName(cat.slug)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={langCode(c)}
+                      onValueChange={async (v) => {
+                        try {
+                          await updateLangFn({ data: { channelId: c.id, language: v } });
+                          toast.success(t("parent.languageUpdated"));
+                          qc.invalidateQueries({ queryKey: ["wl"] });
+                        } catch (e: any) {
+                          toast.error(e.message ?? "Error");
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-7 text-xs w-auto min-w-[7rem]">
+                        <SelectValue placeholder={t("parent.filterLanguage")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unknown">{t("parent.unknownLanguage")}</SelectItem>
+                        {[...new Set([...LANG_OPTIONS, langCode(c)])]
+                          .filter((code) => code !== "unknown")
+                          .map((code) => (
+                            <SelectItem key={code} value={code}>
+                              {langLabel(code)}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <Switch checked={c.active} onCheckedChange={() => toggleActive(c)} />
                 <Button
