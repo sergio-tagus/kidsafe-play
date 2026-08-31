@@ -28,6 +28,13 @@ function ChannelPage() {
     queryKey: ["ch-vids", childId, channelId],
     queryFn: () => videosFn({ data: { childId, filter: "byChannel", channelId, limit: 40 } }),
   });
+  const [descOpen, setDescOpen] = useState(false);
+  const channelDescription = useMemo(
+    () => sanitizeDescription((channel as any)?.channel_description),
+    [channel],
+  );
+
+
 
   return (
     <KidShell childId={childId} child={child}>
