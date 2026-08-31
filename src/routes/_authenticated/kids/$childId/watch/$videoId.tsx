@@ -228,7 +228,16 @@ function WatchPage() {
 
     if (!canNative) {
       // iOS Safari/Chrome: no Fullscreen API on non-video elements → simulate it.
-      setPseudoFullscreen((v) => !v);
+      setPseudoFullscreen((v) => {
+        const next = !v;
+        if (next) {
+          // Best effort: only works when installed as PWA; fails silently in browser.
+          try { (window.screen?.orientation as any)?.lock?.("landscape")?.catch?.(() => {}); } catch { /* ignore */ }
+        } else {
+          try { (window.screen?.orientation as any)?.unlock?.(); } catch { /* ignore */ }
+        }
+        return next;
+      });
       return;
     }
     try {
@@ -268,6 +277,7 @@ function WatchPage() {
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
+      try { (window.screen?.orientation as any)?.unlock?.(); } catch { /* ignore */ }
     };
   }, [pseudoFullscreen]);
 
@@ -337,28 +347,27 @@ function WatchPage() {
             ref={stageRef}
             style={
               pseudoFullscreen
-                ? {
-                    paddingTop: "env(safe-area-inset-top)",
-                    paddingBottom: "env(safe-area-inset-bottom)",
-                    paddingLeft: "env(safe-area-inset-left)",
-                    paddingRight: "env(safe-area-inset-right)",
-                    height: "100dvh",
-                  }
+                ? { width: "100dvw", height: "100dvh" }
                 : undefined
             }
             className={
-              pseudoFullscreen
-                ? "fixed inset-0 z-50 bg-black flex flex-col items-center justify-center gap-4 w-screen p-4"
-                : isFullscreen
-                  ? "bg-black flex flex-col items-center justify-center gap-4 w-full h-full p-4"
-                  : ""
+              isFullscreen
+                ? `${pseudoFullscreen ? "fixed inset-0 z-50" : "relative w-full h-full"} bg-black`
+                : ""
             }
           >
 
           <div
-            className={`relative rounded-2xl overflow-hidden bg-black shadow-2xl ${
-              isFullscreen ? "w-full max-w-[min(100%,calc((100vh-11rem)*16/9))] aspect-video" : "aspect-video"
-            }`}
+            style={
+              isFullscreen
+                ? { width: "min(100dvw, calc(100dvh * 16 / 9))" }
+                : undefined
+            }
+            className={
+              isFullscreen
+                ? "absolute inset-0 m-auto aspect-video max-h-full bg-black overflow-hidden"
+                : "relative rounded-2xl overflow-hidden bg-black shadow-2xl aspect-video"
+            }
             onContextMenu={(e) => e.preventDefault()}
             onDragStart={(e) => e.preventDefault()}
           >
@@ -424,7 +433,22 @@ function WatchPage() {
               </div>
             )}
           </div>
-          {!locked && seekControls("bar")}
+          {!locked && (
+            isFullscreen ? (
+              <div
+                className="absolute bottom-0 inset-x-0 z-30 flex justify-center bg-gradient-to-t from-black/70 to-transparent"
+                style={{
+                  paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+                  paddingLeft: "env(safe-area-inset-left)",
+                  paddingRight: "env(safe-area-inset-right)",
+                }}
+              >
+                {seekControls("bar")}
+              </div>
+            ) : (
+              seekControls("bar")
+            )
+          )}
           </div>
 
           <div className="mt-4 flex items-start justify-between gap-4">
