@@ -426,8 +426,18 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { fetchChannel, inferCategory } = await import("@/lib/youtube.server");
-    const ch = await fetchChannel(data.url);
+    const { fetchChannel, inferCategory, createMeter, setActiveMeter } = await import("@/lib/youtube.server");
+    const { recordUsage } = await import("@/lib/api-usage.server");
+    const meter = createMeter();
+    const restoreMeter = setActiveMeter(meter);
+    const flush = async (channelId: string | null) => {
+      restoreMeter();
+      await recordUsage(context.supabase, context.userId, meter, channelId);
+    };
+    const ch = await fetchChannel(data.url).catch(async (e) => {
+      await flush(null);
+      throw e;
+    });
     const category = data.category ?? inferCategory({
       topicIds: ch.topicIds,
       title: ch.title,
