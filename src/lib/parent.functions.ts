@@ -314,13 +314,14 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
     // Upsert channel
     const { data: existing } = await context.supabase
       .from("whitelist_channels")
-      .select("id")
+      .select("id, language")
       .eq("parent_user_id", context.userId)
       .eq("youtube_channel_id", ch.id)
       .maybeSingle();
 
     let channelRowId: string;
     if (existing) {
+      const keepLang = existing.language && existing.language !== "unknown";
       const { error } = await context.supabase
         .from("whitelist_channels")
         .update({
@@ -329,7 +330,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
           channel_thumbnail_url: ch.thumbnail,
           category,
           active: true,
-          language: ch.language,
+          language: keepLang ? existing.language : (ch.language ?? "unknown"),
         })
         .eq("id", existing.id);
       if (error) throw new Error(error.message);
