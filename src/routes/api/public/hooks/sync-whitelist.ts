@@ -66,6 +66,11 @@ export const Route = createFileRoute("/api/public/hooks/sync-whitelist")({
 
         for (const s of due) {
           processedParents++;
+          const runStartedAt = new Date().toISOString();
+          let runChannels = 0;
+          let runVideos = 0;
+          let runUnits = 0;
+          const runErrors: Array<{ channel: string; error: string }> = [];
           const { data: channels } = await supabaseAdmin
             .from("whitelist_channels")
             .select("id, youtube_channel_id, channel_name, channel_handle, channel_thumbnail_url, channel_description, language")
@@ -73,6 +78,8 @@ export const Route = createFileRoute("/api/public/hooks/sync-whitelist")({
             .eq("active", true);
 
           for (const ch of channels ?? []) {
+            const meter = createMeter();
+            const restoreMeter = setActiveMeter(meter);
             try {
               const yt = await fetchChannel(ch.youtube_channel_id);
 
