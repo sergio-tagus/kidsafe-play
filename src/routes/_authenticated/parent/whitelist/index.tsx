@@ -122,6 +122,48 @@ function WhitelistPage() {
   const [manualOpen, setManualOpen] = useState(false);
   const [manualForm, setManualForm] = useState<any>(null);
 
+  // Channel detail dialog state
+  const [detailForm, setDetailForm] = useState<any>(null);
+  const [savingDetail, setSavingDetail] = useState(false);
+
+  const openDetail = (c: any) => {
+    setDetailForm({
+      id: c.id,
+      youtube_channel_id: c.youtube_channel_id,
+      channel_name: c.channel_name,
+      channel_handle: c.channel_handle ?? "",
+      channel_thumbnail_url: c.channel_thumbnail_url ?? "",
+      category: c.category,
+      language: langCode(c),
+      active: c.active,
+      created_at: c.created_at,
+      video_count: c.video_count ?? 0,
+    });
+  };
+
+  const saveDetail = async () => {
+    if (!detailForm || !detailForm.channel_name.trim()) return;
+    setSavingDetail(true);
+    try {
+      await upsertFn({
+        data: {
+          ...channels.find((x: any) => x.id === detailForm.id),
+          channel_name: detailForm.channel_name.trim(),
+          active: detailForm.active,
+        },
+      });
+      await updateCatFn({ data: { channelId: detailForm.id, category: detailForm.category } });
+      await updateLangFn({ data: { channelId: detailForm.id, language: detailForm.language } });
+      toast.success(t("parent.saveChanges") + " ✔️");
+      setDetailForm(null);
+      qc.invalidateQueries({ queryKey: ["wl"] });
+    } catch (e: any) {
+      toast.error(e.message ?? "Error");
+    } finally {
+      setSavingDetail(false);
+    }
+  };
+
   // Auto-import state
   const [urlInput, setUrlInput] = useState("");
   const [preview, setPreview] = useState<any>(null);
