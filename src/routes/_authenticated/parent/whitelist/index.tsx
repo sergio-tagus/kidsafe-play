@@ -197,7 +197,7 @@ function WhitelistPage() {
       p ? { ...p, ok, videos, pending, errors: errs.length, done: true } : p,
     );
     setBulkRunning(false);
-    qc.invalidateQueries({ queryKey: ["whitelist"] });
+    qc.invalidateQueries({ queryKey: ["wl"] });
     qc.invalidateQueries({ queryKey: ["api-usage"] });
   };
 
