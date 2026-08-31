@@ -391,10 +391,10 @@ export const refreshChannelVideos = createServerFn({ method: "POST" })
     const { fetchChannel } = await import("@/lib/youtube.server");
     const yt = await fetchChannel(ch.youtube_channel_id);
     // Never overwrite a language / description the parent set manually.
-    const patch: Record<string, unknown> = {};
-    if (!ch.language || ch.language === "unknown") patch['language'] = yt.language ?? "unknown";
+    const patch: { language?: string; channel_description?: string } = {};
+    if (!ch.language || ch.language === "unknown") patch.language = yt.language ?? "unknown";
     if (!(ch as any).channel_description?.trim() && yt.description?.trim()) {
-      patch['channel_description'] = yt.description.trim();
+      patch.channel_description = yt.description.trim();
     }
     if (Object.keys(patch).length) {
       const { error: updErr } = await context.supabase
