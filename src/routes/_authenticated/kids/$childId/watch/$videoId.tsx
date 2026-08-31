@@ -228,7 +228,16 @@ function WatchPage() {
 
     if (!canNative) {
       // iOS Safari/Chrome: no Fullscreen API on non-video elements → simulate it.
-      setPseudoFullscreen((v) => !v);
+      setPseudoFullscreen((v) => {
+        const next = !v;
+        if (next) {
+          // Best effort: only works when installed as PWA; fails silently in browser.
+          try { (screen.orientation as any)?.lock?.("landscape")?.catch?.(() => {}); } catch { /* ignore */ }
+        } else {
+          try { (screen.orientation as any)?.unlock?.(); } catch { /* ignore */ }
+        }
+        return next;
+      });
       return;
     }
     try {
