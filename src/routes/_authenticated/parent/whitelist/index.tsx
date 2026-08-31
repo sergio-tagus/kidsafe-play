@@ -133,6 +133,68 @@ function WhitelistPage() {
   const [manualOpen, setManualOpen] = useState(false);
   const [manualForm, setManualForm] = useState<any>(null);
 
+  // ---- bulk update ----
+  const bulkFn = useServerFn(bulkUpdateChannel);
+  const logBulkFn = useServerFn(logBulkSyncRun);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkMode, setBulkMode] = useState<"review" | "auto">("review");
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkCancel, setBulkCancel] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState<{
+    i: number;
+    total: number;
+    name: string;
+    ok: number;
+    videos: number;
+    pending: number;
+    errors: number;
+    done: boolean;
+  } | null>(null);
+
+  const runBulkUpdate = async () => {
+    const targets = filteredChannels;
+    if (!targets.length) return;
+    const startedAt = new Date().toISOString();
+    setBulkRunning(true);
+    setBulkCancel(false);
+    let ok = 0, videos = 0, pending = 0, units = 0;
+    const errs: { channel: string; error: string }[] = [];
+    for (let i = 0; i < targets.length; i++) {
+      const c = targets[i];
+      setBulkProgress({
+        i: i + 1, total: targets.length, name: c.channel_name,
+        ok, videos, pending, errors: errs.length, done: false,
+      });
+      try {
+        const res: any = await bulkFn({ data: { channelId: c.id, mode: bulkMode } });
+        ok++;
+        videos += res.videosImported ?? 0;
+        units += res.unitsUsed ?? 0;
+        if (res.changedFields && !res.applied) pending++;
+      } catch (e: any) {
+        errs.push({ channel: c.channel_name, error: String(e?.message ?? e) });
+      }
+      if (bulkCancelRef.current) break;
+    }
+    try {
+      await logBulkFn({
+        data: {
+          startedAt,
+          channelsProcessed: ok,
+          videosImported: videos,
+          unitsUsed: units,
+          errors: errs,
+        },
+      });
+    } catch { /* logging is best-effort */ }
+    setBulkProgress((p) =>
+      p ? { ...p, ok, videos, pending, errors: errs.length, done: true } : p,
+    );
+    setBulkRunning(false);
+    qc.invalidateQueries({ queryKey: ["whitelist"] });
+    qc.invalidateQueries({ queryKey: ["api-usage"] });
+  };
+
   // Channel detail dialog state
   const [detailForm, setDetailForm] = useState<any>(null);
   const [savingDetail, setSavingDetail] = useState(false);
