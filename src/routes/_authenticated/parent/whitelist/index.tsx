@@ -80,6 +80,13 @@ function WhitelistPage() {
     }
   };
 
+  const LANG_FLAGS: Record<string, string> = {
+    es: "🇪🇸", en: "🇬🇧", pt: "🇵🇹", fr: "🇫🇷", de: "🇩🇪", it: "🇮🇹",
+    ca: "🏴", gl: "🏴", eu: "🏴", ja: "🇯🇵", ko: "🇰🇷", zh: "🇨🇳", ar: "🇸🇦", ru: "🇷🇺",
+    unknown: "🏳️",
+  };
+  const langFlag = (code: string) => LANG_FLAGS[code] ?? "🌐";
+
   const filteredChannels = useMemo(() => {
     const q = fQuery.trim().toLowerCase();
     let list = (channels as any[]).filter((c) => {
