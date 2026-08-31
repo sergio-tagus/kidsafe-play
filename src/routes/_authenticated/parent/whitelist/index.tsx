@@ -11,6 +11,9 @@ import {
   refreshChannelVideos,
   updateChannelCategory,
   updateChannelLanguage,
+  previewChannelUpdate,
+  applyChannelUpdate,
+  dismissPendingUpdates,
 } from "@/lib/parent.functions";
 import { listCategories } from "@/lib/categories.functions";
 import { recommendChannels, type ChannelRecommendation } from "@/lib/recommendations.functions";
@@ -25,7 +28,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Trash2, ExternalLink, Search, RefreshCw, Loader2, Sparkles, X } from "lucide-react";
+import { Plus, Trash2, ExternalLink, Search, RefreshCw, Loader2, Sparkles, X, AlertTriangle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/parent/whitelist/")({
@@ -45,6 +49,9 @@ function WhitelistPage() {
   const updateLangFn = useServerFn(updateChannelLanguage);
   const catsFn = useServerFn(listCategories);
   const recommendFn = useServerFn(recommendChannels);
+  const previewUpdateFn = useServerFn(previewChannelUpdate);
+  const applyUpdateFn = useServerFn(applyChannelUpdate);
+  const dismissUpdatesFn = useServerFn(dismissPendingUpdates);
 
   const { data: channels = [] } = useQuery({ queryKey: ["wl"], queryFn: () => listFn() });
   const { data: categories = [] } = useQuery<any[]>({ queryKey: ["categories"], queryFn: () => catsFn() as any });
@@ -95,6 +102,7 @@ function WhitelistPage() {
       if (fCategory !== "all" && c.category !== fCategory) return false;
       if (fStatus === "active" && !c.active) return false;
       if (fStatus === "inactive" && c.active) return false;
+      if (fStatus === "pending" && !(c.pending_updates?.length)) return false;
       if (fLanguage !== "all" && langCode(c) !== fLanguage) return false;
       return true;
     });
@@ -274,9 +282,13 @@ function WhitelistPage() {
     if (!preview) return;
     setImporting(true);
     try {
-      const res = await importFn({
+      const res: any = await importFn({
         data: { url: urlInput.trim(), category: previewCategory as any },
       });
+      if (res?.needsConfirm) {
+        openDiff(res.channelId, res.channelName, res.diff, "import");
+        return;
+      }
       toast.success(t("parent.autoImportDone", { n: res.videosImported }));
       setAutoOpen(false);
       qc.invalidateQueries({ queryKey: ["wl"] });
@@ -287,7 +299,100 @@ function WhitelistPage() {
     }
   };
 
-  const doRefresh = async (id: string) => {
+  const doRefresh = async (c: any) => {
+    const id = typeof c === "string" ? c : c.id;
+    const name = typeof c === "string" ? "" : c.channel_name;
+    setRefreshingId(id);
+    try {
+      const res = await previewUpdateFn({ data: { channelId: id } });
+      setRefreshingId(null);
+      if (res.diff.length) {
+        openDiff(id, name, res.diff as any, "sync");
+        return;
+      }
+    } catch (e: any) {
+      setRefreshingId(null);
+      toast.error(e.message ?? "Error");
+      return;
+    }
+    await syncVideos(id);
+  };
+
+  // ---- channel data update authorisation ----
+  type DiffRow = { field: string; current: string | null; incoming: string | null };
+  const [diffState, setDiffState] = useState<{
+    channelId: string;
+    channelName: string;
+    diff: DiffRow[];
+    source: "sync" | "import" | "pending";
+  } | null>(null);
+  const [diffSelected, setDiffSelected] = useState<Record<string, boolean>>({});
+  const [diffBusy, setDiffBusy] = useState(false);
+
+  const openDiff = (
+    channelId: string,
+    channelName: string,
+    diff: DiffRow[],
+    source: "sync" | "import" | "pending",
+  ) => {
+    setDiffState({ channelId, channelName, diff, source });
+    setDiffSelected(Object.fromEntries(diff.map((d) => [d.field, true])));
+  };
+
+  const fieldLabel = (f: string) =>
+    f === "channel_name" ? t("parent.channelName")
+      : f === "channel_description" ? t("parent.channelDescription")
+      : f === "language" ? t("parent.filterLanguage")
+      : f === "channel_handle" ? "@handle"
+      : t("parent.thumbnail");
+
+  const fieldValue = (f: string, v: string | null) => {
+    if (!v) return "—";
+    if (f === "language") return `${langFlag(v)} ${langLabel(v)}`;
+    return v.length > 220 ? `${v.slice(0, 220)}…` : v;
+  };
+
+  const confirmDiff = async () => {
+    if (!diffState) return;
+    const fields = diffState.diff.filter((d) => diffSelected[d.field]);
+    setDiffBusy(true);
+    try {
+      if (diffState.source === "import") {
+        const res: any = await importFn({
+          data: { url: urlInput.trim(), category: previewCategory as any, confirmOverwrite: true },
+        });
+        toast.success(t("parent.autoImportDone", { n: res.videosImported ?? 0 }));
+        setAutoOpen(false);
+      } else {
+        if (fields.length) {
+          await applyUpdateFn({ data: { channelId: diffState.channelId, fields: fields as any } });
+        } else {
+          await dismissUpdatesFn({ data: { channelId: diffState.channelId } });
+        }
+        toast.success(t("parent.dataUpdated"));
+        if (diffState.source === "sync") await syncVideos(diffState.channelId);
+      }
+      setDiffState(null);
+      qc.invalidateQueries({ queryKey: ["wl"] });
+    } catch (e: any) {
+      toast.error(e.message ?? "Error");
+    } finally {
+      setDiffBusy(false);
+    }
+  };
+
+  const skipDiff = async () => {
+    if (!diffState) return;
+    const { source, channelId } = diffState;
+    setDiffState(null);
+    if (source === "sync") await syncVideos(channelId);
+    if (source === "pending") {
+      await dismissUpdatesFn({ data: { channelId } });
+      qc.invalidateQueries({ queryKey: ["wl"] });
+    }
+  };
+
+  const syncVideos = async (id: string) => {
     setRefreshingId(id);
     try {
       const res = await refreshFn({ data: { channelId: id } });
@@ -394,6 +499,7 @@ function WhitelistPage() {
               <SelectItem value="all">{t("parent.filterAllM")}</SelectItem>
               <SelectItem value="active">{t("parent.statusActive")}</SelectItem>
               <SelectItem value="inactive">{t("parent.statusInactive")}</SelectItem>
+              <SelectItem value="pending">{t("parent.filterPending")}</SelectItem>
             </SelectContent>
           </Select>
           <Select value={fLanguage} onValueChange={setFLanguage}>
@@ -459,6 +565,20 @@ function WhitelistPage() {
                   {c.channel_handle && (
                     <div className="text-xs text-muted-foreground truncate">@{c.channel_handle}</div>
                   )}
+                  {c.pending_updates?.length ? (
+                    <button
+                      type="button"
+                      className="mt-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDiff(c.id, c.channel_name, c.pending_updates, "pending");
+                      }}
+                    >
+                      <Badge variant="secondary" className="gap-1 cursor-pointer">
+                        <AlertTriangle className="w-3 h-3" /> {t("parent.pendingUpdates")}
+                      </Badge>
+                    </button>
+                  ) : null}
                   <div className="flex flex-wrap items-center gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
                     <Select
                       value={c.category ?? ""}
@@ -530,7 +650,7 @@ function WhitelistPage() {
                   disabled={refreshingId === c.id}
                   onClick={(e) => {
                     e.stopPropagation();
-                    doRefresh(c.id);
+                    doRefresh(c);
                   }}
                   title={t("parent.sync")}
                 >
@@ -917,6 +1037,55 @@ function WhitelistPage() {
             <Button onClick={importRecommendation} disabled={!recPreview?.youtube_channel_id || recImporting}>
               {recImporting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
               {t("parent.autoImport")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Authorise channel data update */}
+      <Dialog open={!!diffState} onOpenChange={(o) => !o && setDiffState(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t("parent.updateDetected")}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {t("parent.updateDetectedHint", { name: diffState?.channelName ?? "" })}
+          </p>
+          <div className="space-y-3">
+            {diffState?.diff.map((d) => (
+              <label
+                key={d.field}
+                className="flex gap-3 items-start rounded-xl border p-3 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={!!diffSelected[d.field]}
+                  onChange={(e) => setDiffSelected((s) => ({ ...s, [d.field]: e.target.checked }))}
+                />
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="font-medium text-sm">{fieldLabel(d.field)}</div>
+                  <div className="text-xs text-muted-foreground break-words">
+                    <span className="opacity-70">{t("parent.currentValue")}: </span>
+                    {fieldValue(d.field, d.current)}
+                  </div>
+                  <div className="text-xs break-words">
+                    <span className="opacity-70">{t("parent.newValue")}: </span>
+                    {fieldValue(d.field, d.incoming)}
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDiffState(null)} disabled={diffBusy}>
+              {t("profile.cancel")}
+            </Button>
+            <Button variant="secondary" onClick={skipDiff} disabled={diffBusy}>
+              {diffState?.source === "pending" ? t("parent.discardUpdates") : t("parent.onlyImportVideos")}
+            </Button>
+            <Button onClick={confirmDiff} disabled={diffBusy}>
+              {diffBusy ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+              {t("parent.updateData")}
             </Button>
           </DialogFooter>
         </DialogContent>
