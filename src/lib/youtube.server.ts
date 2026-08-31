@@ -129,6 +129,7 @@ export async function fetchChannel(input: string): Promise<YtChannel> {
 
   if (!raw) throw new Error("Channel not found on YouTube");
 
+
   const uploads = raw.contentDetails?.relatedPlaylists?.uploads;
   if (!uploads) throw new Error("Channel has no uploads playlist");
 
