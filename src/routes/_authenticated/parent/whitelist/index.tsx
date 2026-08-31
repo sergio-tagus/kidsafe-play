@@ -562,6 +562,124 @@ function WhitelistPage() {
         </div>
       )}
 
+      {/* Channel detail dialog */}
+      <Dialog open={!!detailForm} onOpenChange={(o) => !o && setDetailForm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("parent.channelDetails")}</DialogTitle>
+          </DialogHeader>
+          {detailForm && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                {detailForm.channel_thumbnail_url ? (
+                  <img
+                    src={detailForm.channel_thumbnail_url}
+                    alt={detailForm.channel_name}
+                    className="w-20 h-20 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-3xl">📺</div>
+                )}
+                <div className="min-w-0">
+                  {detailForm.channel_handle && (
+                    <div className="text-sm text-muted-foreground truncate">@{detailForm.channel_handle}</div>
+                  )}
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {t("parent.addedOn")}: {new Date(detailForm.created_at).toLocaleDateString(lang)} ·{" "}
+                    {detailForm.video_count} {t("parent.videosImported")}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <Label>{t("parent.channelName")}</Label>
+                <Input
+                  value={detailForm.channel_name}
+                  onChange={(e) => setDetailForm({ ...detailForm, channel_name: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>{t("parent.category")}</Label>
+                  <Select
+                    value={detailForm.category ?? ""}
+                    onValueChange={(v) => setDetailForm({ ...detailForm, category: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat: any) => (
+                        <SelectItem key={cat.slug} value={cat.slug}>
+                          {catName(cat.slug)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>{t("parent.filterLanguage")}</Label>
+                  <Select
+                    value={detailForm.language}
+                    onValueChange={(v) => setDetailForm({ ...detailForm, language: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unknown">
+                        <span className="inline-flex items-center gap-2">
+                          <span>{langFlag("unknown")}</span>
+                          {t("parent.unknownLanguage")}
+                        </span>
+                      </SelectItem>
+                      {LANG_OPTIONS.map((code) => (
+                        <SelectItem key={code} value={code}>
+                          <span className="inline-flex items-center gap-2">
+                            <span>{langFlag(code)}</span>
+                            {langLabel(code)}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>{detailForm.active ? t("parent.statusActive") : t("parent.statusInactive")}</Label>
+                <Switch
+                  checked={detailForm.active}
+                  onCheckedChange={(v) => setDetailForm({ ...detailForm, active: v })}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter className="flex-wrap gap-2">
+            {detailForm && (
+              <Button
+                variant="ghost"
+                className="mr-auto"
+                disabled={refreshingId === detailForm.id}
+                onClick={() => doRefresh(detailForm.id)}
+              >
+                {refreshingId === detailForm.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                ) : (
+                  <RefreshCw className="w-4 h-4 mr-1" />
+                )}
+                {t("parent.sync")}
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => setDetailForm(null)}>
+              {t("profile.cancel")}
+            </Button>
+            <Button onClick={saveDetail} disabled={savingDetail || !detailForm?.channel_name?.trim()}>
+              {savingDetail ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+              {t("parent.saveChanges")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Auto-import dialog */}
       <Dialog open={autoOpen} onOpenChange={setAutoOpen}>
         <DialogContent>
