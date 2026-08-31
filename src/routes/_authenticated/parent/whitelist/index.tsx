@@ -14,6 +14,8 @@ import {
   previewChannelUpdate,
   applyChannelUpdate,
   dismissPendingUpdates,
+  bulkUpdateChannel,
+  logBulkSyncRun,
 } from "@/lib/parent.functions";
 import { listCategories } from "@/lib/categories.functions";
 import { recommendChannels, type ChannelRecommendation } from "@/lib/recommendations.functions";
