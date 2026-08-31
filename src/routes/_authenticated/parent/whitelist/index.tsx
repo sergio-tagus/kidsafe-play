@@ -58,14 +58,16 @@ function WhitelistPage() {
   const [fLanguage, setFLanguage] = useState("all");
   const [fSort, setFSort] = useState("newest");
 
+  const langCode = (c: any) => ((c.language || "").trim().toLowerCase() || "unknown");
+
   const languages = useMemo(() => {
     const set = new Set<string>();
-    for (const c of channels as any[]) set.add((c.language || "").trim().toLowerCase());
+    for (const c of channels as any[]) set.add(langCode(c));
     return [...set].sort();
   }, [channels]);
 
   const langLabel = (code: string) => {
-    if (!code) return t("parent.unknownLanguage");
+    if (!code || code === "unknown") return t("parent.unknownLanguage");
     try {
       const names = new Intl.DisplayNames([lang], { type: "language" });
       return names.of(code) ?? code;
@@ -81,7 +83,7 @@ function WhitelistPage() {
       if (fCategory !== "all" && c.category !== fCategory) return false;
       if (fStatus === "active" && !c.active) return false;
       if (fStatus === "inactive" && c.active) return false;
-      if (fLanguage !== "all" && (c.language || "").trim().toLowerCase() !== fLanguage) return false;
+      if (fLanguage !== "all" && langCode(c) !== fLanguage) return false;
       return true;
     });
     list = [...list].sort((a, b) => {
@@ -338,19 +340,21 @@ function WhitelistPage() {
               <SelectItem value="inactive">{t("parent.statusInactive")}</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={fLanguage} onValueChange={setFLanguage}>
-            <SelectTrigger className="w-auto min-w-[8rem]">
-              <SelectValue placeholder={t("parent.filterLanguage")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("parent.filterAllM")}</SelectItem>
-              {languages.map((code) => (
-                <SelectItem key={code || "unknown"} value={code}>
-                  {langLabel(code)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {!(languages.length <= 1 && languages[0] === "unknown") && (
+            <Select value={fLanguage} onValueChange={setFLanguage}>
+              <SelectTrigger className="w-auto min-w-[8rem]">
+                <SelectValue placeholder={t("parent.filterLanguage")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("parent.filterAllM")}</SelectItem>
+                {languages.map((code) => (
+                  <SelectItem key={code} value={code}>
+                    {langLabel(code)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <Select value={fSort} onValueChange={setFSort}>
             <SelectTrigger className="w-auto min-w-[9rem]">
               <SelectValue />
