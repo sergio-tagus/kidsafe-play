@@ -19,6 +19,7 @@ import { Route as AuthenticatedParentResetPinRouteImport } from './routes/_authe
 import { Route as AuthenticatedParentHistoryRouteImport } from './routes/_authenticated/parent/history'
 import { Route as AuthenticatedParentChildrenRouteImport } from './routes/_authenticated/parent/children'
 import { Route as AuthenticatedParentCategoriesRouteImport } from './routes/_authenticated/parent/categories'
+import { Route as AuthenticatedParentApiUsageRouteImport } from './routes/_authenticated/parent/api-usage'
 import { Route as AuthenticatedParentWhitelistIndexRouteImport } from './routes/_authenticated/parent/whitelist/index'
 import { Route as AuthenticatedKidsChildIdIndexRouteImport } from './routes/_authenticated/kids/$childId/index'
 import { Route as ApiPublicHooksSyncWhitelistRouteImport } from './routes/api/public/hooks/sync-whitelist'
@@ -86,6 +87,12 @@ const AuthenticatedParentCategoriesRoute =
   AuthenticatedParentCategoriesRouteImport.update({
     id: '/categories',
     path: '/categories',
+    getParentRoute: () => AuthenticatedParentRouteRoute,
+  } as any)
+const AuthenticatedParentApiUsageRoute =
+  AuthenticatedParentApiUsageRouteImport.update({
+    id: '/api-usage',
+    path: '/api-usage',
     getParentRoute: () => AuthenticatedParentRouteRoute,
   } as any)
 const AuthenticatedParentWhitelistIndexRoute =
@@ -165,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/parent': typeof AuthenticatedParentRouteRouteWithChildren
+  '/parent/api-usage': typeof AuthenticatedParentApiUsageRoute
   '/parent/categories': typeof AuthenticatedParentCategoriesRoute
   '/parent/children': typeof AuthenticatedParentChildrenRoute
   '/parent/history': typeof AuthenticatedParentHistoryRoute
@@ -187,6 +195,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/parent/api-usage': typeof AuthenticatedParentApiUsageRoute
   '/parent/categories': typeof AuthenticatedParentCategoriesRoute
   '/parent/children': typeof AuthenticatedParentChildrenRoute
   '/parent/history': typeof AuthenticatedParentHistoryRoute
@@ -212,6 +221,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/parent': typeof AuthenticatedParentRouteRouteWithChildren
+  '/_authenticated/parent/api-usage': typeof AuthenticatedParentApiUsageRoute
   '/_authenticated/parent/categories': typeof AuthenticatedParentCategoriesRoute
   '/_authenticated/parent/children': typeof AuthenticatedParentChildrenRoute
   '/_authenticated/parent/history': typeof AuthenticatedParentHistoryRoute
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/parent'
+    | '/parent/api-usage'
     | '/parent/categories'
     | '/parent/children'
     | '/parent/history'
@@ -259,6 +270,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/parent/api-usage'
     | '/parent/categories'
     | '/parent/children'
     | '/parent/history'
@@ -283,6 +295,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/parent'
+    | '/_authenticated/parent/api-usage'
     | '/_authenticated/parent/categories'
     | '/_authenticated/parent/children'
     | '/_authenticated/parent/history'
@@ -382,6 +395,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedParentCategoriesRouteImport
       parentRoute: typeof AuthenticatedParentRouteRoute
     }
+    '/_authenticated/parent/api-usage': {
+      id: '/_authenticated/parent/api-usage'
+      path: '/api-usage'
+      fullPath: '/parent/api-usage'
+      preLoaderRoute: typeof AuthenticatedParentApiUsageRouteImport
+      parentRoute: typeof AuthenticatedParentRouteRoute
+    }
     '/_authenticated/parent/whitelist/': {
       id: '/_authenticated/parent/whitelist/'
       path: '/whitelist'
@@ -470,6 +490,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedParentRouteRouteChildren {
+  AuthenticatedParentApiUsageRoute: typeof AuthenticatedParentApiUsageRoute
   AuthenticatedParentCategoriesRoute: typeof AuthenticatedParentCategoriesRoute
   AuthenticatedParentChildrenRoute: typeof AuthenticatedParentChildrenRoute
   AuthenticatedParentHistoryRoute: typeof AuthenticatedParentHistoryRoute
@@ -482,6 +503,7 @@ interface AuthenticatedParentRouteRouteChildren {
 
 const AuthenticatedParentRouteRouteChildren: AuthenticatedParentRouteRouteChildren =
   {
+    AuthenticatedParentApiUsageRoute: AuthenticatedParentApiUsageRoute,
     AuthenticatedParentCategoriesRoute: AuthenticatedParentCategoriesRoute,
     AuthenticatedParentChildrenRoute: AuthenticatedParentChildrenRoute,
     AuthenticatedParentHistoryRoute: AuthenticatedParentHistoryRoute,
