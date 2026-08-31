@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { useMemo, useState } from "react";
 import { listChildProfiles } from "@/lib/parent.functions";
 import { listSafeVideos, listApprovedChannels } from "@/lib/kids.functions";
 import { KidShell } from "@/components/kid-shell";
 import { VideoCard } from "@/components/video-card";
+import { sanitizeDescription } from "@/lib/sanitize-text";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/kids/$childId/channels/$channelId")({
