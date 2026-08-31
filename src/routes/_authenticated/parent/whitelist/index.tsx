@@ -140,6 +140,11 @@ function WhitelistPage() {
   const [bulkMode, setBulkMode] = useState<"review" | "auto">("review");
   const [bulkRunning, setBulkRunning] = useState(false);
   const [bulkCancel, setBulkCancel] = useState(false);
+  const bulkCancelRef = useRef(false);
+  const requestBulkCancel = () => {
+    bulkCancelRef.current = true;
+    setBulkCancel(true);
+  };
   const [bulkProgress, setBulkProgress] = useState<{
     i: number;
     total: number;
