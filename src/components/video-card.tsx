@@ -25,16 +25,26 @@ export function VideoCard({ video, childId }: { video: SafeVideo; childId: strin
   );
 }
 
-export function VideoRow({ title, videos, childId }: { title: string; videos: SafeVideo[]; childId: string }) {
+export function VideoRow({ title, videos, childId, scroll = false }: { title: string; videos: SafeVideo[]; childId: string; scroll?: boolean }) {
   if (!videos.length) return null;
   return (
     <section className="mb-8">
       <h2 className="text-xl md:text-2xl font-display font-bold mb-3 flex items-center gap-2">{title}</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
-        {videos.map((v) => (
-          <VideoCard key={v.id} video={v} childId={childId} />
-        ))}
-      </div>
+      {scroll ? (
+        <div className="flex gap-4 overflow-x-auto pb-2">
+          {videos.map((v) => (
+            <div key={v.id} className="w-44 sm:w-52 flex-shrink-0">
+              <VideoCard video={v} childId={childId} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+          {videos.map((v) => (
+            <VideoCard key={v.id} video={v} childId={childId} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
