@@ -80,6 +80,13 @@ function WhitelistPage() {
     }
   };
 
+  const LANG_FLAGS: Record<string, string> = {
+    es: "🇪🇸", en: "🇬🇧", pt: "🇵🇹", fr: "🇫🇷", de: "🇩🇪", it: "🇮🇹",
+    ca: "🏴", gl: "🏴", eu: "🏴", ja: "🇯🇵", ko: "🇰🇷", zh: "🇨🇳", ar: "🇸🇦", ru: "🇷🇺",
+    unknown: "🏳️",
+  };
+  const langFlag = (code: string) => LANG_FLAGS[code] ?? "🌐";
+
   const filteredChannels = useMemo(() => {
     const q = fQuery.trim().toLowerCase();
     let list = (channels as any[]).filter((c) => {
@@ -114,6 +121,48 @@ function WhitelistPage() {
   const [autoOpen, setAutoOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualForm, setManualForm] = useState<any>(null);
+
+  // Channel detail dialog state
+  const [detailForm, setDetailForm] = useState<any>(null);
+  const [savingDetail, setSavingDetail] = useState(false);
+
+  const openDetail = (c: any) => {
+    setDetailForm({
+      id: c.id,
+      youtube_channel_id: c.youtube_channel_id,
+      channel_name: c.channel_name,
+      channel_handle: c.channel_handle ?? "",
+      channel_thumbnail_url: c.channel_thumbnail_url ?? "",
+      category: c.category,
+      language: langCode(c),
+      active: c.active,
+      created_at: c.created_at,
+      video_count: c.video_count ?? 0,
+    });
+  };
+
+  const saveDetail = async () => {
+    if (!detailForm || !detailForm.channel_name.trim()) return;
+    setSavingDetail(true);
+    try {
+      await upsertFn({
+        data: {
+          ...channels.find((x: any) => x.id === detailForm.id),
+          channel_name: detailForm.channel_name.trim(),
+          active: detailForm.active,
+        },
+      });
+      await updateCatFn({ data: { channelId: detailForm.id, category: detailForm.category } });
+      await updateLangFn({ data: { channelId: detailForm.id, language: detailForm.language } });
+      toast.success(t("parent.saveChanges") + " ✔️");
+      setDetailForm(null);
+      qc.invalidateQueries({ queryKey: ["wl"] });
+    } catch (e: any) {
+      toast.error(e.message ?? "Error");
+    } finally {
+      setSavingDetail(false);
+    }
+  };
 
   // Auto-import state
   const [urlInput, setUrlInput] = useState("");
@@ -352,7 +401,10 @@ function WhitelistPage() {
               <SelectItem value="all">{t("parent.filterAllM")}</SelectItem>
               {languages.map((code) => (
                 <SelectItem key={code} value={code}>
-                  {langLabel(code)}
+                  <span className="inline-flex items-center gap-2">
+                    <span>{langFlag(code)}</span>
+                    {langLabel(code)}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -388,7 +440,11 @@ function WhitelistPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredChannels.map((c: any) => (
-            <Card key={c.id}>
+            <Card
+              key={c.id}
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => openDetail(c)}
+            >
               <CardContent className="p-5 flex items-center gap-4">
                 {c.channel_thumbnail_url ? (
                   <img src={c.channel_thumbnail_url} alt={c.channel_name} className="w-14 h-14 rounded-full object-cover" />
@@ -400,7 +456,7 @@ function WhitelistPage() {
                   {c.channel_handle && (
                     <div className="text-xs text-muted-foreground truncate">@{c.channel_handle}</div>
                   )}
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <div className="flex flex-wrap items-center gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
                     <Select
                       value={c.category ?? ""}
                       onValueChange={async (v) => {
@@ -440,24 +496,39 @@ function WhitelistPage() {
                         <SelectValue placeholder={t("parent.filterLanguage")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="unknown">{t("parent.unknownLanguage")}</SelectItem>
+                        <SelectItem value="unknown">
+                          <span className="inline-flex items-center gap-2">
+                            <span>{langFlag("unknown")}</span>
+                            {t("parent.unknownLanguage")}
+                          </span>
+                        </SelectItem>
                         {[...new Set([...LANG_OPTIONS, langCode(c)])]
                           .filter((code) => code !== "unknown")
                           .map((code) => (
                             <SelectItem key={code} value={code}>
-                              {langLabel(code)}
+                              <span className="inline-flex items-center gap-2">
+                                <span>{langFlag(code)}</span>
+                                {langLabel(code)}
+                              </span>
                             </SelectItem>
                           ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
-                <Switch checked={c.active} onCheckedChange={() => toggleActive(c)} />
+                <Switch
+                  checked={c.active}
+                  onCheckedChange={() => toggleActive(c)}
+                  onClick={(e) => e.stopPropagation()}
+                />
                 <Button
                   variant="ghost"
                   size="icon"
                   disabled={refreshingId === c.id}
-                  onClick={() => doRefresh(c.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    doRefresh(c.id);
+                  }}
                   title={t("parent.sync")}
                 >
                   {refreshingId === c.id ? (
@@ -466,12 +537,23 @@ function WhitelistPage() {
                     <RefreshCw className="w-4 h-4" />
                   )}
                 </Button>
-                <Link to="/parent/whitelist/$channelId" params={{ channelId: c.id } as any}>
+                <Link
+                  to="/parent/whitelist/$channelId"
+                  params={{ channelId: c.id } as any}
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Button variant="ghost" size="icon">
                     <ExternalLink className="w-4 h-4" />
                   </Button>
                 </Link>
-                <Button variant="ghost" size="icon" onClick={() => remove(c.id)}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    remove(c.id);
+                  }}
+                >
                   <Trash2 className="w-4 h-4 text-destructive" />
                 </Button>
               </CardContent>
@@ -479,6 +561,124 @@ function WhitelistPage() {
           ))}
         </div>
       )}
+
+      {/* Channel detail dialog */}
+      <Dialog open={!!detailForm} onOpenChange={(o) => !o && setDetailForm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("parent.channelDetails")}</DialogTitle>
+          </DialogHeader>
+          {detailForm && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                {detailForm.channel_thumbnail_url ? (
+                  <img
+                    src={detailForm.channel_thumbnail_url}
+                    alt={detailForm.channel_name}
+                    className="w-20 h-20 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-3xl">📺</div>
+                )}
+                <div className="min-w-0">
+                  {detailForm.channel_handle && (
+                    <div className="text-sm text-muted-foreground truncate">@{detailForm.channel_handle}</div>
+                  )}
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {t("parent.addedOn")}: {new Date(detailForm.created_at).toLocaleDateString(lang)} ·{" "}
+                    {detailForm.video_count} {t("parent.videosImported")}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <Label>{t("parent.channelName")}</Label>
+                <Input
+                  value={detailForm.channel_name}
+                  onChange={(e) => setDetailForm({ ...detailForm, channel_name: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>{t("parent.category")}</Label>
+                  <Select
+                    value={detailForm.category ?? ""}
+                    onValueChange={(v) => setDetailForm({ ...detailForm, category: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat: any) => (
+                        <SelectItem key={cat.slug} value={cat.slug}>
+                          {catName(cat.slug)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>{t("parent.filterLanguage")}</Label>
+                  <Select
+                    value={detailForm.language}
+                    onValueChange={(v) => setDetailForm({ ...detailForm, language: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unknown">
+                        <span className="inline-flex items-center gap-2">
+                          <span>{langFlag("unknown")}</span>
+                          {t("parent.unknownLanguage")}
+                        </span>
+                      </SelectItem>
+                      {LANG_OPTIONS.map((code) => (
+                        <SelectItem key={code} value={code}>
+                          <span className="inline-flex items-center gap-2">
+                            <span>{langFlag(code)}</span>
+                            {langLabel(code)}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>{detailForm.active ? t("parent.statusActive") : t("parent.statusInactive")}</Label>
+                <Switch
+                  checked={detailForm.active}
+                  onCheckedChange={(v) => setDetailForm({ ...detailForm, active: v })}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter className="flex-wrap gap-2">
+            {detailForm && (
+              <Button
+                variant="ghost"
+                className="mr-auto"
+                disabled={refreshingId === detailForm.id}
+                onClick={() => doRefresh(detailForm.id)}
+              >
+                {refreshingId === detailForm.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                ) : (
+                  <RefreshCw className="w-4 h-4 mr-1" />
+                )}
+                {t("parent.sync")}
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => setDetailForm(null)}>
+              {t("profile.cancel")}
+            </Button>
+            <Button onClick={saveDetail} disabled={savingDetail || !detailForm?.channel_name?.trim()}>
+              {savingDetail ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+              {t("parent.saveChanges")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Auto-import dialog */}
       <Dialog open={autoOpen} onOpenChange={setAutoOpen}>
