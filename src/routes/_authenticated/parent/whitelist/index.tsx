@@ -10,6 +10,7 @@ import {
   importChannelFromUrl,
   refreshChannelVideos,
   updateChannelCategory,
+  updateChannelLanguage,
 } from "@/lib/parent.functions";
 import { listCategories } from "@/lib/categories.functions";
 import { recommendChannels, type ChannelRecommendation } from "@/lib/recommendations.functions";
@@ -40,6 +41,7 @@ function WhitelistPage() {
   const importFn = useServerFn(importChannelFromUrl);
   const refreshFn = useServerFn(refreshChannelVideos);
   const updateCatFn = useServerFn(updateChannelCategory);
+  const updateLangFn = useServerFn(updateChannelLanguage);
   const catsFn = useServerFn(listCategories);
   const recommendFn = useServerFn(recommendChannels);
 
@@ -65,6 +67,8 @@ function WhitelistPage() {
     for (const c of channels as any[]) set.add(langCode(c));
     return [...set].sort();
   }, [channels]);
+
+  const LANG_OPTIONS = ["es", "en", "pt", "fr", "de", "it", "ca", "gl", "eu", "ja", "ko", "zh", "ar", "ru"];
 
   const langLabel = (code: string) => {
     if (!code || code === "unknown") return t("parent.unknownLanguage");
