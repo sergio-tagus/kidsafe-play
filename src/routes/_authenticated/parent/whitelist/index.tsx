@@ -686,7 +686,7 @@ function WhitelistPage() {
               </p>
               <DialogFooter>
                 <Button variant="outline" className="rounded-full" onClick={() => setBulkOpen(false)}>
-                  {t("common.cancel")}
+                  {t("profile.cancel")}
                 </Button>
                 <Button className="rounded-full" onClick={runBulkUpdate}>
                   {t("parent.bulkStart")}
