@@ -42,7 +42,8 @@ export const Route = createFileRoute("/api/public/hooks/sync-whitelist")({
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-        const { fetchChannel, fetchRecentUploads } = await import("@/lib/youtube.server");
+        const { fetchChannel, fetchRecentUploads, createMeter, setActiveMeter } = await import("@/lib/youtube.server");
+        const { recordUsage, logSyncRun } = await import("@/lib/api-usage.server");
 
         const nowMs = Date.now();
         const { data: settings, error: sErr } = await supabaseAdmin
