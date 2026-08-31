@@ -378,8 +378,10 @@ useEffect(() => {
       ) : (
 
         <div className="max-w-6xl mx-auto">
-          <div
+<div
             ref={stageRef}
+            onPointerDown={nudgeControls}
+            onMouseMove={nudgeControls}
             style={
               pseudoFullscreen
                 ? { width: "100dvw", height: "100dvh" }
@@ -467,11 +469,23 @@ useEffect(() => {
                 <p className="mt-2 opacity-90">{t("player.lockedDesc")}</p>
               </div>
             )}
-          </div>
+</div>
+          {/* Full-screen tap catcher: while playing with the controls hidden, a
+              tap anywhere on the stage brings them back. Never blocks the
+              paused overlay nor YouTube's native controls when visible. */}
+          {isFullscreen && !locked && (
+            <div
+              aria-hidden="true"
+              onClick={nudgeControls}
+              className={`absolute inset-0 z-20 ${!paused && !controlsVisible ? "pointer-events-auto" : "pointer-events-none"}`}
+            />
+          )}
           {!locked && (
             isFullscreen ? (
-              <div
-                className="absolute bottom-0 inset-x-0 z-30 flex justify-center bg-gradient-to-t from-black/70 to-transparent"
+<div
+                className={`absolute bottom-0 inset-x-0 z-30 flex justify-center bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300 ${
+                  controlsVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
                 style={{
                   paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
                   paddingLeft: "env(safe-area-inset-left)",
