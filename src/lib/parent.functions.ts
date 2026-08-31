@@ -506,15 +506,20 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
     }
 
 
-    const imported = await importVideosForChannel(
-      context.supabase,
-      context.userId,
-      channelRowId,
-      ch.uploadsPlaylistId,
-      data.videoLimit,
-    );
+    let imported = 0;
+    try {
+      imported = await importVideosForChannel(
+        context.supabase,
+        context.userId,
+        channelRowId,
+        ch.uploadsPlaylistId,
+        data.videoLimit,
+      );
+    } finally {
+      await flush(channelRowId);
+    }
 
-    return { channelId: channelRowId, videosImported: imported };
+    return { channelId: channelRowId, videosImported: imported, unitsUsed: meter.units };
   });
 
 export const refreshChannelVideos = createServerFn({ method: "POST" })
