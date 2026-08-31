@@ -523,21 +523,132 @@ export const refreshChannelVideos = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!ch) throw new Error("Channel not found");
 
-    const { fetchChannel } = await import("@/lib/youtube.server");
-    const yt = await fetchChannel(ch.youtube_channel_id);
+    const { fetchChannel, withYtMeter } = await import("@/lib/youtube.server");
+    const { recordUsage, logSyncRun } = await import("@/lib/api-usage.server");
+    const startedAt = new Date().toISOString();
     // Channel metadata is only updated through previewChannelUpdate/applyChannelUpdate
     // so the parent always authorises the change.
-
-    const imported = await importVideosForChannel(
-      context.supabase,
-      context.userId,
-      ch.id,
-      yt.uploadsPlaylistId,
-      data.videoLimit,
-    );
+    const { result: imported, meter } = await withYtMeter(async () => {
+      const yt = await fetchChannel(ch.youtube_channel_id);
+      return importVideosForChannel(
+        context.supabase,
+        context.userId,
+        ch.id,
+        yt.uploadsPlaylistId,
+        data.videoLimit,
+      );
+    });
+    await recordUsage(context.supabase, context.userId, meter, ch.id);
+    await logSyncRun(context.supabase, context.userId, {
+      source: "manual",
+      startedAt,
+      channelsProcessed: 1,
+      videosImported: imported,
+      unitsUsed: meter.units,
+    });
     await context.supabase
       .from("whitelist_channels")
       .update({ last_synced_at: new Date().toISOString() } as never)
       .eq("id", ch.id);
-    return { videosImported: imported };
+    return { videosImported: imported, unitsUsed: meter.units };
+  });
+
+// ---------- bulk update ----------
+/**
+ * Update a single channel as part of a bulk run.
+ * mode "review": metadata differences are stored as pending updates.
+ * mode "auto": metadata differences are applied immediately.
+ */
+export const bulkUpdateChannel = createServerFn({ method: "POST" })
+  .middleware([requireParentUnlocked])
+  .inputValidator((d: unknown) =>
+    z.object({
+      channelId: z.string().uuid(),
+      mode: z.enum(["review", "auto"]),
+      videoLimit: z.number().int().min(1).max(500).default(200),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: ch, error } = await context.supabase
+      .from("whitelist_channels")
+      .select("*")
+      .eq("id", data.channelId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!ch) throw new Error("Channel not found");
+
+    const { fetchChannel, withYtMeter } = await import("@/lib/youtube.server");
+    const { recordUsage } = await import("@/lib/api-usage.server");
+
+    const { result, meter } = await withYtMeter(async () => {
+      const yt = await fetchChannel((ch as any).youtube_channel_id);
+      const incoming = {
+        channel_name: yt.title,
+        channel_handle: yt.handle,
+        channel_thumbnail_url: yt.thumbnail,
+        channel_description: yt.description,
+        language: yt.language ?? "unknown",
+      };
+      const diff = buildChannelDiff(ch as any, incoming);
+      const imported = await importVideosForChannel(
+        context.supabase,
+        context.userId,
+        (ch as any).id,
+        yt.uploadsPlaylistId,
+        data.videoLimit,
+      );
+      return { diff, imported };
+    });
+
+    const patch: Record<string, unknown> = { last_synced_at: new Date().toISOString() };
+    if (result.diff.length) {
+      if (data.mode === "auto") {
+        for (const f of result.diff) patch[f.field] = f.incoming;
+        patch['pending_updates'] = null;
+        patch['pending_updates_at'] = null;
+      } else {
+        patch['pending_updates'] = result.diff;
+        patch['pending_updates_at'] = new Date().toISOString();
+      }
+    }
+    const { error: upErr } = await context.supabase
+      .from("whitelist_channels")
+      .update(patch as never)
+      .eq("id", (ch as any).id);
+    if (upErr) throw new Error(upErr.message);
+
+    await recordUsage(context.supabase, context.userId, meter, (ch as any).id);
+
+    return {
+      channelId: (ch as any).id as string,
+      videosImported: result.imported,
+      changedFields: result.diff.length,
+      applied: data.mode === "auto" && result.diff.length > 0,
+      unitsUsed: meter.units,
+    };
+  });
+
+/** Persist a summary row for a completed bulk run. */
+export const logBulkSyncRun = createServerFn({ method: "POST" })
+  .middleware([requireParentUnlocked])
+  .inputValidator((d: unknown) =>
+    z.object({
+      startedAt: z.string(),
+      channelsProcessed: z.number().int().min(0),
+      videosImported: z.number().int().min(0),
+      unitsUsed: z.number().int().min(0),
+      errors: z.array(z.object({ channel: z.string(), error: z.string() })).default([]),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { logSyncRun } = await import("@/lib/api-usage.server");
+    await logSyncRun(context.supabase, context.userId, {
+      source: "bulk",
+      startedAt: data.startedAt,
+      channelsProcessed: data.channelsProcessed,
+      videosImported: data.videosImported,
+      unitsUsed: data.unitsUsed,
+      errors: data.errors.length ? data.errors : null,
+    });
+    return { ok: true };
   });
