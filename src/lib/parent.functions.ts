@@ -90,6 +90,7 @@ const channelInput = z.object({
   channel_name: z.string().min(1).max(200),
   channel_handle: z.string().max(200).nullable().optional(),
   channel_thumbnail_url: z.string().url().nullable().optional().or(z.literal("")),
+  channel_description: z.string().max(5000).nullable().optional(),
   category: categorySlug,
   active: z.boolean().default(true),
 });
@@ -104,6 +105,7 @@ export const upsertWhitelistChannel = createServerFn({ method: "POST" })
       channel_name: data.channel_name,
       channel_handle: data.channel_handle || null,
       channel_thumbnail_url: data.channel_thumbnail_url || null,
+      channel_description: data.channel_description?.trim() || null,
       category: data.category,
       active: data.active,
     };
