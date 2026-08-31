@@ -67,13 +67,38 @@ export const Route = createFileRoute("/api/public/hooks/sync-whitelist")({
           processedParents++;
           const { data: channels } = await supabaseAdmin
             .from("whitelist_channels")
-            .select("id, youtube_channel_id")
+            .select("id, youtube_channel_id, channel_name, channel_handle, channel_thumbnail_url, channel_description, language")
             .eq("parent_user_id", s.parent_user_id)
             .eq("active", true);
 
           for (const ch of channels ?? []) {
             try {
               const yt = await fetchChannel(ch.youtube_channel_id);
+
+              // Scheduled sync never overwrites channel metadata on its own:
+              // detected changes are stored as pending updates for parent approval.
+              const incoming: Record<string, string | null> = {
+                channel_name: yt.title,
+                channel_handle: yt.handle,
+                channel_thumbnail_url: yt.thumbnail,
+                channel_description: yt.description,
+                language: yt.language ?? "unknown",
+              };
+              const norm = (v: unknown) => {
+                const t = typeof v === "string" ? v.trim() : v == null ? "" : String(v);
+                return t.length ? t : null;
+              };
+              const diff = Object.entries(incoming)
+                .map(([field, value]) => ({ field, current: norm((ch as any)[field]), incoming: norm(value) }))
+                .filter((d) => d.incoming !== null && d.incoming !== d.current)
+                .filter((d) => !(d.field === "language" && d.incoming === "unknown"));
+              if (diff.length) {
+                await supabaseAdmin
+                  .from("whitelist_channels")
+                  .update({ pending_updates: diff, pending_updates_at: new Date().toISOString() } as never)
+                  .eq("id", ch.id);
+              }
+
               const videos = await fetchRecentUploads(yt.uploadsPlaylistId, 200);
               if (videos.length) {
                 const rows = videos.map((v) => ({

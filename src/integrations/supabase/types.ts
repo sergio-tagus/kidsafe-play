@@ -331,6 +331,8 @@ export type Database = {
           id: string
           language: string
           parent_user_id: string
+          pending_updates: Json | null
+          pending_updates_at: string | null
           youtube_channel_id: string
         }
         Insert: {
@@ -344,6 +346,8 @@ export type Database = {
           id?: string
           language?: string
           parent_user_id: string
+          pending_updates?: Json | null
+          pending_updates_at?: string | null
           youtube_channel_id: string
         }
         Update: {
@@ -357,6 +361,8 @@ export type Database = {
           id?: string
           language?: string
           parent_user_id?: string
+          pending_updates?: Json | null
+          pending_updates_at?: string | null
           youtube_channel_id?: string
         }
         Relationships: [

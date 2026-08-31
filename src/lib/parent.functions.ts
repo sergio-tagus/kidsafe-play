@@ -233,6 +233,111 @@ export const deleteVideo = createServerFn({ method: "POST" })
 // ---------- YouTube auto-import ----------
 // Category slugs live in `public.categories`; validated by shape + FK.
 
+export const UPDATABLE_CHANNEL_FIELDS = [
+  "channel_name",
+  "channel_handle",
+  "channel_thumbnail_url",
+  "channel_description",
+  "language",
+] as const;
+
+export type UpdatableChannelField = (typeof UPDATABLE_CHANNEL_FIELDS)[number];
+export type ChannelDiff = {
+  field: UpdatableChannelField;
+  current: string | null;
+  incoming: string | null;
+};
+
+const norm = (v: unknown): string | null => {
+  const s = typeof v === "string" ? v.trim() : v == null ? "" : String(v);
+  return s.length ? s : null;
+};
+
+/** Build the list of fields where YouTube data differs from the stored row. */
+export function buildChannelDiff(
+  current: Record<string, unknown>,
+  incoming: Record<string, unknown>,
+): ChannelDiff[] {
+  const out: ChannelDiff[] = [];
+  for (const field of UPDATABLE_CHANNEL_FIELDS) {
+    const inc = norm(incoming[field]);
+    const cur = norm(current[field]);
+    if (inc === null) continue; // never wipe data with empty YouTube values
+    if (field === "language" && inc === "unknown") continue;
+    if (inc !== cur) out.push({ field, current: cur, incoming: inc });
+  }
+  return out;
+}
+
+const channelDiffFields = z.array(
+  z.object({
+    field: z.enum(UPDATABLE_CHANNEL_FIELDS),
+    current: z.string().nullable(),
+    incoming: z.string().nullable(),
+  }),
+);
+
+/** Fetch YouTube data for a stored channel and return the pending diff (no writes). */
+export const previewChannelUpdate = createServerFn({ method: "POST" })
+  .middleware([requireParentUnlocked])
+  .inputValidator((d: unknown) => z.object({ channelId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: ch, error } = await context.supabase
+      .from("whitelist_channels")
+      .select("*")
+      .eq("id", data.channelId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!ch) throw new Error("Channel not found");
+
+    const { fetchChannel } = await import("@/lib/youtube.server");
+    const yt = await fetchChannel((ch as any).youtube_channel_id);
+    const incoming = {
+      channel_name: yt.title,
+      channel_handle: yt.handle,
+      channel_thumbnail_url: yt.thumbnail,
+      channel_description: yt.description,
+      language: yt.language ?? "unknown",
+    };
+    return {
+      channelId: (ch as any).id as string,
+      diff: buildChannelDiff(ch as any, incoming),
+    };
+  });
+
+/** Apply the parent-approved subset of a diff to the channel row. */
+export const applyChannelUpdate = createServerFn({ method: "POST" })
+  .middleware([requireParentUnlocked])
+  .inputValidator((d: unknown) =>
+    z.object({ channelId: z.string().uuid(), fields: channelDiffFields }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const patch: Record<string, string | null> = {};
+    for (const f of data.fields) patch[f.field] = f.incoming;
+    patch['pending_updates'] = null;
+    patch['pending_updates_at'] = null;
+    const { error } = await context.supabase
+      .from("whitelist_channels")
+      .update(patch as never)
+      .eq("id", data.channelId);
+    if (error) throw new Error(error.message);
+    return { updated: data.fields.length };
+  });
+
+/** Discard the pending updates detected by the scheduled sync. */
+export const dismissPendingUpdates = createServerFn({ method: "POST" })
+  .middleware([requireParentUnlocked])
+  .inputValidator((d: unknown) => z.object({ channelId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("whitelist_channels")
+      .update({ pending_updates: null, pending_updates_at: null } as never)
+      .eq("id", data.channelId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
 export const previewChannelFromUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ url: z.string().min(1).max(500) }).parse(d))
@@ -303,6 +408,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
       url: z.string().min(1).max(500),
       category: categorySlug.optional(),
       videoLimit: z.number().int().min(1).max(500).default(200),
+      confirmOverwrite: z.boolean().default(false),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -317,29 +423,38 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
     // Upsert channel
     const { data: existing } = await context.supabase
       .from("whitelist_channels")
-      .select("id, language, channel_description")
+      .select("*")
       .eq("parent_user_id", context.userId)
       .eq("youtube_channel_id", ch.id)
       .maybeSingle();
 
+    const incoming = {
+      channel_name: ch.title,
+      channel_handle: ch.handle,
+      channel_thumbnail_url: ch.thumbnail,
+      channel_description: ch.description,
+      language: ch.language ?? "unknown",
+    };
+
     let channelRowId: string;
     if (existing) {
-      const keepLang = existing.language && existing.language !== "unknown";
-      const keepDesc = (existing as any).channel_description?.trim();
+      const diff = buildChannelDiff(existing as any, incoming);
+      if (diff.length && !data.confirmOverwrite) {
+        return {
+          needsConfirm: true as const,
+          channelId: (existing as any).id as string,
+          channelName: (existing as any).channel_name as string,
+          diff,
+        };
+      }
+      const patch: Record<string, unknown> = { active: true, category };
+      for (const f of diff) patch[f.field] = f.incoming;
       const { error } = await context.supabase
         .from("whitelist_channels")
-        .update({
-          channel_name: ch.title,
-          channel_handle: ch.handle,
-          channel_thumbnail_url: ch.thumbnail,
-          channel_description: keepDesc || ch.description?.trim() || null,
-          category,
-          active: true,
-          language: keepLang ? existing.language : (ch.language ?? "unknown"),
-        })
-        .eq("id", existing.id);
+        .update(patch as never)
+        .eq("id", (existing as any).id);
       if (error) throw new Error(error.message);
-      channelRowId = existing.id;
+      channelRowId = (existing as any).id;
     } else {
       const { data: row, error } = await context.supabase
         .from("whitelist_channels")
@@ -359,6 +474,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
       channelRowId = row.id;
     }
+
 
     const imported = await importVideosForChannel(
       context.supabase,
@@ -382,7 +498,7 @@ export const refreshChannelVideos = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: ch, error } = await context.supabase
       .from("whitelist_channels")
-      .select("id, youtube_channel_id, language, channel_description")
+      .select("id, youtube_channel_id")
       .eq("id", data.channelId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -390,19 +506,9 @@ export const refreshChannelVideos = createServerFn({ method: "POST" })
 
     const { fetchChannel } = await import("@/lib/youtube.server");
     const yt = await fetchChannel(ch.youtube_channel_id);
-    // Never overwrite a language / description the parent set manually.
-    const patch: { language?: string; channel_description?: string } = {};
-    if (!ch.language || ch.language === "unknown") patch.language = yt.language ?? "unknown";
-    if (!(ch as any).channel_description?.trim() && yt.description?.trim()) {
-      patch.channel_description = yt.description.trim();
-    }
-    if (Object.keys(patch).length) {
-      const { error: updErr } = await context.supabase
-        .from("whitelist_channels")
-        .update(patch)
-        .eq("id", ch.id);
-      if (updErr) throw new Error(updErr.message);
-    }
+    // Channel metadata is only updated through previewChannelUpdate/applyChannelUpdate
+    // so the parent always authorises the change.
+
     const imported = await importVideosForChannel(
       context.supabase,
       context.userId,
