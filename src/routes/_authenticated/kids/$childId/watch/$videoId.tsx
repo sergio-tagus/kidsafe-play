@@ -232,9 +232,9 @@ function WatchPage() {
         const next = !v;
         if (next) {
           // Best effort: only works when installed as PWA; fails silently in browser.
-          try { (screen.orientation as any)?.lock?.("landscape")?.catch?.(() => {}); } catch { /* ignore */ }
+          try { (window.screen?.orientation as any)?.lock?.("landscape")?.catch?.(() => {}); } catch { /* ignore */ }
         } else {
-          try { (screen.orientation as any)?.unlock?.(); } catch { /* ignore */ }
+          try { (window.screen?.orientation as any)?.unlock?.(); } catch { /* ignore */ }
         }
         return next;
       });
@@ -277,7 +277,7 @@ function WatchPage() {
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
-      try { (screen.orientation as any)?.unlock?.(); } catch { /* ignore */ }
+      try { (window.screen?.orientation as any)?.unlock?.(); } catch { /* ignore */ }
     };
   }, [pseudoFullscreen]);
 
