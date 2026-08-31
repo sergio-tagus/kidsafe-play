@@ -13,7 +13,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+
+const LANG_FLAGS: Record<string, string> = {
+  es: "🇪🇸", en: "🇬🇧", pt: "🇵🇹", fr: "🇫🇷", de: "🇩🇪", it: "🇮🇹",
+  ca: "🏴", gl: "🏴", eu: "🏴", ja: "🇯🇵", ko: "🇰🇷", zh: "🇨🇳", ar: "🇸🇦", ru: "🇷🇺",
+  unknown: "🏳️",
+};
 
 export const Route = createFileRoute("/_authenticated/parent/whitelist/$channelId")({
   component: ChannelDetail,
