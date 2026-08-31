@@ -133,6 +133,7 @@ function WhitelistPage() {
       channel_name: c.channel_name,
       channel_handle: c.channel_handle ?? "",
       channel_thumbnail_url: c.channel_thumbnail_url ?? "",
+      channel_description: c.channel_description ?? "",
       category: c.category,
       language: langCode(c),
       active: c.active,
