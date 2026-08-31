@@ -306,3 +306,24 @@ export function inferCategory(input: {
   }
   return best;
 }
+
+// ---------- Language helpers ----------
+const COUNTRY_LANG: Record<string, string> = {
+  ES: "es", MX: "es", AR: "es", CO: "es", CL: "es", PE: "es", VE: "es", UY: "es", EC: "es",
+  BO: "es", PY: "es", CR: "es", PA: "es", GT: "es", HN: "es", SV: "es", NI: "es", DO: "es", CU: "es",
+  US: "en", GB: "en", AU: "en", CA: "en", IE: "en", NZ: "en", ZA: "en", IN: "en", PH: "en",
+  PT: "pt", BR: "pt", AO: "pt", MZ: "pt",
+  FR: "fr", BE: "fr", DE: "de", AT: "de", CH: "de", IT: "it", NL: "nl", RU: "ru", UA: "ru",
+  JP: "ja", KR: "ko", CN: "zh", TW: "zh", HK: "zh", SA: "ar", AE: "ar", EG: "ar", MA: "ar",
+};
+
+export function countryToLanguage(country: unknown): string | null {
+  if (typeof country !== "string" || !country.trim()) return null;
+  return COUNTRY_LANG[country.trim().toUpperCase()] ?? null;
+}
+
+export function normalizeLanguage(value: unknown): string {
+  if (typeof value !== "string") return "unknown";
+  const base = value.trim().toLowerCase().split(/[-_]/)[0];
+  return base && base !== "zxx" ? base : "unknown";
+}
