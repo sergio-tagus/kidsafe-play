@@ -346,7 +346,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
           channel_thumbnail_url: ch.thumbnail,
           category,
           active: true,
-          language: ch.language,
+          language: ch.language ?? "unknown",
         })
         .select("id")
         .single();
