@@ -440,9 +440,12 @@ function WhitelistPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredChannels.map((c: any) => (
-            <Card key={c.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => openDetail(c)}>
-              <CardContent className="p-5 flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
-                <div className="contents" onClick={(e) => { e.stopPropagation(); openDetail(c); }} />
+            <Card
+              key={c.id}
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => openDetail(c)}
+            >
+              <CardContent className="p-5 flex items-center gap-4">
                 {c.channel_thumbnail_url ? (
                   <img src={c.channel_thumbnail_url} alt={c.channel_name} className="w-14 h-14 rounded-full object-cover" />
                 ) : (
