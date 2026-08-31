@@ -13,7 +13,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Trash2, ArrowLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+
+const LANG_FLAGS: Record<string, string> = {
+  es: "🇪🇸", en: "🇬🇧", pt: "🇵🇹", fr: "🇫🇷", de: "🇩🇪", it: "🇮🇹",
+  ca: "🏴", gl: "🏴", eu: "🏴", ja: "🇯🇵", ko: "🇰🇷", zh: "🇨🇳", ar: "🇸🇦", ru: "🇷🇺",
+  unknown: "🏳️",
+};
 
 export const Route = createFileRoute("/_authenticated/parent/whitelist/$channelId")({
   component: ChannelDetail,
@@ -34,6 +41,8 @@ function ChannelDetail() {
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>(null);
+  const [descOpen, setDescOpen] = useState(false);
+  const langFlag = (code: string) => LANG_FLAGS[(code || "unknown").toLowerCase()] ?? "🌐";
 
   const openNew = () => {
     setForm({ whitelist_channel_id: channelId, videoInput: "", youtube_video_id: "", title: "", description: "", thumbnail_url: "", duration_seconds: "", published_at: "" });
@@ -88,6 +97,58 @@ function ChannelDetail() {
         <h1 className="text-2xl font-display font-bold flex-1 truncate">{channel?.channel_name ?? ""}</h1>
         <Button className="rounded-full" onClick={openNew}><Plus className="w-4 h-4 mr-1" /> {t("parent.addVideo")}</Button>
       </div>
+
+      {channel && (
+        <Card className="mb-6">
+          <CardContent className="p-4 flex flex-col sm:flex-row gap-4">
+            {channel.channel_thumbnail_url ? (
+              <img src={channel.channel_thumbnail_url} alt={channel.channel_name} className="w-20 h-20 rounded-full object-cover shrink-0" />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-3xl shrink-0">📺</div>
+            )}
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {channel.channel_handle && (
+                  <span className="text-sm text-muted-foreground">@{channel.channel_handle}</span>
+                )}
+                <Badge variant={channel.active ? "default" : "secondary"}>
+                  {channel.active ? t("parent.statusActive") : t("parent.statusInactive")}
+                </Badge>
+                <span className="text-sm inline-flex items-center gap-1">
+                  <span>{langFlag(channel.language)}</span>
+                  {channel.language && channel.language !== "unknown"
+                    ? channel.language
+                    : t("parent.unknownLanguage")}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {t(`categories.${channel.category}` as any)}
+                </span>
+              </div>
+              {channel.channel_description && (
+                <div>
+                  <p className={`text-sm text-foreground/80 whitespace-pre-wrap ${descOpen ? "" : "line-clamp-3"}`}>
+                    {channel.channel_description}
+                  </p>
+                  <button
+                    type="button"
+                    className="mt-1 text-sm font-semibold text-primary hover:underline"
+                    onClick={() => setDescOpen((v) => !v)}
+                  >
+                    {descOpen ? t("common.showLess") : t("common.showMore")}
+                  </button>
+                </div>
+              )}
+              <div className="text-xs text-muted-foreground">
+                {t("parent.addedOn")}: {new Date(channel.created_at).toLocaleDateString()} ·{" "}
+                {channel.video_count ?? 0} {t("parent.videosImported")} · {t("parent.lastUpdated")}:{" "}
+                {channel.last_synced_at
+                  ? new Date(channel.last_synced_at).toLocaleString()
+                  : t("parent.neverSynced")}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {videos.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">{t("parent.noVideos")}</div>

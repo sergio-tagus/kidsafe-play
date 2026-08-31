@@ -147,8 +147,37 @@ function WhitelistPage() {
       language: langCode(c),
       active: c.active,
       created_at: c.created_at,
+      last_synced_at: c.last_synced_at ?? null,
       video_count: c.video_count ?? 0,
     });
+  };
+
+  /** Refresh the open detail popup with the latest server data (after sync/import). */
+  const syncDetailFromServer = async (id: string) => {
+    if (!detailForm || detailForm.id !== id) return;
+    try {
+      const rows: any[] = (await listFn()) as any[];
+      const c = rows.find((x) => x.id === id);
+      if (!c) return;
+      setDetailForm((f: any) =>
+        f && f.id === id
+          ? {
+              ...f,
+              channel_name: c.channel_name,
+              channel_handle: c.channel_handle ?? "",
+              channel_thumbnail_url: c.channel_thumbnail_url ?? "",
+              channel_description: c.channel_description ?? "",
+              category: c.category,
+              language: langCode(c),
+              active: c.active,
+              last_synced_at: c.last_synced_at ?? null,
+              video_count: c.video_count ?? 0,
+            }
+          : f,
+      );
+    } catch {
+      // popup refresh is best-effort; the list query is invalidated separately
+    }
   };
 
   const saveDetail = async () => {
@@ -374,6 +403,7 @@ function WhitelistPage() {
       }
       setDiffState(null);
       qc.invalidateQueries({ queryKey: ["wl"] });
+      await syncDetailFromServer(diffState.channelId);
     } catch (e: any) {
       toast.error(e.message ?? "Error");
     } finally {
@@ -398,6 +428,7 @@ function WhitelistPage() {
       const res = await refreshFn({ data: { channelId: id } });
       toast.success(t("parent.syncDone", { n: res.videosImported }));
       qc.invalidateQueries({ queryKey: ["wl"] });
+      await syncDetailFromServer(id);
     } catch (e: any) {
       toast.error(e.message ?? "Error");
     } finally {
@@ -710,6 +741,12 @@ function WhitelistPage() {
                   <div className="text-xs text-muted-foreground mt-1">
                     {t("parent.addedOn")}: {new Date(detailForm.created_at).toLocaleDateString(lang)} ·{" "}
                     {detailForm.video_count} {t("parent.videosImported")}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {t("parent.lastUpdated")}:{" "}
+                    {detailForm.last_synced_at
+                      ? new Date(detailForm.last_synced_at).toLocaleString(lang)
+                      : t("parent.neverSynced")}
                   </div>
                 </div>
               </div>

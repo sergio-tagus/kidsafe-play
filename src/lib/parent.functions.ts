@@ -316,12 +316,24 @@ export const applyChannelUpdate = createServerFn({ method: "POST" })
     for (const f of data.fields) patch[f.field] = f.incoming;
     patch['pending_updates'] = null;
     patch['pending_updates_at'] = null;
+    patch['last_synced_at'] = new Date().toISOString();
     const { error } = await context.supabase
       .from("whitelist_channels")
       .update(patch as never)
       .eq("id", data.channelId);
     if (error) throw new Error(error.message);
-    return { updated: data.fields.length };
+    const { data: fresh } = await context.supabase
+      .from("whitelist_channels")
+      .select("*, videos_cache(count)")
+      .eq("id", data.channelId)
+      .maybeSingle();
+    const row: any = fresh ?? null;
+    return {
+      updated: data.fields.length,
+      channel: row
+        ? { ...row, video_count: row.videos_cache?.[0]?.count ?? 0, videos_cache: undefined }
+        : null,
+    };
   });
 
 /** Discard the pending updates detected by the scheduled sync. */
@@ -447,7 +459,11 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
           diff,
         };
       }
-      const patch: Record<string, unknown> = { active: true, category };
+      const patch: Record<string, unknown> = {
+        active: true,
+        category,
+        last_synced_at: new Date().toISOString(),
+      };
       for (const f of diff) patch[f.field] = f.incoming;
       const { error } = await context.supabase
         .from("whitelist_channels")
@@ -468,6 +484,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
           category,
           active: true,
           language: ch.language ?? "unknown",
+          last_synced_at: new Date().toISOString(),
         })
         .select("id")
         .single();
@@ -516,5 +533,9 @@ export const refreshChannelVideos = createServerFn({ method: "POST" })
       yt.uploadsPlaylistId,
       data.videoLimit,
     );
+    await context.supabase
+      .from("whitelist_channels")
+      .update({ last_synced_at: new Date().toISOString() } as never)
+      .eq("id", ch.id);
     return { videosImported: imported };
   });
