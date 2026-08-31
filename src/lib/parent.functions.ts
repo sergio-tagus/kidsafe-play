@@ -233,6 +233,111 @@ export const deleteVideo = createServerFn({ method: "POST" })
 // ---------- YouTube auto-import ----------
 // Category slugs live in `public.categories`; validated by shape + FK.
 
+export const UPDATABLE_CHANNEL_FIELDS = [
+  "channel_name",
+  "channel_handle",
+  "channel_thumbnail_url",
+  "channel_description",
+  "language",
+] as const;
+
+export type UpdatableChannelField = (typeof UPDATABLE_CHANNEL_FIELDS)[number];
+export type ChannelDiff = {
+  field: UpdatableChannelField;
+  current: string | null;
+  incoming: string | null;
+};
+
+const norm = (v: unknown): string | null => {
+  const s = typeof v === "string" ? v.trim() : v == null ? "" : String(v);
+  return s.length ? s : null;
+};
+
+/** Build the list of fields where YouTube data differs from the stored row. */
+export function buildChannelDiff(
+  current: Record<string, unknown>,
+  incoming: Record<string, unknown>,
+): ChannelDiff[] {
+  const out: ChannelDiff[] = [];
+  for (const field of UPDATABLE_CHANNEL_FIELDS) {
+    const inc = norm(incoming[field]);
+    const cur = norm(current[field]);
+    if (inc === null) continue; // never wipe data with empty YouTube values
+    if (field === "language" && inc === "unknown") continue;
+    if (inc !== cur) out.push({ field, current: cur, incoming: inc });
+  }
+  return out;
+}
+
+const channelDiffFields = z.array(
+  z.object({
+    field: z.enum(UPDATABLE_CHANNEL_FIELDS),
+    current: z.string().nullable(),
+    incoming: z.string().nullable(),
+  }),
+);
+
+/** Fetch YouTube data for a stored channel and return the pending diff (no writes). */
+export const previewChannelUpdate = createServerFn({ method: "POST" })
+  .middleware([requireParentUnlocked])
+  .inputValidator((d: unknown) => z.object({ channelId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: ch, error } = await context.supabase
+      .from("whitelist_channels")
+      .select("*")
+      .eq("id", data.channelId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!ch) throw new Error("Channel not found");
+
+    const { fetchChannel } = await import("@/lib/youtube.server");
+    const yt = await fetchChannel((ch as any).youtube_channel_id);
+    const incoming = {
+      channel_name: yt.title,
+      channel_handle: yt.handle,
+      channel_thumbnail_url: yt.thumbnail,
+      channel_description: yt.description,
+      language: yt.language ?? "unknown",
+    };
+    return {
+      channelId: (ch as any).id as string,
+      diff: buildChannelDiff(ch as any, incoming),
+    };
+  });
+
+/** Apply the parent-approved subset of a diff to the channel row. */
+export const applyChannelUpdate = createServerFn({ method: "POST" })
+  .middleware([requireParentUnlocked])
+  .inputValidator((d: unknown) =>
+    z.object({ channelId: z.string().uuid(), fields: channelDiffFields }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const patch: Record<string, string | null> = {};
+    for (const f of data.fields) patch[f.field] = f.incoming;
+    patch['pending_updates'] = null;
+    patch['pending_updates_at'] = null;
+    const { error } = await context.supabase
+      .from("whitelist_channels")
+      .update(patch as never)
+      .eq("id", data.channelId);
+    if (error) throw new Error(error.message);
+    return { updated: data.fields.length };
+  });
+
+/** Discard the pending updates detected by the scheduled sync. */
+export const dismissPendingUpdates = createServerFn({ method: "POST" })
+  .middleware([requireParentUnlocked])
+  .inputValidator((d: unknown) => z.object({ channelId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("whitelist_channels")
+      .update({ pending_updates: null, pending_updates_at: null } as never)
+      .eq("id", data.channelId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+
 export const previewChannelFromUrl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ url: z.string().min(1).max(500) }).parse(d))
