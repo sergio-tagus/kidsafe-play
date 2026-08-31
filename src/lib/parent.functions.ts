@@ -74,10 +74,14 @@ export const listWhitelistChannels = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("whitelist_channels")
-      .select("*")
+      .select("*, videos_cache(count)")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return data ?? [];
+    return (data ?? []).map((row: any) => ({
+      ...row,
+      video_count: row.videos_cache?.[0]?.count ?? 0,
+      videos_cache: undefined,
+    }));
   });
 
 const channelInput = z.object({
@@ -306,6 +310,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
           channel_thumbnail_url: ch.thumbnail,
           category,
           active: true,
+          language: ch.language,
         })
         .eq("id", existing.id);
       if (error) throw new Error(error.message);
@@ -321,6 +326,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
           channel_thumbnail_url: ch.thumbnail,
           category,
           active: true,
+          language: ch.language,
         })
         .select("id")
         .single();
@@ -358,6 +364,11 @@ export const refreshChannelVideos = createServerFn({ method: "POST" })
 
     const { fetchChannel } = await import("@/lib/youtube.server");
     const yt = await fetchChannel(ch.youtube_channel_id);
+    const { error: updErr } = await context.supabase
+      .from("whitelist_channels")
+      .update({ language: yt.language })
+      .eq("id", ch.id);
+    if (updErr) throw new Error(updErr.message);
     const imported = await importVideosForChannel(
       context.supabase,
       context.userId,
