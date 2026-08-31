@@ -400,29 +400,57 @@ function WhitelistPage() {
                   {c.channel_handle && (
                     <div className="text-xs text-muted-foreground truncate">@{c.channel_handle}</div>
                   )}
-                  <Select
-                    value={c.category ?? ""}
-                    onValueChange={async (v) => {
-                      try {
-                        await updateCatFn({ data: { channelId: c.id, category: v } });
-                        toast.success(t("parent.categoryUpdated"));
-                        qc.invalidateQueries({ queryKey: ["wl"] });
-                      } catch (e: any) {
-                        toast.error(e.message ?? "Error");
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="h-7 mt-1 text-xs w-auto min-w-[8rem]">
-                      <SelectValue placeholder={t("parent.category")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat: any) => (
-                        <SelectItem key={cat.slug} value={cat.slug}>
-                          {catName(cat.slug)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <Select
+                      value={c.category ?? ""}
+                      onValueChange={async (v) => {
+                        try {
+                          await updateCatFn({ data: { channelId: c.id, category: v } });
+                          toast.success(t("parent.categoryUpdated"));
+                          qc.invalidateQueries({ queryKey: ["wl"] });
+                        } catch (e: any) {
+                          toast.error(e.message ?? "Error");
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-7 text-xs w-auto min-w-[8rem]">
+                        <SelectValue placeholder={t("parent.category")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((cat: any) => (
+                          <SelectItem key={cat.slug} value={cat.slug}>
+                            {catName(cat.slug)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
+                      value={langCode(c)}
+                      onValueChange={async (v) => {
+                        try {
+                          await updateLangFn({ data: { channelId: c.id, language: v } });
+                          toast.success(t("parent.languageUpdated"));
+                          qc.invalidateQueries({ queryKey: ["wl"] });
+                        } catch (e: any) {
+                          toast.error(e.message ?? "Error");
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-7 text-xs w-auto min-w-[7rem]">
+                        <SelectValue placeholder={t("parent.filterLanguage")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unknown">{t("parent.unknownLanguage")}</SelectItem>
+                        {[...new Set([...LANG_OPTIONS, langCode(c)])]
+                          .filter((code) => code !== "unknown")
+                          .map((code) => (
+                            <SelectItem key={code} value={code}>
+                              {langLabel(code)}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <Switch checked={c.active} onCheckedChange={() => toggleActive(c)} />
                 <Button
