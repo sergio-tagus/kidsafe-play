@@ -344,21 +344,19 @@ function WhitelistPage() {
               <SelectItem value="inactive">{t("parent.statusInactive")}</SelectItem>
             </SelectContent>
           </Select>
-          {!(languages.length <= 1 && languages[0] === "unknown") && (
-            <Select value={fLanguage} onValueChange={setFLanguage}>
-              <SelectTrigger className="w-auto min-w-[8rem]">
-                <SelectValue placeholder={t("parent.filterLanguage")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("parent.filterAllM")}</SelectItem>
-                {languages.map((code) => (
-                  <SelectItem key={code} value={code}>
-                    {langLabel(code)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          <Select value={fLanguage} onValueChange={setFLanguage}>
+            <SelectTrigger className="w-auto min-w-[8rem]">
+              <SelectValue placeholder={t("parent.filterLanguage")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("parent.filterAllM")}</SelectItem>
+              {languages.map((code) => (
+                <SelectItem key={code} value={code}>
+                  {langLabel(code)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select value={fSort} onValueChange={setFSort}>
             <SelectTrigger className="w-auto min-w-[9rem]">
               <SelectValue />
