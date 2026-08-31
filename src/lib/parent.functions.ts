@@ -262,6 +262,7 @@ export const previewChannelFromUrl = createServerFn({ method: "POST" })
       channel_name: ch.title,
       channel_handle: ch.handle,
       channel_thumbnail_url: ch.thumbnail,
+      channel_description: ch.description?.trim() || null,
       subscriberCount: ch.subscriberCount,
       videoCount: ch.videoCount,
       category,
