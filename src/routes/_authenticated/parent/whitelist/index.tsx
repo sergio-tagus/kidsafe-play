@@ -229,10 +229,10 @@ function WhitelistPage() {
     if (!recPreview?.__rec) return;
     setRecImporting(true);
     try {
-      const res = await importFn({
-        data: { url: `https://youtube.com/@${recPreview.__rec.channel_handle}`, category: recPreviewCat as any },
+      const res: any = await importFn({
+        data: { url: `https://youtube.com/@${recPreview.__rec.channel_handle}`, category: recPreviewCat as any, confirmOverwrite: true },
       });
-      toast.success(t("parent.autoImportDone", { n: res.videosImported }));
+      toast.success(t("parent.autoImportDone", { n: res.videosImported ?? 0 }));
       setRecItems((items) => items.filter((x) => x.channel_handle !== recPreview.__rec.channel_handle));
       setRecPreview(null);
       qc.invalidateQueries({ queryKey: ["wl"] });
