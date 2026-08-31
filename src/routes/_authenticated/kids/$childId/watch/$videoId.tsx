@@ -35,6 +35,7 @@ export const Route = createFileRoute("/_authenticated/kids/$childId/watch/$video
 });
 
 const SEEK_SECONDS = 10;
+const CONTROLS_HIDE_MS = 3000;
 
 // Load YouTube IFrame API once
 let ytPromise: Promise<any> | null = null;
@@ -93,8 +94,10 @@ function WatchPage() {
   const [locked, setLocked] = useState(false);
   const [paused, setPaused] = useState(false);
   const [nativeFullscreen, setNativeFullscreen] = useState(false);
-  const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
+const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
   const isFullscreen = nativeFullscreen || pseudoFullscreen;
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const hideTimerRef = useRef<number | null>(null);
 
 
   useEffect(() => {
@@ -196,7 +199,7 @@ function WatchPage() {
     } catch { /* ignore */ }
   }, []);
 
-  const togglePlay = useCallback(() => {
+const togglePlay = useCallback(() => {
     try {
       const p = playerRef.current;
       if (!p) return;
@@ -205,7 +208,37 @@ function WatchPage() {
     } catch { /* ignore */ }
   }, []);
 
+  const clearHideTimer = useCallback(() => {
+    if (hideTimerRef.current) {
+      window.clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
+    }
+  }, []);
+
+  const nudgeControls = useCallback(() => {
+    setControlsVisible(true);
+    clearHideTimer();
+    // Auto-hide only applies to the overlaid controls in fullscreen while playing.
+    if (isFullscreen && !paused && !locked) {
+      hideTimerRef.current = window.setTimeout(() => {
+        setControlsVisible(false);
+      }, CONTROLS_HIDE_MS);
+    }
+  }, [isFullscreen, paused, locked, clearHideTimer]);
+
+  // Keep controls visible while paused, locked or outside fullscreen;
+  // otherwise start the auto-hide countdown.
   useEffect(() => {
+    if (!isFullscreen || paused || locked) {
+      clearHideTimer();
+      setControlsVisible(true);
+      return;
+    }
+    nudgeControls();
+    return clearHideTimer;
+  }, [isFullscreen, paused, locked, nudgeControls, clearHideTimer]);
+
+useEffect(() => {
     if (locked) return;
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null;
@@ -213,10 +246,12 @@ function WatchPage() {
       if (e.key === "ArrowLeft") { e.preventDefault(); seekBy(-SEEK_SECONDS); }
       else if (e.key === "ArrowRight") { e.preventDefault(); seekBy(SEEK_SECONDS); }
       else if (e.key === " " || e.key === "Enter") { e.preventDefault(); togglePlay(); }
+      else return;
+      nudgeControls();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [locked, seekBy, togglePlay]);
+  }, [locked, seekBy, togglePlay, nudgeControls]);
 
   const toggleFullscreen = useCallback(async () => {
     const el = stageRef.current as any;
