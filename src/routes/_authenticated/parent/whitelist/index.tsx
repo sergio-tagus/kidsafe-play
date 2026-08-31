@@ -566,7 +566,7 @@ function WhitelistPage() {
 
       {/* Channel detail dialog */}
       <Dialog open={!!detailForm} onOpenChange={(o) => !o && setDetailForm(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{t("parent.channelDetails")}</DialogTitle>
           </DialogHeader>
@@ -597,6 +597,15 @@ function WhitelistPage() {
                 <Input
                   value={detailForm.channel_name}
                   onChange={(e) => setDetailForm({ ...detailForm, channel_name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>{t("parent.channelDescription")}</Label>
+                <Textarea
+                  rows={5}
+                  value={detailForm.channel_description ?? ""}
+                  placeholder={t("parent.noDescription")}
+                  onChange={(e) => setDetailForm({ ...detailForm, channel_description: e.target.value })}
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
