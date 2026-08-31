@@ -29,15 +29,29 @@ function ChannelPage() {
 
   return (
     <KidShell childId={childId} child={child}>
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-start gap-4 mb-6">
         {channel?.channel_thumbnail_url ? (
           <img src={channel.channel_thumbnail_url} alt={channel.channel_name} className="w-16 h-16 rounded-full object-cover" />
         ) : (
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-3xl">📺</div>
         )}
-        <div>
+        <div className="min-w-0">
           <h1 className="text-2xl md:text-3xl font-display font-bold">{channel?.channel_name ?? ""}</h1>
           {channel && <div className="text-sm text-muted-foreground">{t(`categories.${channel.category}` as any)}</div>}
+          {channelDescription && (
+            <div className="mt-2 max-w-3xl">
+              <p className={`text-sm text-foreground/80 whitespace-pre-wrap ${descOpen ? "" : "line-clamp-3"}`}>
+                {channelDescription}
+              </p>
+              <button
+                type="button"
+                className="mt-1 text-sm font-semibold text-primary hover:underline"
+                onClick={() => setDescOpen((v) => !v)}
+              >
+                {descOpen ? t("common.showLess") : t("common.showMore")}
+              </button>
+            </div>
+          )}
         </div>
       </div>
       {videos.length === 0 ? (
