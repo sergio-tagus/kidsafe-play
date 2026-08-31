@@ -58,14 +58,16 @@ function WhitelistPage() {
   const [fLanguage, setFLanguage] = useState("all");
   const [fSort, setFSort] = useState("newest");
 
+  const langCode = (c: any) => ((c.language || "").trim().toLowerCase() || "unknown");
+
   const languages = useMemo(() => {
     const set = new Set<string>();
-    for (const c of channels as any[]) set.add((c.language || "").trim().toLowerCase());
+    for (const c of channels as any[]) set.add(langCode(c));
     return [...set].sort();
   }, [channels]);
 
   const langLabel = (code: string) => {
-    if (!code) return t("parent.unknownLanguage");
+    if (!code || code === "unknown") return t("parent.unknownLanguage");
     try {
       const names = new Intl.DisplayNames([lang], { type: "language" });
       return names.of(code) ?? code;
