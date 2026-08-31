@@ -67,6 +67,7 @@ export type YtChannel = {
   topicIds: string[];
   subscriberCount: number;
   videoCount: number;
+  language: string | null;
 };
 
 export type YtVideo = {
@@ -87,7 +88,7 @@ export async function fetchChannel(input: string): Promise<YtChannel> {
 
   if (parsed.id) {
     const j = await ytFetch<any>("/channels", {
-      part: "snippet,contentDetails,topicDetails,statistics",
+      part: "snippet,contentDetails,topicDetails,statistics,brandingSettings",
       id: parsed.id,
     });
     raw = j.items?.[0] ?? null;
@@ -96,13 +97,13 @@ export async function fetchChannel(input: string): Promise<YtChannel> {
   if (!raw && parsed.handle) {
     // Try forHandle (newer API), then forUsername (legacy)
     const j1 = await ytFetch<any>("/channels", {
-      part: "snippet,contentDetails,topicDetails,statistics",
+      part: "snippet,contentDetails,topicDetails,statistics,brandingSettings",
       forHandle: parsed.handle,
     }).catch(() => ({ items: [] }));
     raw = j1.items?.[0] ?? null;
     if (!raw) {
       const j2 = await ytFetch<any>("/channels", {
-        part: "snippet,contentDetails,topicDetails,statistics",
+        part: "snippet,contentDetails,topicDetails,statistics,brandingSettings",
         forUsername: parsed.handle,
       }).catch(() => ({ items: [] }));
       raw = j2.items?.[0] ?? null;
@@ -118,7 +119,7 @@ export async function fetchChannel(input: string): Promise<YtChannel> {
       const chId = s.items?.[0]?.id?.channelId;
       if (chId) {
         const j3 = await ytFetch<any>("/channels", {
-          part: "snippet,contentDetails,topicDetails,statistics",
+          part: "snippet,contentDetails,topicDetails,statistics,brandingSettings",
           id: chId,
         });
         raw = j3.items?.[0] ?? null;
@@ -147,6 +148,7 @@ export async function fetchChannel(input: string): Promise<YtChannel> {
     topicIds: raw.topicDetails?.topicIds ?? [],
     subscriberCount: Number(raw.statistics?.subscriberCount ?? 0),
     videoCount: Number(raw.statistics?.videoCount ?? 0),
+    language: raw.brandingSettings?.channel?.defaultLanguage ?? raw.snippet?.defaultLanguage ?? null,
   };
 }
 

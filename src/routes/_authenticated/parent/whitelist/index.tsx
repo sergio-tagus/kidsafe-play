@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   listWhitelistChannels,
   upsertWhitelistChannel,
@@ -23,7 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Trash2, ExternalLink, Search, RefreshCw, Loader2, Sparkles } from "lucide-react";
+import { Plus, Trash2, ExternalLink, Search, RefreshCw, Loader2, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/parent/whitelist/")({
@@ -49,6 +49,60 @@ function WhitelistPage() {
     const c = categories.find((x) => x.slug === slug);
     if (!c) return slug;
     return lang === "es" ? c.name_es : lang === "pt" ? c.name_pt : c.name_en;
+  };
+
+  // Filters
+  const [fQuery, setFQuery] = useState("");
+  const [fCategory, setFCategory] = useState("all");
+  const [fStatus, setFStatus] = useState("all");
+  const [fLanguage, setFLanguage] = useState("all");
+  const [fSort, setFSort] = useState("newest");
+
+  const languages = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of channels as any[]) set.add((c.language || "").trim().toLowerCase());
+    return [...set].sort();
+  }, [channels]);
+
+  const langLabel = (code: string) => {
+    if (!code) return t("parent.unknownLanguage");
+    try {
+      const names = new Intl.DisplayNames([lang], { type: "language" });
+      return names.of(code) ?? code;
+    } catch {
+      return code;
+    }
+  };
+
+  const filteredChannels = useMemo(() => {
+    const q = fQuery.trim().toLowerCase();
+    let list = (channels as any[]).filter((c) => {
+      if (q && !(`${c.channel_name} ${c.channel_handle ?? ""}`.toLowerCase().includes(q))) return false;
+      if (fCategory !== "all" && c.category !== fCategory) return false;
+      if (fStatus === "active" && !c.active) return false;
+      if (fStatus === "inactive" && c.active) return false;
+      if (fLanguage !== "all" && (c.language || "").trim().toLowerCase() !== fLanguage) return false;
+      return true;
+    });
+    list = [...list].sort((a, b) => {
+      switch (fSort) {
+        case "nameAsc": return a.channel_name.localeCompare(b.channel_name);
+        case "nameDesc": return b.channel_name.localeCompare(a.channel_name);
+        case "mostVideos": return (b.video_count ?? 0) - (a.video_count ?? 0);
+        default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+    return list;
+  }, [channels, fQuery, fCategory, fStatus, fLanguage, fSort]);
+
+  const filtersActive =
+    fQuery.trim() !== "" || fCategory !== "all" || fStatus !== "all" || fLanguage !== "all" || fSort !== "newest";
+  const clearFilters = () => {
+    setFQuery("");
+    setFCategory("all");
+    setFStatus("all");
+    setFLanguage("all");
+    setFSort("newest");
   };
 
   const [autoOpen, setAutoOpen] = useState(false);
@@ -250,11 +304,84 @@ function WhitelistPage() {
         </div>
       </div>
 
+      {channels.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-5">
+          <div className="relative flex-1 min-w-[12rem]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              placeholder={t("parent.filterSearchPlaceholder")}
+              value={fQuery}
+              onChange={(e) => setFQuery(e.target.value)}
+            />
+          </div>
+          <Select value={fCategory} onValueChange={setFCategory}>
+            <SelectTrigger className="w-auto min-w-[9rem]">
+              <SelectValue placeholder={t("parent.filterCategory")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("parent.filterAll")}</SelectItem>
+              {categories.map((cat: any) => (
+                <SelectItem key={cat.slug} value={cat.slug}>
+                  {catName(cat.slug)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={fStatus} onValueChange={setFStatus}>
+            <SelectTrigger className="w-auto min-w-[8rem]">
+              <SelectValue placeholder={t("parent.filterStatus")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("parent.filterAllM")}</SelectItem>
+              <SelectItem value="active">{t("parent.statusActive")}</SelectItem>
+              <SelectItem value="inactive">{t("parent.statusInactive")}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={fLanguage} onValueChange={setFLanguage}>
+            <SelectTrigger className="w-auto min-w-[8rem]">
+              <SelectValue placeholder={t("parent.filterLanguage")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("parent.filterAllM")}</SelectItem>
+              {languages.map((code) => (
+                <SelectItem key={code || "unknown"} value={code}>
+                  {langLabel(code)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={fSort} onValueChange={setFSort}>
+            <SelectTrigger className="w-auto min-w-[9rem]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">{t("parent.sortNewest")}</SelectItem>
+              <SelectItem value="mostVideos">{t("parent.sortMostVideos")}</SelectItem>
+              <SelectItem value="nameAsc">{t("parent.sortNameAsc")}</SelectItem>
+              <SelectItem value="nameDesc">{t("parent.sortNameDesc")}</SelectItem>
+            </SelectContent>
+          </Select>
+          {filtersActive && (
+            <Button variant="ghost" size="sm" className="rounded-full" onClick={clearFilters}>
+              <X className="w-4 h-4 mr-1" /> {t("parent.clearFilters")}
+            </Button>
+          )}
+        </div>
+      )}
+
       {channels.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">{t("parent.noChannels")}</div>
+      ) : filteredChannels.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground space-y-3">
+          <div>{t("parent.noFilterResults")}</div>
+          <Button variant="outline" className="rounded-full" onClick={clearFilters}>
+            <X className="w-4 h-4 mr-1" /> {t("parent.clearFilters")}
+          </Button>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {channels.map((c: any) => (
+          {filteredChannels.map((c: any) => (
             <Card key={c.id}>
               <CardContent className="p-5 flex items-center gap-4">
                 {c.channel_thumbnail_url ? (
