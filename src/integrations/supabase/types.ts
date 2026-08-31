@@ -323,6 +323,7 @@ export type Database = {
         Row: {
           active: boolean
           category: string
+          channel_description: string | null
           channel_handle: string | null
           channel_name: string
           channel_thumbnail_url: string | null
@@ -335,6 +336,7 @@ export type Database = {
         Insert: {
           active?: boolean
           category: string
+          channel_description?: string | null
           channel_handle?: string | null
           channel_name: string
           channel_thumbnail_url?: string | null
@@ -347,6 +349,7 @@ export type Database = {
         Update: {
           active?: boolean
           category?: string
+          channel_description?: string | null
           channel_handle?: string | null
           channel_name?: string
           channel_thumbnail_url?: string | null
