@@ -464,6 +464,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
     if (existing) {
       const diff = buildChannelDiff(existing as any, incoming);
       if (diff.length && !data.confirmOverwrite) {
+        await flush((existing as any).id as string);
         return {
           needsConfirm: true as const,
           channelId: (existing as any).id as string,
