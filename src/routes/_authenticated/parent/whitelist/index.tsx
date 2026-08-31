@@ -516,12 +516,19 @@ function WhitelistPage() {
                     </Select>
                   </div>
                 </div>
-                <Switch checked={c.active} onCheckedChange={() => toggleActive(c)} />
+                <Switch
+                  checked={c.active}
+                  onCheckedChange={() => toggleActive(c)}
+                  onClick={(e) => e.stopPropagation()}
+                />
                 <Button
                   variant="ghost"
                   size="icon"
                   disabled={refreshingId === c.id}
-                  onClick={() => doRefresh(c.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    doRefresh(c.id);
+                  }}
                   title={t("parent.sync")}
                 >
                   {refreshingId === c.id ? (
@@ -530,12 +537,23 @@ function WhitelistPage() {
                     <RefreshCw className="w-4 h-4" />
                   )}
                 </Button>
-                <Link to="/parent/whitelist/$channelId" params={{ channelId: c.id } as any}>
+                <Link
+                  to="/parent/whitelist/$channelId"
+                  params={{ channelId: c.id } as any}
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Button variant="ghost" size="icon">
                     <ExternalLink className="w-4 h-4" />
                   </Button>
                 </Link>
-                <Button variant="ghost" size="icon" onClick={() => remove(c.id)}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    remove(c.id);
+                  }}
+                >
                   <Trash2 className="w-4 h-4 text-destructive" />
                 </Button>
               </CardContent>
