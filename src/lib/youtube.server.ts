@@ -148,7 +148,11 @@ export async function fetchChannel(input: string): Promise<YtChannel> {
     topicIds: raw.topicDetails?.topicIds ?? [],
     subscriberCount: Number(raw.statistics?.subscriberCount ?? 0),
     videoCount: Number(raw.statistics?.videoCount ?? 0),
-    language: raw.brandingSettings?.channel?.defaultLanguage ?? raw.snippet?.defaultLanguage ?? null,
+    language: normalizeLanguage(
+      raw.brandingSettings?.channel?.defaultLanguage ??
+        raw.snippet?.defaultLanguage ??
+        countryToLanguage(raw.snippet?.country ?? raw.brandingSettings?.channel?.country),
+    ),
   };
 }
 
