@@ -381,7 +381,7 @@ export const refreshChannelVideos = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: ch, error } = await context.supabase
       .from("whitelist_channels")
-      .select("id, youtube_channel_id, language")
+      .select("id, youtube_channel_id, language, channel_description")
       .eq("id", data.channelId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -389,11 +389,16 @@ export const refreshChannelVideos = createServerFn({ method: "POST" })
 
     const { fetchChannel } = await import("@/lib/youtube.server");
     const yt = await fetchChannel(ch.youtube_channel_id);
-    // Never overwrite a language the parent set manually.
-    if (!ch.language || ch.language === "unknown") {
+    // Never overwrite a language / description the parent set manually.
+    const patch: Record<string, unknown> = {};
+    if (!ch.language || ch.language === "unknown") patch['language'] = yt.language ?? "unknown";
+    if (!(ch as any).channel_description?.trim() && yt.description?.trim()) {
+      patch['channel_description'] = yt.description.trim();
+    }
+    if (Object.keys(patch).length) {
       const { error: updErr } = await context.supabase
         .from("whitelist_channels")
-        .update({ language: yt.language ?? "unknown" })
+        .update(patch)
         .eq("id", ch.id);
       if (updErr) throw new Error(updErr.message);
     }
