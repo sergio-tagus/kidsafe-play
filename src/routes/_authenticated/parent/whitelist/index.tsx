@@ -456,7 +456,7 @@ function WhitelistPage() {
                   {c.channel_handle && (
                     <div className="text-xs text-muted-foreground truncate">@{c.channel_handle}</div>
                   )}
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <div className="flex flex-wrap items-center gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
                     <Select
                       value={c.category ?? ""}
                       onValueChange={async (v) => {
