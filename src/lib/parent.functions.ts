@@ -498,7 +498,7 @@ export const refreshChannelVideos = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: ch, error } = await context.supabase
       .from("whitelist_channels")
-      .select("id, youtube_channel_id, language, channel_description")
+      .select("id, youtube_channel_id")
       .eq("id", data.channelId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -506,19 +506,9 @@ export const refreshChannelVideos = createServerFn({ method: "POST" })
 
     const { fetchChannel } = await import("@/lib/youtube.server");
     const yt = await fetchChannel(ch.youtube_channel_id);
-    // Never overwrite a language / description the parent set manually.
-    const patch: { language?: string; channel_description?: string } = {};
-    if (!ch.language || ch.language === "unknown") patch.language = yt.language ?? "unknown";
-    if (!(ch as any).channel_description?.trim() && yt.description?.trim()) {
-      patch.channel_description = yt.description.trim();
-    }
-    if (Object.keys(patch).length) {
-      const { error: updErr } = await context.supabase
-        .from("whitelist_channels")
-        .update(patch)
-        .eq("id", ch.id);
-      if (updErr) throw new Error(updErr.message);
-    }
+    // Channel metadata is only updated through previewChannelUpdate/applyChannelUpdate
+    // so the parent always authorises the change.
+
     const imported = await importVideosForChannel(
       context.supabase,
       context.userId,
