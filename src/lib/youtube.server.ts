@@ -32,6 +32,18 @@ export function createMeter(): YtMeter {
 
 let activeMeter: YtMeter | null = null;
 
+/** Install a meter for subsequent calls; returns a function that restores the previous one. */
+export function setActiveMeter(meter: YtMeter): () => void {
+  const prev = activeMeter;
+  activeMeter = meter;
+  let done = false;
+  return () => {
+    if (done) return;
+    done = true;
+    activeMeter = prev;
+  };
+}
+
 /** Run `fn` while counting every YouTube API call it performs. */
 export async function withYtMeter<T>(fn: (meter: YtMeter) => Promise<T>): Promise<{ result: T; meter: YtMeter }> {
   const meter = createMeter();
