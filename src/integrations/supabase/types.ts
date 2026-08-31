@@ -328,6 +328,7 @@ export type Database = {
           channel_thumbnail_url: string | null
           created_at: string
           id: string
+          language: string | null
           parent_user_id: string
           youtube_channel_id: string
         }
@@ -339,6 +340,7 @@ export type Database = {
           channel_thumbnail_url?: string | null
           created_at?: string
           id?: string
+          language?: string | null
           parent_user_id: string
           youtube_channel_id: string
         }
@@ -350,6 +352,7 @@ export type Database = {
           channel_thumbnail_url?: string | null
           created_at?: string
           id?: string
+          language?: string | null
           parent_user_id?: string
           youtube_channel_id?: string
         }
