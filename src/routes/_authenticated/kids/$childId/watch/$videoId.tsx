@@ -432,7 +432,22 @@ function WatchPage() {
               </div>
             )}
           </div>
-          {!locked && seekControls("bar")}
+          {!locked && (
+            isFullscreen ? (
+              <div
+                className="absolute bottom-0 inset-x-0 z-30 flex justify-center bg-gradient-to-t from-black/70 to-transparent"
+                style={{
+                  paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+                  paddingLeft: "env(safe-area-inset-left)",
+                  paddingRight: "env(safe-area-inset-right)",
+                }}
+              >
+                {seekControls("bar")}
+              </div>
+            ) : (
+              seekControls("bar")
+            )
+          )}
           </div>
 
           <div className="mt-4 flex items-start justify-between gap-4">
