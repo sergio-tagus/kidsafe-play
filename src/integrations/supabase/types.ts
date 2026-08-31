@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_quota_settings: {
+        Row: {
+          created_at: string
+          daily_quota: number
+          parent_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          daily_quota?: number
+          parent_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          daily_quota?: number
+          parent_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null
@@ -377,6 +398,89 @@ export type Database = {
             referencedColumns: ["slug"]
           },
         ]
+      }
+      youtube_api_usage: {
+        Row: {
+          calls: number
+          created_at: string
+          day: string
+          id: string
+          operation: string
+          parent_user_id: string
+          units: number
+          updated_at: string
+          whitelist_channel_id: string | null
+        }
+        Insert: {
+          calls?: number
+          created_at?: string
+          day?: string
+          id?: string
+          operation: string
+          parent_user_id: string
+          units?: number
+          updated_at?: string
+          whitelist_channel_id?: string | null
+        }
+        Update: {
+          calls?: number
+          created_at?: string
+          day?: string
+          id?: string
+          operation?: string
+          parent_user_id?: string
+          units?: number
+          updated_at?: string
+          whitelist_channel_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "youtube_api_usage_whitelist_channel_id_fkey"
+            columns: ["whitelist_channel_id"]
+            isOneToOne: false
+            referencedRelation: "whitelist_channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      youtube_sync_runs: {
+        Row: {
+          channels_processed: number
+          created_at: string
+          errors: Json | null
+          finished_at: string | null
+          id: string
+          parent_user_id: string
+          source: string
+          started_at: string
+          units_used: number
+          videos_imported: number
+        }
+        Insert: {
+          channels_processed?: number
+          created_at?: string
+          errors?: Json | null
+          finished_at?: string | null
+          id?: string
+          parent_user_id: string
+          source?: string
+          started_at?: string
+          units_used?: number
+          videos_imported?: number
+        }
+        Update: {
+          channels_processed?: number
+          created_at?: string
+          errors?: Json | null
+          finished_at?: string | null
+          id?: string
+          parent_user_id?: string
+          source?: string
+          started_at?: string
+          units_used?: number
+          videos_imported?: number
+        }
+        Relationships: []
       }
     }
     Views: {
