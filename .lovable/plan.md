@@ -1,22 +1,25 @@
-# Inicio: nuevo orden de secciones
+# Bandera de Portugal y nuevo orden de secciones en Inicio
 
 ## Objetivo
-En la página de inicio del niño, reordenar las secciones para que aparezcan en este orden:
-
-1. Recomendado para ti
-2. Vídeos nuevos
-3. Populares
-4. Continuar viendo
-
-La fila de canales (recientes) se mantiene al final, después de "Continuar viendo", como está ahora.
+1. Cambiar la bandera del idioma portugués de Brasil (🇧🇷) a Portugal (🇵🇹) en toda la app.
+2. Reordenar las secciones de la página de inicio del niño: Recomendado, Vídeos nuevos, Populares y, al final, Continuar viendo.
 
 ## Cambios
-- En `src/routes/_authenticated/kids/$childId/index.tsx`, reordenar los cuatro `VideoRow` del bloque principal: mover `Continuar viendo` (cont) al final y dejar `Recomendado` (reco), `Vídeos nuevos` (recent) y `Populares` (pop) por delante, en ese orden.
+
+### 1. Bandera de Portugal
+- En `src/lib/i18n.tsx` (definición de `LANGS`, línea 739): cambiar la bandera del código `pt` de `🇧🇷` a `🇵🇹`.
+- Al ser la única fuente de banderas, el cambio se refleja automáticamente en la página de login, en el selector de idioma del menú y en cualquier otro lugar que use `LANGS`.
+
+### 2. Orden de secciones en Inicio
+- En `src/routes/_authenticated/kids/$childId/index.tsx` (líneas 44-47): reordenar los cuatro `VideoRow`.
+  - Orden actual: Continuar viendo → Recomendado → Vídeos nuevos → Populares.
+  - Orden nuevo: Recomendado → Vídeos nuevos → Populares → Continuar viendo.
+- La fila de canales recientes se mantiene al final, como está ahora.
 
 ## Notas técnicas
-- Sin cambios de base de datos, lógica ni estilos. Solo se reordenan los componentes en el JSX.
-- No cambia el comportamiento de scroll horizontal ni el resto de páginas.
+- Sin cambios en base de datos ni migraciones.
+- Sin cambios de lógica: solo texto y orden de componentes.
 
 ## Verificación
-- Build sin errores.
-- Comprobar en la preview que el inicio muestra el nuevo orden de títulos.
+- Build automático sin errores.
+- Comprobar en el preview que el login muestra 🇵🇹 y que Inicio muestra las secciones en el nuevo orden.
