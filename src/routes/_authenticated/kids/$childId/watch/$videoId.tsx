@@ -277,6 +277,7 @@ function WatchPage() {
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
+      try { (screen.orientation as any)?.unlock?.(); } catch { /* ignore */ }
     };
   }, [pseudoFullscreen]);
 
