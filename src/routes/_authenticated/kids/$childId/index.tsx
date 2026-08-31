@@ -41,7 +41,7 @@ function KidHome() {
         </div>
       ) : (
         <>
-<VideoRow title={t("home.recommended")} videos={reco} childId={childId} scroll />
+          <VideoRow<VideoRow title={t("home.recommended")} videos={reco} childId={childId} scroll />
           <VideoRow title={t("home.newVideos")} videos={recent} childId={childId} scroll />
           <VideoRow title={t("home.popular")} videos={pop} childId={childId} scroll />
           <VideoRow title={t("home.continueWatching")} videos={cont} childId={childId} scroll />
