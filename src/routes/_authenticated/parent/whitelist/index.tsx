@@ -496,12 +496,20 @@ function WhitelistPage() {
                         <SelectValue placeholder={t("parent.filterLanguage")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="unknown">{t("parent.unknownLanguage")}</SelectItem>
+                        <SelectItem value="unknown">
+                          <span className="inline-flex items-center gap-2">
+                            <span>{langFlag("unknown")}</span>
+                            {t("parent.unknownLanguage")}
+                          </span>
+                        </SelectItem>
                         {[...new Set([...LANG_OPTIONS, langCode(c)])]
                           .filter((code) => code !== "unknown")
                           .map((code) => (
                             <SelectItem key={code} value={code}>
-                              {langLabel(code)}
+                              <span className="inline-flex items-center gap-2">
+                                <span>{langFlag(code)}</span>
+                                {langLabel(code)}
+                              </span>
                             </SelectItem>
                           ))}
                       </SelectContent>
