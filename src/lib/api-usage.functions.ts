@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireSuperAdmin } from "@/lib/require-superadmin";
+import { requireParentUnlocked } from "@/lib/parent-unlock";
 
 const DEFAULT_QUOTA = 10000;
 
@@ -123,7 +124,7 @@ export const listSyncRuns = createServerFn({ method: "POST" })
   });
 
 export const setQuotaSettings = createServerFn({ method: "POST" })
-  .middleware([requireSuperAdmin])
+  .middleware([requireParentUnlocked, requireSuperAdmin])
   .inputValidator((d: unknown) =>
     z.object({ dailyQuota: z.number().int().min(100).max(100_000_000) }).parse(d),
   )
