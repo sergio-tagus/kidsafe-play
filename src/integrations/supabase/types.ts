@@ -518,7 +518,7 @@ export type Database = {
     }
     Enums: {
       app_role: "superadmin"
-      sync_frequency: "off" | "daily" | "weekly" | "monthly"
+      sync_frequency: "off" | "daily" | "weekly" | "monthly" | "biweekly"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -647,7 +647,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["superadmin"],
-      sync_frequency: ["off", "daily", "weekly", "monthly"],
+      sync_frequency: ["off", "daily", "weekly", "monthly", "biweekly"],
     },
   },
 } as const
