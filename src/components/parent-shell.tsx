@@ -12,14 +12,18 @@ export function ParentShell({ children }: { children: ReactNode }) {
   const { signOut } = useSession();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
+  const { isSuperAdmin } = useIsSuperAdmin();
+
   const nav = [
     { to: "/parent", label: t("parent.overview"), icon: LayoutDashboard, exact: true },
     { to: "/parent/children", label: t("parent.children"), icon: Users, exact: false },
     { to: "/parent/whitelist", label: t("parent.whitelist"), icon: ListChecks, exact: false },
     { to: "/parent/categories", label: t("parent.categories"), icon: Tags, exact: false },
     { to: "/parent/history", label: t("parent.history"), icon: History, exact: false },
-    { to: "/parent/api-usage", label: t("parent.apiUsage"), icon: Gauge, exact: false },
-  ] as const;
+    ...(isSuperAdmin
+      ? [{ to: "/parent/api-usage", label: t("parent.apiUsage"), icon: Gauge, exact: false }]
+      : []),
+  ];
 
   return (
     <div className="min-h-screen flex bg-background">
