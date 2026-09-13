@@ -78,6 +78,19 @@ export const skipOnboarding = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Hide the tour permanently; it stays available from the help menu. */
+export const dismissOnboarding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ step: z.number().int().min(0).max(50) }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { error } = await context.supabase
+      .from("profiles")
+      .update({ onboarding_status: "dismissed", onboarding_step: data.step } as any)
+      .eq("id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const resetOnboarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
