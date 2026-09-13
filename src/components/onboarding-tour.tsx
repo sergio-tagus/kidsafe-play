@@ -115,7 +115,9 @@ export function OnboardingTour({ suspended = false }: { suspended?: boolean }) {
   useLayoutEffect(() => {
     if (!open) return;
     measure();
-    const id = window.setInterval(measure, 400);
+    // Re-measure often so the spotlight appears as soon as the target screen
+    // finishes rendering after the step's own navigation.
+    const id = window.setInterval(measure, 200);
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
     return () => {
