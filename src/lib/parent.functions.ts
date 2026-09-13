@@ -124,6 +124,41 @@ export const upsertWhitelistChannel = createServerFn({ method: "POST" })
     return { id: row.id };
   });
 
+// Manual add is a superadmin-only operation (bypasses YouTube import/validation)
+const manualChannelInput = z.object({
+  youtube_channel_id: z.string().min(1),
+  channel_name: z.string().min(1).max(200),
+  channel_handle: z.string().nullable().optional(),
+  channel_thumbnail_url: z.string().url().nullable().optional(),
+  channel_description: z.string().max(5000).nullable().optional(),
+  category: z.string().nullable().optional(),
+  active: z.boolean().optional(),
+  language: z.string().nullable().optional(),
+});
+
+export const manualAddWhitelistChannel = createServerFn({ method: "POST" })
+  .middleware([requireParentUnlocked, requireSuperAdmin])
+  .inputValidator((d: unknown) => manualChannelInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase
+      .from("whitelist_channels")
+      .insert({
+        parent_user_id: context.userId,
+        youtube_channel_id: data.youtube_channel_id,
+        channel_name: data.channel_name,
+        channel_handle: data.channel_handle || null,
+        channel_thumbnail_url: data.channel_thumbnail_url || null,
+        channel_description: data.channel_description?.trim() || null,
+        category: data.category || "education",
+        active: data.active ?? true,
+        language: data.language || "unknown",
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    return { id: row.id };
+  });
+
 export const deleteWhitelistChannel = createServerFn({ method: "POST" })
   .middleware([requireParentUnlocked])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))

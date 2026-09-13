@@ -5,6 +5,7 @@ import { useMemo, useRef, useState } from "react";
 import {
   listWhitelistChannels,
   upsertWhitelistChannel,
+  manualAddWhitelistChannel,
   deleteWhitelistChannel,
   previewChannelFromUrl,
   importChannelFromUrl,
@@ -44,6 +45,7 @@ function WhitelistPage() {
   const qc = useQueryClient();
   const listFn = useServerFn(listWhitelistChannels);
   const upsertFn = useServerFn(upsertWhitelistChannel);
+  const manualAddFn = useServerFn(manualAddWhitelistChannel);
   const delFn = useServerFn(deleteWhitelistChannel);
   const previewFn = useServerFn(previewChannelFromUrl);
   const importFn = useServerFn(importChannelFromUrl);
@@ -524,12 +526,13 @@ function WhitelistPage() {
       return;
     }
     try {
-      await upsertFn({
+      await manualAddFn({
         data: {
           youtube_channel_id: manualForm.youtube_channel_id,
           channel_name: manualForm.channel_name,
           channel_handle: manualForm.channel_handle || null,
           channel_thumbnail_url: manualForm.channel_thumbnail_url || null,
+          channel_description: manualForm.channel_description || null,
           category: manualForm.category,
           active: manualForm.active,
         },
@@ -561,9 +564,11 @@ function WhitelistPage() {
           <Button variant="outline" className="rounded-full" onClick={() => openRecommend(false)} disabled={channels.length === 0}>
             <Sparkles className="w-4 h-4 mr-1" /> {t("whitelist.recommend")}
           </Button>
-          <Button variant="outline" className="rounded-full" onClick={openManual}>
-            {t("parent.manualAdd")}
-          </Button>
+          {isSuperAdmin && (
+            <Button variant="outline" className="rounded-full" onClick={openManual}>
+              {t("parent.manualAdd")}
+            </Button>
+          )}
           <Button className="rounded-full" onClick={openAuto}>
             <Plus className="w-4 h-4 mr-1" /> {t("parent.addChannel")}
           </Button>
