@@ -7,13 +7,13 @@ Un recorrido guiado que se abre automáticamente la primera vez que un padre ent
 1. **Bienvenida**: tarjeta central con el nombre de la app, qué va a configurar y botones "Empezar" / "Ahora no".
 2. **Recorrido por pasos** con un foco resaltado sobre el elemento real de la pantalla, un texto corto (para qué sirve + acción recomendada) y botones Atrás / Siguiente / Omitir, más un indicador "Paso 3 de 7".
 3. Pasos previstos (en este orden):
-   - Resumen del panel: qué datos se ven aquí.
-   - Perfiles infantiles: crear el primer perfil y fijar el límite diario.
-   - Canales aprobados: añadir el primer canal por URL de YouTube; se explica que solo se ve contenido de esta lista.
-   - Categorías: organizar los canales.
-   - Historial: revisar lo que ven los niños.
-   - PIN parental: para qué sirve y cómo recuperarlo.
-   - Final: resumen con checklist de lo que queda pendiente y enlace a volver a ver el tutorial.
+  - Resumen del panel: qué datos se ven aquí.
+  - Perfiles infantiles: crear el primer perfil y fijar el límite diario.
+  - Categorías: organizar los canales.  
+  Canales aprobados: añadir el primer canal por URL de YouTube; se explica que solo se ve contenido de esta lista.
+  - Historial: revisar lo que ven los niños.
+  - PIN parental: para qué sirve y cómo recuperarlo.
+  - Final: resumen con checklist de lo que queda pendiente y enlace a volver a ver el tutorial.
 4. Cuando un paso pertenece a otra pantalla, el asistente navega solo a esa pantalla y continúa el foco allí.
 5. El checklist final marca automáticamente lo ya hecho (tiene hijos, tiene canales, tiene PIN), de modo que el padre ve qué le falta.
 
