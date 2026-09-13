@@ -11,6 +11,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { toast } from "sonner";
+import { useIsSuperAdmin } from "@/hooks/use-superadmin";
 
 export const Route = createFileRoute("/_authenticated/parent/")({
   component: ParentDashboard,
@@ -134,10 +135,15 @@ function ParentDashboard() {
 function SyncSettingsCard() {
   const { t } = useI18n();
   const qc = useQueryClient();
+  const { isSuperAdmin } = useIsSuperAdmin();
   const getFn = useServerFn(getSyncSettings);
   const saveFn = useServerFn(upsertSyncSettings);
-  const { data: s } = useQuery({ queryKey: ["sync-settings"], queryFn: () => getFn() });
-  const freq = s?.frequency ?? "weekly";
+  const { data: s } = useQuery({
+    queryKey: ["sync-settings"],
+    queryFn: () => getFn(),
+    enabled: isSuperAdmin,
+  });
+  const freq = s?.frequency ?? "biweekly";
 
   const save = async (v: string) => {
     try {
@@ -149,6 +155,8 @@ function SyncSettingsCard() {
     }
   };
 
+  if (!isSuperAdmin) return null;
+
   return (
     <Card className="mt-6">
       <CardHeader>
@@ -156,12 +164,10 @@ function SyncSettingsCard() {
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground mb-4">{t("parent.syncDesc")}</p>
-        <RadioGroup value={freq} onValueChange={save} className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <RadioGroup value={freq} onValueChange={save} className="grid grid-cols-2 gap-3">
           {[
             { v: "off", label: t("parent.syncOff") },
-            { v: "daily", label: t("parent.syncDaily") },
-            { v: "weekly", label: t("parent.syncWeekly") },
-            { v: "monthly", label: t("parent.syncMonthly") },
+            { v: "biweekly", label: t("parent.syncBiweekly") },
           ].map((opt) => (
             <Label
               key={opt.v}
@@ -172,6 +178,9 @@ function SyncSettingsCard() {
             </Label>
           ))}
         </RadioGroup>
+        {(s as any)?.auto_paused && (
+          <div className="text-xs text-amber-600 mt-3">{t("parent.syncPaused")}</div>
+        )}
         <div className="text-xs text-muted-foreground mt-3">
           {t("parent.syncLastRun")}:{" "}
           {s?.last_run_at ? new Date(s.last_run_at).toLocaleString() : t("parent.syncNever")}

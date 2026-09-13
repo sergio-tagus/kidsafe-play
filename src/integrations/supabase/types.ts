@@ -236,22 +236,28 @@ export type Database = {
       }
       sync_settings: {
         Row: {
+          auto_paused: boolean
           created_at: string
           frequency: Database["public"]["Enums"]["sync_frequency"]
+          last_active_at: string
           last_run_at: string | null
           parent_user_id: string
           updated_at: string
         }
         Insert: {
+          auto_paused?: boolean
           created_at?: string
           frequency?: Database["public"]["Enums"]["sync_frequency"]
+          last_active_at?: string
           last_run_at?: string | null
           parent_user_id: string
           updated_at?: string
         }
         Update: {
+          auto_paused?: boolean
           created_at?: string
           frequency?: Database["public"]["Enums"]["sync_frequency"]
+          last_active_at?: string
           last_run_at?: string | null
           parent_user_id?: string
           updated_at?: string
@@ -518,7 +524,7 @@ export type Database = {
     }
     Enums: {
       app_role: "superadmin"
-      sync_frequency: "off" | "daily" | "weekly" | "monthly"
+      sync_frequency: "off" | "daily" | "weekly" | "monthly" | "biweekly"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -647,7 +653,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["superadmin"],
-      sync_frequency: ["off", "daily", "weekly", "monthly"],
+      sync_frequency: ["off", "daily", "weekly", "monthly", "biweekly"],
     },
   },
 } as const
