@@ -96,7 +96,7 @@ async function ytFetch<T>(path: string, params: Record<string, string | number |
 }
 
 // ---------- URL / handle parsing ----------
-function parseChannelInput(raw: string): { id?: string; handle?: string; query?: string } {
+function parseChannelInput(raw: string): { id?: string; handle?: string; videoId?: string; query?: string } {
   const s = raw.trim();
   if (!s) return {};
   if (/^UC[a-zA-Z0-9_-]{20,}$/.test(s)) return { id: s };
@@ -107,7 +107,14 @@ function parseChannelInput(raw: string): { id?: string; handle?: string; query?:
     if (parts[0]?.startsWith("@")) return { handle: parts[0].slice(1) };
     if (parts[0] === "c" && parts[1]) return { handle: parts[1] };
     if (parts[0] === "user" && parts[1]) return { handle: parts[1] };
-    if ((parts[0] === "watch" || parts[0] === "shorts") && parts[1]) return { query: s };
+    if (parts[0] === "watch") {
+      const v = url.searchParams.get("v");
+      if (v) return { videoId: v };
+    }
+    if ((parts[0] === "shorts" || parts[0] === "live" || parts[0] === "embed") && parts[1]) {
+      return { videoId: parts[1] };
+    }
+    if (url.hostname.replace(/^www\./, "") === "youtu.be" && parts[0]) return { videoId: parts[0] };
   } catch {
     // fallthrough
   }
