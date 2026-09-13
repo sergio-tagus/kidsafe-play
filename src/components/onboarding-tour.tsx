@@ -135,6 +135,7 @@ export function OnboardingTour({ suspended = false }: { suspended?: boolean }) {
   };
 
   const onSkip = () => { skip.mutate({ step: index }); close(); };
+  const onNever = () => { dismiss.mutate({ step: index }); close(); };
   const onFinish = () => { save.mutate({ step: TOUR_COUNT - 1, status: "done" }); close(); };
 
   const next = () => (index >= TOUR_COUNT - 1 ? onFinish() : goto(index + 1));
