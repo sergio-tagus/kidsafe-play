@@ -157,6 +157,33 @@ export type Database = {
           },
         ]
       }
+      impersonation_logs: {
+        Row: {
+          actor_user_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          started_at: string
+          target_user_id: string
+        }
+        Insert: {
+          actor_user_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          target_user_id: string
+        }
+        Update: {
+          actor_user_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          started_at?: string
+          target_user_id?: string
+        }
+        Relationships: []
+      }
       parent_pins: {
         Row: {
           created_at: string
@@ -520,6 +547,15 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      search_users: {
+        Args: { term: string }
+        Returns: {
+          avatar_url: string
+          email: string
+          id: string
+          name: string
+        }[]
       }
     }
     Enums: {
