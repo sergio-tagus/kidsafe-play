@@ -18,7 +18,11 @@ const THRESHOLD: Record<string, number> = {
   daily: 20 * 60 * 60 * 1000,     // 20h
   weekly: 6 * 24 * 60 * 60 * 1000, // 6 days
   monthly: 28 * 24 * 60 * 60 * 1000,
+  biweekly: 14 * 24 * 60 * 60 * 1000,
 };
+
+/** Automatic sync pauses itself after this long without the parent using the app. */
+const INACTIVITY_MS = 10 * 24 * 60 * 60 * 1000;
 
 export const Route = createFileRoute("/api/public/hooks/sync-whitelist")({
   server: {
@@ -48,11 +52,27 @@ export const Route = createFileRoute("/api/public/hooks/sync-whitelist")({
         const nowMs = Date.now();
         const { data: settings, error: sErr } = await supabaseAdmin
           .from("sync_settings")
-          .select("parent_user_id, frequency, last_run_at")
+          .select("parent_user_id, frequency, last_run_at, last_active_at, auto_paused")
           .neq("frequency", "off");
         if (sErr) return json({ error: sErr.message }, 500);
 
+        // Pause accounts that have not used the app for more than 10 days.
+        const inactive = (settings ?? []).filter(
+          (s: any) =>
+            !s.auto_paused &&
+            s.last_active_at &&
+            nowMs - new Date(s.last_active_at).getTime() > INACTIVITY_MS,
+        );
+        for (const s of inactive) {
+          await supabaseAdmin
+            .from("sync_settings")
+            .update({ auto_paused: true } as never)
+            .eq("parent_user_id", s.parent_user_id);
+        }
+        const pausedIds = new Set(inactive.map((s: any) => s.parent_user_id));
+
         const due = (settings ?? []).filter((s: any) => {
+          if (s.auto_paused || pausedIds.has(s.parent_user_id)) return false;
           const th = THRESHOLD[s.frequency];
           if (!th) return false;
           if (!s.last_run_at) return true;
