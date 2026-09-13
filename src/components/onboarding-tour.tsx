@@ -215,8 +215,11 @@ export function OnboardingTour({ suspended = false }: { suspended?: boolean }) {
           </Button>
         </div>
 
-        <div className="flex items-center gap-2 mt-4">
+        <div className="flex flex-wrap items-center gap-2 mt-4">
           <Button variant="ghost" className="rounded-xl" onClick={onSkip}>{t("tour.skip")}</Button>
+          <Button variant="ghost" className="rounded-xl text-muted-foreground" onClick={onNever}>
+            {t("tour.never")}
+          </Button>
           <div className="flex-1" />
           {index > 0 && (
             <Button variant="outline" className="rounded-xl" onClick={prev}>
