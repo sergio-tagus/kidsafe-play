@@ -160,17 +160,31 @@ export async function fetchChannel(input: string): Promise<YtChannel> {
     raw = j.items?.[0] ?? null;
   }
 
-  if (!raw && parsed.handle) {
+  if (!raw && parsed.videoId) {
+    // A video/short URL: resolve its owning channel first.
+    const v = await ytFetch<any>("/videos", { part: "snippet", id: parsed.videoId });
+    const chId = v.items?.[0]?.snippet?.channelId;
+    if (chId) {
+      const j = await ytFetch<any>("/channels", {
+        part: "snippet,contentDetails,topicDetails,statistics,brandingSettings",
+        id: chId,
+      });
+      raw = j.items?.[0] ?? null;
+    }
+  }
+
+  const searchTerm = parsed.handle ?? parsed.query;
+  if (!raw && searchTerm) {
     // Try forHandle (newer API), then forUsername (legacy)
     const j1 = await ytFetch<any>("/channels", {
       part: "snippet,contentDetails,topicDetails,statistics,brandingSettings",
-      forHandle: parsed.handle,
+      forHandle: searchTerm,
     }).catch(() => ({ items: [] }));
     raw = j1.items?.[0] ?? null;
     if (!raw) {
       const j2 = await ytFetch<any>("/channels", {
         part: "snippet,contentDetails,topicDetails,statistics,brandingSettings",
-        forUsername: parsed.handle,
+        forUsername: searchTerm,
       }).catch(() => ({ items: [] }));
       raw = j2.items?.[0] ?? null;
     }
@@ -179,7 +193,7 @@ export async function fetchChannel(input: string): Promise<YtChannel> {
       const s = await ytFetch<any>("/search", {
         part: "snippet",
         type: "channel",
-        q: parsed.handle,
+        q: searchTerm,
         maxResults: 1,
       });
       const chId = s.items?.[0]?.id?.channelId;
@@ -193,7 +207,11 @@ export async function fetchChannel(input: string): Promise<YtChannel> {
     }
   }
 
-  if (!raw) throw new Error("Channel not found on YouTube");
+  if (!raw) {
+    throw new Error(
+      `Channel not found on YouTube for "${input.trim().slice(0, 120)}". Paste the channel URL (youtube.com/@handle or /channel/UC...).`,
+    );
+  }
 
 
   const uploads = raw.contentDetails?.relatedPlaylists?.uploads;
