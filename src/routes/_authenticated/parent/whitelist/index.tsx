@@ -45,6 +45,7 @@ function WhitelistPage() {
   const qc = useQueryClient();
   const listFn = useServerFn(listWhitelistChannels);
   const upsertFn = useServerFn(upsertWhitelistChannel);
+  const manualAddFn = useServerFn(manualAddWhitelistChannel);
   const delFn = useServerFn(deleteWhitelistChannel);
   const previewFn = useServerFn(previewChannelFromUrl);
   const importFn = useServerFn(importChannelFromUrl);
@@ -525,12 +526,13 @@ function WhitelistPage() {
       return;
     }
     try {
-      await upsertFn({
+      await manualAddFn({
         data: {
           youtube_channel_id: manualForm.youtube_channel_id,
           channel_name: manualForm.channel_name,
           channel_handle: manualForm.channel_handle || null,
           channel_thumbnail_url: manualForm.channel_thumbnail_url || null,
+          channel_description: manualForm.channel_description || null,
           category: manualForm.category,
           active: manualForm.active,
         },
