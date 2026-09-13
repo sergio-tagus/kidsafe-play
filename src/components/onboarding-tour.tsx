@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState, useSyncExternalStore } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -10,12 +10,37 @@ import {
   getOnboardingState,
   setOnboardingStep,
   skipOnboarding,
+  dismissOnboarding,
   type OnboardingState,
 } from "@/lib/onboarding.functions";
 
 type Rect = { top: number; left: number; width: number; height: number };
 
 const OPEN_EVENT = "safetube:tour-open";
+
+/**
+ * The tour is rendered from ParentShell, which remounts on every parent-panel
+ * navigation. Keeping open/index in a module store lets the tour survive the
+ * screen changes it performs itself (step 3 onwards).
+ */
+type TourRun = { open: boolean; index: number };
+let runState: TourRun = { open: false, index: 0 };
+const runListeners = new Set<() => void>();
+function setRun(next: TourRun) {
+  runState = next;
+  runListeners.forEach((l) => l());
+}
+function subscribeRun(l: () => void) {
+  runListeners.add(l);
+  return () => runListeners.delete(l);
+}
+function useTourRun() {
+  return useSyncExternalStore(
+    subscribeRun,
+    () => runState,
+    () => runState,
+  );
+}
 
 export function openOnboardingTour(opts?: { restart?: boolean }) {
   window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: { restart: !!opts?.restart } }));
@@ -43,25 +68,27 @@ export function OnboardingTour({ suspended = false }: { suspended?: boolean }) {
     mutationFn: (v: { step: number }) => skipFn({ data: v }) as any,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["onboarding"] }),
   });
+  const dismissFn = useServerFn(dismissOnboarding);
+  const dismiss = useMutation({
+    mutationFn: (v: { step: number }) => dismissFn({ data: v }) as any,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["onboarding"] }),
+  });
 
-  const [open, setOpen] = useState(false);
-  const [index, setIndex] = useState(0);
+  const { open, index } = useTourRun();
+  const setOpen = (v: boolean) => setRun({ open: v, index: runState.index });
+  const setIndex = (i: number) => setRun({ open: runState.open, index: i });
   const [rect, setRect] = useState<Rect | null>(null);
 
   // Auto-open on first visit; resume where the parent left off.
   useEffect(() => {
     if (suspended || !state) return;
-    if (state.status === "pending") {
-      setIndex(0);
-      setOpen(true);
-    }
+    if (state.status === "pending" && !runState.open) setRun({ open: true, index: 0 });
   }, [state, suspended]);
 
   useEffect(() => {
     const handler = (e: Event) => {
       const restart = (e as CustomEvent).detail?.restart;
-      setIndex(restart ? 0 : Math.min(state?.step ?? 0, TOUR_COUNT - 1));
-      setOpen(true);
+      setRun({ open: true, index: restart ? 0 : Math.min(state?.step ?? 0, TOUR_COUNT - 1) });
     };
     window.addEventListener(OPEN_EVENT, handler as EventListener);
     return () => window.removeEventListener(OPEN_EVENT, handler as EventListener);
@@ -88,7 +115,9 @@ export function OnboardingTour({ suspended = false }: { suspended?: boolean }) {
   useLayoutEffect(() => {
     if (!open) return;
     measure();
-    const id = window.setInterval(measure, 400);
+    // Re-measure often so the spotlight appears as soon as the target screen
+    // finishes rendering after the step's own navigation.
+    const id = window.setInterval(measure, 200);
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, true);
     return () => {
@@ -96,7 +125,7 @@ export function OnboardingTour({ suspended = false }: { suspended?: boolean }) {
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
-  }, [open, measure]);
+  }, [open, measure, path, index]);
 
   const close = () => { setOpen(false); setRect(null); };
 
@@ -106,6 +135,7 @@ export function OnboardingTour({ suspended = false }: { suspended?: boolean }) {
   };
 
   const onSkip = () => { skip.mutate({ step: index }); close(); };
+  const onNever = () => { dismiss.mutate({ step: index }); close(); };
   const onFinish = () => { save.mutate({ step: TOUR_COUNT - 1, status: "done" }); close(); };
 
   const next = () => (index >= TOUR_COUNT - 1 ? onFinish() : goto(index + 1));
@@ -185,8 +215,11 @@ export function OnboardingTour({ suspended = false }: { suspended?: boolean }) {
           </Button>
         </div>
 
-        <div className="flex items-center gap-2 mt-4">
+        <div className="flex flex-wrap items-center gap-2 mt-4">
           <Button variant="ghost" className="rounded-xl" onClick={onSkip}>{t("tour.skip")}</Button>
+          <Button variant="ghost" className="rounded-xl text-muted-foreground" onClick={onNever}>
+            {t("tour.never")}
+          </Button>
           <div className="flex-1" />
           {index > 0 && (
             <Button variant="outline" className="rounded-xl" onClick={prev}>

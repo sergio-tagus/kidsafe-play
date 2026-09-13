@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export type OnboardingStatus = "pending" | "in_progress" | "skipped" | "done";
+export type OnboardingStatus = "pending" | "in_progress" | "skipped" | "done" | "dismissed";
 
 export type OnboardingState = {
   status: OnboardingStatus;
@@ -46,7 +46,7 @@ export const getOnboardingState = createServerFn({ method: "GET" })
 
 const setSchema = z.object({
   step: z.number().int().min(0).max(50),
-  status: z.enum(["pending", "in_progress", "skipped", "done"]).optional(),
+  status: z.enum(["pending", "in_progress", "skipped", "done", "dismissed"]).optional(),
 });
 
 export const setOnboardingStep = createServerFn({ method: "POST" })
@@ -73,6 +73,19 @@ export const skipOnboarding = createServerFn({ method: "POST" })
     const { error } = await context.supabase
       .from("profiles")
       .update({ onboarding_status: "skipped", onboarding_step: data.step } as any)
+      .eq("id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+/** Hide the tour permanently; it stays available from the help menu. */
+export const dismissOnboarding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ step: z.number().int().min(0).max(50) }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { error } = await context.supabase
+      .from("profiles")
+      .update({ onboarding_status: "dismissed", onboarding_step: data.step } as any)
       .eq("id", context.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
