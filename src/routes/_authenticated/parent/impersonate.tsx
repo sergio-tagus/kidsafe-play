@@ -43,6 +43,8 @@ function ImpersonatePage() {
     queryFn: () => search({ data: { term: debounced } }),
     enabled: isSuperAdmin,
     staleTime: 30_000,
+    retry: false,
+    throwOnError: false,
   });
 
   const impersonate = async (userId: string) => {
