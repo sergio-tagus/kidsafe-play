@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-export type OnboardingStatus = "pending" | "in_progress" | "skipped" | "done";
+export type OnboardingStatus = "pending" | "in_progress" | "skipped" | "done" | "dismissed";
 
 export type OnboardingState = {
   status: OnboardingStatus;
