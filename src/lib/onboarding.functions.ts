@@ -46,7 +46,7 @@ export const getOnboardingState = createServerFn({ method: "GET" })
 
 const setSchema = z.object({
   step: z.number().int().min(0).max(50),
-  status: z.enum(["pending", "in_progress", "skipped", "done"]).optional(),
+  status: z.enum(["pending", "in_progress", "skipped", "done", "dismissed"]).optional(),
 });
 
 export const setOnboardingStep = createServerFn({ method: "POST" })
