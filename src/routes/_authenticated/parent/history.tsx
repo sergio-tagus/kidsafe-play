@@ -36,7 +36,7 @@ function ParentHistory() {
   return (
     <ParentShell>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <h1 className="text-2xl md:text-3xl font-display font-bold">{t("parent.history")}</h1>
+        <h1 data-tour="history" className="text-2xl md:text-3xl font-display font-bold">{t("parent.history")}</h1>
         {kids.length > 0 && (
           <Select value={selected} onValueChange={setSelected}>
             <SelectTrigger className="w-full sm:w-64">

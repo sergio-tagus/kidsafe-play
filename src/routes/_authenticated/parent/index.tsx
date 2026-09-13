@@ -5,6 +5,7 @@ import { getParentStats } from "@/lib/kids.functions";
 import { getSyncSettings, upsertSyncSettings } from "@/lib/sync.functions";
 import { listCategories } from "@/lib/categories.functions";
 import { ParentShell } from "@/components/parent-shell";
+import { OnboardingResumeBanner } from "@/components/onboarding-tour";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -38,7 +39,8 @@ function ParentDashboard() {
 
   return (
     <ParentShell>
-      <h1 className="text-3xl font-display font-bold mb-6">{t("parent.dashboard")}</h1>
+      <OnboardingResumeBanner />
+      <h1 data-tour="overview" className="text-3xl font-display font-bold mb-6">{t("parent.dashboard")}</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <StatCard label={t("parent.today")} value={`${data?.totals.today ?? 0}`} unit="min" />
