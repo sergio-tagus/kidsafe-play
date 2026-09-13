@@ -110,6 +110,8 @@ function ApiUsagePage() {
 
   const fmt = (n: number) => n.toLocaleString(lang);
 
+  if (!isSuperAdmin) return <ParentShell>{null}</ParentShell>;
+
   return (
     <ParentShell>
       <h1 className="text-3xl font-display font-bold mb-6">{t("parent.apiUsageTitle")}</h1>
