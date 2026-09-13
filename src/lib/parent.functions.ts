@@ -149,7 +149,7 @@ export const manualAddWhitelistChannel = createServerFn({ method: "POST" })
         channel_handle: data.channel_handle || null,
         channel_thumbnail_url: data.channel_thumbnail_url || null,
         channel_description: data.channel_description?.trim() || null,
-        ...(data.category ? { category: data.category } : {}),
+        category: data.category || "education",
         active: data.active ?? true,
         language: data.language || "unknown",
       })
