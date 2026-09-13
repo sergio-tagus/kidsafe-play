@@ -4,9 +4,15 @@ import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { LanguageSwitcher } from "./language-switcher";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags, History, Gauge, UserCheck } from "lucide-react";
+import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags, History, Gauge, UserCheck, HelpCircle, PlayCircle, RotateCcw } from "lucide-react";
 import { ParentUnlockGuard } from "./parent-unlock-guard";
 import { useIsSuperAdmin } from "@/hooks/use-superadmin";
+import { OnboardingTour, openOnboardingTour } from "./onboarding-tour";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { resetOnboarding } from "@/lib/onboarding.functions";
+import { useImpersonation } from "@/lib/impersonation";
 
 export function ParentShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
