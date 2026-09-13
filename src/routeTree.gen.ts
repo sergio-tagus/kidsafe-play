@@ -16,6 +16,7 @@ import { Route as AuthenticatedParentRouteRouteImport } from './routes/_authenti
 import { Route as AuthenticatedParentIndexRouteImport } from './routes/_authenticated/parent/index'
 import { Route as AuthenticatedParentUnlockRouteImport } from './routes/_authenticated/parent/unlock'
 import { Route as AuthenticatedParentResetPinRouteImport } from './routes/_authenticated/parent/reset-pin'
+import { Route as AuthenticatedParentImpersonateRouteImport } from './routes/_authenticated/parent/impersonate'
 import { Route as AuthenticatedParentHistoryRouteImport } from './routes/_authenticated/parent/history'
 import { Route as AuthenticatedParentChildrenRouteImport } from './routes/_authenticated/parent/children'
 import { Route as AuthenticatedParentCategoriesRouteImport } from './routes/_authenticated/parent/categories'
@@ -69,6 +70,12 @@ const AuthenticatedParentResetPinRoute =
   AuthenticatedParentResetPinRouteImport.update({
     id: '/reset-pin',
     path: '/reset-pin',
+    getParentRoute: () => AuthenticatedParentRouteRoute,
+  } as any)
+const AuthenticatedParentImpersonateRoute =
+  AuthenticatedParentImpersonateRouteImport.update({
+    id: '/impersonate',
+    path: '/impersonate',
     getParentRoute: () => AuthenticatedParentRouteRoute,
   } as any)
 const AuthenticatedParentHistoryRoute =
@@ -176,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/parent/categories': typeof AuthenticatedParentCategoriesRoute
   '/parent/children': typeof AuthenticatedParentChildrenRoute
   '/parent/history': typeof AuthenticatedParentHistoryRoute
+  '/parent/impersonate': typeof AuthenticatedParentImpersonateRoute
   '/parent/reset-pin': typeof AuthenticatedParentResetPinRoute
   '/parent/unlock': typeof AuthenticatedParentUnlockRoute
   '/parent/': typeof AuthenticatedParentIndexRoute
@@ -199,6 +207,7 @@ export interface FileRoutesByTo {
   '/parent/categories': typeof AuthenticatedParentCategoriesRoute
   '/parent/children': typeof AuthenticatedParentChildrenRoute
   '/parent/history': typeof AuthenticatedParentHistoryRoute
+  '/parent/impersonate': typeof AuthenticatedParentImpersonateRoute
   '/parent/reset-pin': typeof AuthenticatedParentResetPinRoute
   '/parent/unlock': typeof AuthenticatedParentUnlockRoute
   '/parent': typeof AuthenticatedParentIndexRoute
@@ -225,6 +234,7 @@ export interface FileRoutesById {
   '/_authenticated/parent/categories': typeof AuthenticatedParentCategoriesRoute
   '/_authenticated/parent/children': typeof AuthenticatedParentChildrenRoute
   '/_authenticated/parent/history': typeof AuthenticatedParentHistoryRoute
+  '/_authenticated/parent/impersonate': typeof AuthenticatedParentImpersonateRoute
   '/_authenticated/parent/reset-pin': typeof AuthenticatedParentResetPinRoute
   '/_authenticated/parent/unlock': typeof AuthenticatedParentUnlockRoute
   '/_authenticated/parent/': typeof AuthenticatedParentIndexRoute
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/parent/categories'
     | '/parent/children'
     | '/parent/history'
+    | '/parent/impersonate'
     | '/parent/reset-pin'
     | '/parent/unlock'
     | '/parent/'
@@ -274,6 +285,7 @@ export interface FileRouteTypes {
     | '/parent/categories'
     | '/parent/children'
     | '/parent/history'
+    | '/parent/impersonate'
     | '/parent/reset-pin'
     | '/parent/unlock'
     | '/parent'
@@ -299,6 +311,7 @@ export interface FileRouteTypes {
     | '/_authenticated/parent/categories'
     | '/_authenticated/parent/children'
     | '/_authenticated/parent/history'
+    | '/_authenticated/parent/impersonate'
     | '/_authenticated/parent/reset-pin'
     | '/_authenticated/parent/unlock'
     | '/_authenticated/parent/'
@@ -372,6 +385,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-pin'
       fullPath: '/parent/reset-pin'
       preLoaderRoute: typeof AuthenticatedParentResetPinRouteImport
+      parentRoute: typeof AuthenticatedParentRouteRoute
+    }
+    '/_authenticated/parent/impersonate': {
+      id: '/_authenticated/parent/impersonate'
+      path: '/impersonate'
+      fullPath: '/parent/impersonate'
+      preLoaderRoute: typeof AuthenticatedParentImpersonateRouteImport
       parentRoute: typeof AuthenticatedParentRouteRoute
     }
     '/_authenticated/parent/history': {
@@ -494,6 +514,7 @@ interface AuthenticatedParentRouteRouteChildren {
   AuthenticatedParentCategoriesRoute: typeof AuthenticatedParentCategoriesRoute
   AuthenticatedParentChildrenRoute: typeof AuthenticatedParentChildrenRoute
   AuthenticatedParentHistoryRoute: typeof AuthenticatedParentHistoryRoute
+  AuthenticatedParentImpersonateRoute: typeof AuthenticatedParentImpersonateRoute
   AuthenticatedParentResetPinRoute: typeof AuthenticatedParentResetPinRoute
   AuthenticatedParentUnlockRoute: typeof AuthenticatedParentUnlockRoute
   AuthenticatedParentIndexRoute: typeof AuthenticatedParentIndexRoute
@@ -507,6 +528,7 @@ const AuthenticatedParentRouteRouteChildren: AuthenticatedParentRouteRouteChildr
     AuthenticatedParentCategoriesRoute: AuthenticatedParentCategoriesRoute,
     AuthenticatedParentChildrenRoute: AuthenticatedParentChildrenRoute,
     AuthenticatedParentHistoryRoute: AuthenticatedParentHistoryRoute,
+    AuthenticatedParentImpersonateRoute: AuthenticatedParentImpersonateRoute,
     AuthenticatedParentResetPinRoute: AuthenticatedParentResetPinRoute,
     AuthenticatedParentUnlockRoute: AuthenticatedParentUnlockRoute,
     AuthenticatedParentIndexRoute: AuthenticatedParentIndexRoute,
