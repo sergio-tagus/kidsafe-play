@@ -13,6 +13,8 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { I18nProvider } from "../lib/i18n";
 import { SessionProvider } from "../lib/session";
+import { ImpersonationProvider } from "../lib/impersonation";
+import { ImpersonationBanner } from "@/components/impersonation-banner";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { OfflinePersistProvider, clearOfflineCache } from "../lib/query-persist";
@@ -138,8 +140,11 @@ function RootComponent() {
     <OfflinePersistProvider client={queryClient}>
       <I18nProvider>
         <SessionProvider>
-          <Outlet />
-          <Toaster richColors position="top-center" />
+          <ImpersonationProvider>
+            <ImpersonationBanner />
+            <Outlet />
+            <Toaster richColors position="top-center" />
+          </ImpersonationProvider>
         </SessionProvider>
       </I18nProvider>
     </OfflinePersistProvider>
