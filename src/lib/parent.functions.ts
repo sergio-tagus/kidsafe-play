@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { requireParentUnlocked } from "@/lib/parent-unlock";
+import { requireSuperAdmin } from "@/lib/require-superadmin";
 
 // ---------- child profiles ----------
 export const listChildProfiles = createServerFn({ method: "GET" })
@@ -523,7 +524,7 @@ export const importChannelFromUrl = createServerFn({ method: "POST" })
   });
 
 export const refreshChannelVideos = createServerFn({ method: "POST" })
-  .middleware([requireParentUnlocked])
+  .middleware([requireParentUnlocked, requireSuperAdmin])
   .inputValidator((d: unknown) =>
     z.object({
       channelId: z.string().uuid(),
@@ -576,7 +577,7 @@ export const refreshChannelVideos = createServerFn({ method: "POST" })
  * mode "auto": metadata differences are applied immediately.
  */
 export const bulkUpdateChannel = createServerFn({ method: "POST" })
-  .middleware([requireParentUnlocked])
+  .middleware([requireParentUnlocked, requireSuperAdmin])
   .inputValidator((d: unknown) =>
     z.object({
       channelId: z.string().uuid(),
@@ -646,7 +647,7 @@ export const bulkUpdateChannel = createServerFn({ method: "POST" })
 
 /** Persist a summary row for a completed bulk run. */
 export const logBulkSyncRun = createServerFn({ method: "POST" })
-  .middleware([requireParentUnlocked])
+  .middleware([requireParentUnlocked, requireSuperAdmin])
   .inputValidator((d: unknown) =>
     z.object({
       startedAt: z.string(),
