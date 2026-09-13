@@ -20,6 +20,19 @@ export function ParentShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   const { isSuperAdmin } = useIsSuperAdmin();
+  const { impersonation } = useImpersonation();
+  const qc = useQueryClient();
+  const resetFn = useServerFn(resetOnboarding);
+  const reset = useMutation({
+    mutationFn: () => resetFn() as any,
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["onboarding"] });
+      openOnboardingTour({ restart: true });
+    },
+  });
+  const unlockStatus = qc.getQueryData<any>(["parent-unlock-status"]);
+  const pinLocked = !!unlockStatus?.hasPin && !unlockStatus?.unlocked;
+
 
   const nav = [
     { to: "/parent", label: t("parent.overview"), icon: LayoutDashboard, exact: true },
