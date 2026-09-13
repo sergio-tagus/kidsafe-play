@@ -68,25 +68,27 @@ export function OnboardingTour({ suspended = false }: { suspended?: boolean }) {
     mutationFn: (v: { step: number }) => skipFn({ data: v }) as any,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["onboarding"] }),
   });
+  const dismissFn = useServerFn(dismissOnboarding);
+  const dismiss = useMutation({
+    mutationFn: (v: { step: number }) => dismissFn({ data: v }) as any,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["onboarding"] }),
+  });
 
-  const [open, setOpen] = useState(false);
-  const [index, setIndex] = useState(0);
+  const { open, index } = useTourRun();
+  const setOpen = (v: boolean) => setRun({ open: v, index: runState.index });
+  const setIndex = (i: number) => setRun({ open: runState.open, index: i });
   const [rect, setRect] = useState<Rect | null>(null);
 
   // Auto-open on first visit; resume where the parent left off.
   useEffect(() => {
     if (suspended || !state) return;
-    if (state.status === "pending") {
-      setIndex(0);
-      setOpen(true);
-    }
+    if (state.status === "pending" && !runState.open) setRun({ open: true, index: 0 });
   }, [state, suspended]);
 
   useEffect(() => {
     const handler = (e: Event) => {
       const restart = (e as CustomEvent).detail?.restart;
-      setIndex(restart ? 0 : Math.min(state?.step ?? 0, TOUR_COUNT - 1));
-      setOpen(true);
+      setRun({ open: true, index: restart ? 0 : Math.min(state?.step ?? 0, TOUR_COUNT - 1) });
     };
     window.addEventListener(OPEN_EVENT, handler as EventListener);
     return () => window.removeEventListener(OPEN_EVENT, handler as EventListener);
