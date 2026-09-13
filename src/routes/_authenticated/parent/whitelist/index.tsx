@@ -5,6 +5,7 @@ import { useMemo, useRef, useState } from "react";
 import {
   listWhitelistChannels,
   upsertWhitelistChannel,
+  manualAddWhitelistChannel,
   deleteWhitelistChannel,
   previewChannelFromUrl,
   importChannelFromUrl,
@@ -561,9 +562,11 @@ function WhitelistPage() {
           <Button variant="outline" className="rounded-full" onClick={() => openRecommend(false)} disabled={channels.length === 0}>
             <Sparkles className="w-4 h-4 mr-1" /> {t("whitelist.recommend")}
           </Button>
-          <Button variant="outline" className="rounded-full" onClick={openManual}>
-            {t("parent.manualAdd")}
-          </Button>
+          {isSuperAdmin && (
+            <Button variant="outline" className="rounded-full" onClick={openManual}>
+              {t("parent.manualAdd")}
+            </Button>
+          )}
           <Button className="rounded-full" onClick={openAuto}>
             <Plus className="w-4 h-4 mr-1" /> {t("parent.addChannel")}
           </Button>
