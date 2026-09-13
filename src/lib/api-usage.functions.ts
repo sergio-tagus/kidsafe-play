@@ -22,7 +22,7 @@ function dayKey(d: Date): string {
 }
 
 export const getApiUsageSummary = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSuperAdmin])
   .inputValidator((d: unknown) => z.object({ days: z.number().int().min(1).max(90).default(30) }).parse(d))
   .handler(async ({ data, context }) => {
     const since = new Date();
@@ -74,7 +74,7 @@ export const getApiUsageSummary = createServerFn({ method: "POST" })
   });
 
 export const getApiUsageByChannel = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSuperAdmin])
   .handler(async ({ context }) => {
     const { data: rows, error } = await context.supabase
       .from("youtube_api_usage")
@@ -109,7 +109,7 @@ export const getApiUsageByChannel = createServerFn({ method: "GET" })
   });
 
 export const listSyncRuns = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSuperAdmin])
   .inputValidator((d: unknown) => z.object({ limit: z.number().int().min(1).max(100).default(20) }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
@@ -123,7 +123,7 @@ export const listSyncRuns = createServerFn({ method: "POST" })
   });
 
 export const setQuotaSettings = createServerFn({ method: "POST" })
-  .middleware([requireParentUnlocked])
+  .middleware([requireSuperAdmin])
   .inputValidator((d: unknown) =>
     z.object({ dailyQuota: z.number().int().min(100).max(100_000_000) }).parse(d),
   )
