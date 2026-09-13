@@ -33,6 +33,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Plus, Trash2, ExternalLink, Search, RefreshCw, Loader2, Sparkles, X, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useIsSuperAdmin } from "@/hooks/use-superadmin";
 
 export const Route = createFileRoute("/_authenticated/parent/whitelist/")({
   component: WhitelistPage,
@@ -54,6 +55,7 @@ function WhitelistPage() {
   const previewUpdateFn = useServerFn(previewChannelUpdate);
   const applyUpdateFn = useServerFn(applyChannelUpdate);
   const dismissUpdatesFn = useServerFn(dismissPendingUpdates);
+  const { isSuperAdmin } = useIsSuperAdmin();
 
   const { data: channels = [] } = useQuery({ queryKey: ["wl"], queryFn: () => listFn() });
   const { data: categories = [] } = useQuery<any[]>({ queryKey: ["categories"], queryFn: () => catsFn() as any });
@@ -635,19 +637,21 @@ function WhitelistPage() {
               <X className="w-4 h-4 mr-1" /> {t("parent.clearFilters")}
             </Button>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-full"
-            disabled={filteredChannels.length === 0}
-            onClick={() => {
-              setBulkProgress(null);
-              setBulkOpen(true);
-            }}
-          >
-            <RefreshCw className="w-4 h-4 mr-1" />
-            {t("parent.bulkUpdate", { n: filteredChannels.length })}
-          </Button>
+          {isSuperAdmin && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              disabled={filteredChannels.length === 0}
+              onClick={() => {
+                setBulkProgress(null);
+                setBulkOpen(true);
+              }}
+            >
+              <RefreshCw className="w-4 h-4 mr-1" />
+              {t("parent.bulkUpdate", { n: filteredChannels.length })}
+            </Button>
+          )}
         </div>
       )}
 
@@ -847,22 +851,24 @@ function WhitelistPage() {
                   onCheckedChange={() => toggleActive(c)}
                   onClick={(e) => e.stopPropagation()}
                 />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  disabled={refreshingId === c.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    doRefresh(c);
-                  }}
-                  title={t("parent.sync")}
-                >
-                  {refreshingId === c.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <RefreshCw className="w-4 h-4" />
-                  )}
-                </Button>
+                {isSuperAdmin && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={refreshingId === c.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      doRefresh(c);
+                    }}
+                    title={t("parent.sync")}
+                  >
+                    {refreshingId === c.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4" />
+                    )}
+                  </Button>
+                )}
                 <Link
                   to="/parent/whitelist/$channelId"
                   params={{ channelId: c.id } as any}
@@ -995,7 +1001,7 @@ function WhitelistPage() {
             </div>
           )}
           <DialogFooter className="flex-wrap gap-2">
-            {detailForm && (
+            {detailForm && isSuperAdmin && (
               <Button
                 variant="ghost"
                 className="mr-auto"
