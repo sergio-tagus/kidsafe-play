@@ -46,6 +46,13 @@ export const startImpersonation = createServerFn({ method: "POST" })
     const tokenHash = link?.properties?.hashed_token;
     if (!tokenHash) throw new Error("Could not create impersonation session");
 
+    // Grant a parent-zone unlock window for the impersonated account so the
+    // superadmin can review the parent panel without knowing their PIN.
+    await supabaseAdmin
+      .from("parent_pins")
+      .update({ unlocked_until: new Date(Date.now() + 30 * 60 * 1000).toISOString() })
+      .eq("user_id", data.userId);
+
     const { data: log, error: logErr } = await context.supabase
       .from("impersonation_logs")
       .insert({ actor_user_id: context.userId, target_user_id: data.userId })
