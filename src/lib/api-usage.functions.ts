@@ -1,9 +1,21 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { requireParentUnlocked } from "@/lib/parent-unlock";
+import { requireSuperAdmin } from "@/lib/require-superadmin";
 
 const DEFAULT_QUOTA = 10000;
+
+/** Whether the signed-in account is the superuser (drives UI visibility). */
+export const isSuperAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "superadmin",
+    });
+    if (error) return { isSuperAdmin: false };
+    return { isSuperAdmin: Boolean(data) };
+  });
 
 function dayKey(d: Date): string {
   return d.toISOString().slice(0, 10);
