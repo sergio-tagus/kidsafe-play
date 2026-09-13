@@ -125,7 +125,7 @@ export function OnboardingTour({ suspended = false }: { suspended?: boolean }) {
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure, true);
     };
-  }, [open, measure]);
+  }, [open, measure, path, index]);
 
   const close = () => { setOpen(false); setRect(null); };
 
