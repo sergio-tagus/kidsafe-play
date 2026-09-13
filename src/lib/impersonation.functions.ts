@@ -73,10 +73,10 @@ export const startImpersonation = createServerFn({ method: "POST" })
       tokenHash,
       logId: (log as { id: string }).id,
       user: {
-        id: profile.id,
-        email: profile.email,
-        name: profile.name ?? null,
-        avatar_url: profile.avatar_url ?? null,
+        id: data.userId,
+        email,
+        name: profile?.name ?? null,
+        avatar_url: profile?.avatar_url ?? null,
       } satisfies FoundUser,
     };
   });
