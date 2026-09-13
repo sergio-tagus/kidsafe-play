@@ -35,12 +35,21 @@ export const startImpersonation = createServerFn({ method: "POST" })
       .eq("id", data.userId)
       .maybeSingle();
     if (pErr) throw new Error(pErr.message);
-    if (!profile?.email) throw new Error("User has no email on the platform");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // The profile row may not store an email; fall back to the auth account.
+    let email = profile?.email ?? null;
+    if (!email) {
+      const { data: authUser, error: aErr } = await supabaseAdmin.auth.admin.getUserById(data.userId);
+      if (aErr) throw new Error(aErr.message);
+      email = authUser?.user?.email ?? null;
+    }
+    if (!email) throw new Error("User has no email on the platform");
+
     const { data: link, error: lErr } = await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",
-      email: profile.email,
+      email,
     });
     if (lErr) throw new Error(lErr.message);
     const tokenHash = link?.properties?.hashed_token;
