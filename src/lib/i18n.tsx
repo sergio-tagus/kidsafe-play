@@ -699,6 +699,7 @@ const dict: Record<Lang, Dict> = {
     "tour.next": "Seguinte",
     "tour.back": "Voltar",
     "tour.skip": "Ignorar",
+    "tour.never": "Não mostrar novamente",
     "tour.finish": "Concluir",
     "tour.help": "Ajuda",
     "tour.helpOpen": "Ver tutorial de boas-vindas",
