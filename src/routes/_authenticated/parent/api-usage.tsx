@@ -50,6 +50,12 @@ const OP_LABEL: Record<string, string> = {
 function ApiUsagePage() {
   const { t, lang } = useI18n();
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { isSuperAdmin, isLoading: roleLoading } = useIsSuperAdmin();
+
+  useEffect(() => {
+    if (!roleLoading && !isSuperAdmin) navigate({ to: "/parent", replace: true });
+  }, [roleLoading, isSuperAdmin, navigate]);
   const summaryFn = useServerFn(getApiUsageSummary);
   const byChannelFn = useServerFn(getApiUsageByChannel);
   const runsFn = useServerFn(listSyncRuns);

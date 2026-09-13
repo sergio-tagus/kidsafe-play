@@ -6,6 +6,7 @@ import { LanguageSwitcher } from "./language-switcher";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags, History, Gauge } from "lucide-react";
 import { ParentUnlockGuard } from "./parent-unlock-guard";
+import { useIsSuperAdmin } from "@/hooks/use-superadmin";
 
 export function ParentShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
