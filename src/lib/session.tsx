@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 import { touchActivity } from "@/lib/sync.functions";
+import { isImpersonating } from "@/lib/impersonation";
 
 type SessionCtx = {
   session: Session | null;
@@ -23,6 +24,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     /** Mark the account as active so automatic sync stays on (or resumes). */
     const markActive = () => {
       if (touched) return;
+      // Impersonated sessions must not fake activity for the real account.
+      if (isImpersonating()) return;
       touched = true;
       touchActivity().catch(() => {});
     };
