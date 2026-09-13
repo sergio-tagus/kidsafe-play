@@ -1,16 +1,29 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { requireSuperAdmin } from "@/lib/require-superadmin";
 import { requireParentUnlocked } from "@/lib/parent-unlock";
 
 const DEFAULT_QUOTA = 10000;
+
+/** Whether the signed-in account is the superuser (drives UI visibility). */
+export const isSuperAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "superadmin",
+    });
+    if (error) return { isSuperAdmin: false };
+    return { isSuperAdmin: Boolean(data) };
+  });
 
 function dayKey(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
 export const getApiUsageSummary = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSuperAdmin])
   .inputValidator((d: unknown) => z.object({ days: z.number().int().min(1).max(90).default(30) }).parse(d))
   .handler(async ({ data, context }) => {
     const since = new Date();
@@ -62,7 +75,7 @@ export const getApiUsageSummary = createServerFn({ method: "POST" })
   });
 
 export const getApiUsageByChannel = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSuperAdmin])
   .handler(async ({ context }) => {
     const { data: rows, error } = await context.supabase
       .from("youtube_api_usage")
@@ -97,7 +110,7 @@ export const getApiUsageByChannel = createServerFn({ method: "GET" })
   });
 
 export const listSyncRuns = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireSuperAdmin])
   .inputValidator((d: unknown) => z.object({ limit: z.number().int().min(1).max(100).default(20) }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: rows, error } = await context.supabase
@@ -111,7 +124,7 @@ export const listSyncRuns = createServerFn({ method: "POST" })
   });
 
 export const setQuotaSettings = createServerFn({ method: "POST" })
-  .middleware([requireParentUnlocked])
+  .middleware([requireParentUnlocked, requireSuperAdmin])
   .inputValidator((d: unknown) =>
     z.object({ dailyQuota: z.number().int().min(100).max(100_000_000) }).parse(d),
   )

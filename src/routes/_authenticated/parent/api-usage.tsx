@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useIsSuperAdmin } from "@/hooks/use-superadmin";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
@@ -50,6 +51,12 @@ const OP_LABEL: Record<string, string> = {
 function ApiUsagePage() {
   const { t, lang } = useI18n();
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { isSuperAdmin, isLoading: roleLoading } = useIsSuperAdmin();
+
+  useEffect(() => {
+    if (!roleLoading && !isSuperAdmin) navigate({ to: "/parent", replace: true });
+  }, [roleLoading, isSuperAdmin, navigate]);
   const summaryFn = useServerFn(getApiUsageSummary);
   const byChannelFn = useServerFn(getApiUsageByChannel);
   const runsFn = useServerFn(listSyncRuns);
@@ -60,14 +67,17 @@ function ApiUsagePage() {
   const { data: summary } = useQuery({
     queryKey: ["api-usage", days],
     queryFn: () => summaryFn({ data: { days } }),
+    enabled: isSuperAdmin,
   });
   const { data: byChannel = [] } = useQuery({
     queryKey: ["api-usage-channels"],
     queryFn: () => byChannelFn(),
+    enabled: isSuperAdmin,
   });
   const { data: runs = [] } = useQuery({
     queryKey: ["api-usage-runs"],
     queryFn: () => runsFn({ data: { limit: 20 } }),
+    enabled: isSuperAdmin,
   });
 
   const [quotaInput, setQuotaInput] = useState("");
@@ -99,6 +109,8 @@ function ApiUsagePage() {
     s === "cron" ? t("parent.apiSourceCron") : s === "bulk" ? t("parent.apiSourceBulk") : t("parent.apiSourceManual");
 
   const fmt = (n: number) => n.toLocaleString(lang);
+
+  if (!isSuperAdmin) return <ParentShell>{null}</ParentShell>;
 
   return (
     <ParentShell>

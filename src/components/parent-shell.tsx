@@ -6,11 +6,14 @@ import { LanguageSwitcher } from "./language-switcher";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags, History, Gauge } from "lucide-react";
 import { ParentUnlockGuard } from "./parent-unlock-guard";
+import { useIsSuperAdmin } from "@/hooks/use-superadmin";
 
 export function ParentShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const { signOut } = useSession();
   const path = useRouterState({ select: (s) => s.location.pathname });
+
+  const { isSuperAdmin } = useIsSuperAdmin();
 
   const nav = [
     { to: "/parent", label: t("parent.overview"), icon: LayoutDashboard, exact: true },
@@ -18,8 +21,10 @@ export function ParentShell({ children }: { children: ReactNode }) {
     { to: "/parent/whitelist", label: t("parent.whitelist"), icon: ListChecks, exact: false },
     { to: "/parent/categories", label: t("parent.categories"), icon: Tags, exact: false },
     { to: "/parent/history", label: t("parent.history"), icon: History, exact: false },
-    { to: "/parent/api-usage", label: t("parent.apiUsage"), icon: Gauge, exact: false },
-  ] as const;
+    ...(isSuperAdmin
+      ? [{ to: "/parent/api-usage", label: t("parent.apiUsage"), icon: Gauge, exact: false }]
+      : []),
+  ];
 
   return (
     <div className="min-h-screen flex bg-background">
