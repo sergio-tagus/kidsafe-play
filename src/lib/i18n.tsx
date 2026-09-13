@@ -155,6 +155,7 @@ const dict: Record<Lang, Dict> = {
     "tour.next": "Siguiente",
     "tour.back": "Atrás",
     "tour.skip": "Omitir",
+    "tour.never": "No volver a mostrar",
     "tour.finish": "Finalizar",
     "tour.help": "Ayuda",
     "tour.helpOpen": "Ver tutorial de bienvenida",
