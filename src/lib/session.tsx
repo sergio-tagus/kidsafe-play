@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
+import { touchActivity } from "@/lib/sync.functions";
 
 type SessionCtx = {
   session: Session | null;
@@ -18,12 +19,22 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [activeChildId, setActiveChildIdState] = useState<string | null>(null);
 
   useEffect(() => {
+    let touched = false;
+    /** Mark the account as active so automatic sync stays on (or resumes). */
+    const markActive = () => {
+      if (touched) return;
+      touched = true;
+      touchActivity().catch(() => {});
+    };
+
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setLoading(false);
+      if (data.session) markActive();
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
+      if (event === "SIGNED_IN" && s) markActive();
     });
     const stored = typeof window !== "undefined" ? localStorage.getItem("safetube.childId") : null;
     if (stored) setActiveChildIdState(stored);
