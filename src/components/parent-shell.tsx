@@ -30,7 +30,8 @@ export function ParentShell({ children }: { children: ReactNode }) {
       openOnboardingTour({ restart: true });
     },
   });
-  const unlockStatus = qc.getQueryData<any>(["parent-unlock-status"]);
+  const unlockFn = useServerFn(getParentUnlockStatus);
+  const { data: unlockStatus } = useQuery<any>({ queryKey: ["parent-unlock-status"], queryFn: () => unlockFn() as any });
   const pinLocked = !!unlockStatus?.hasPin && !unlockStatus?.unlocked;
 
 
