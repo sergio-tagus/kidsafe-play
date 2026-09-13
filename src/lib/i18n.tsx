@@ -427,6 +427,7 @@ const dict: Record<Lang, Dict> = {
     "tour.next": "Next",
     "tour.back": "Back",
     "tour.skip": "Skip",
+    "tour.never": "Don't show again",
     "tour.finish": "Finish",
     "tour.help": "Help",
     "tour.helpOpen": "View welcome tutorial",
