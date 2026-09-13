@@ -215,6 +215,9 @@ export type Database = {
           email: string | null
           id: string
           name: string | null
+          onboarding_completed_at: string | null
+          onboarding_status: string
+          onboarding_step: number
         }
         Insert: {
           avatar_url?: string | null
@@ -222,6 +225,9 @@ export type Database = {
           email?: string | null
           id: string
           name?: string | null
+          onboarding_completed_at?: string | null
+          onboarding_status?: string
+          onboarding_step?: number
         }
         Update: {
           avatar_url?: string | null
@@ -229,6 +235,9 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string | null
+          onboarding_completed_at?: string | null
+          onboarding_status?: string
+          onboarding_step?: number
         }
         Relationships: []
       }

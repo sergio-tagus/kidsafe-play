@@ -4,9 +4,16 @@ import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { LanguageSwitcher } from "./language-switcher";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags, History, Gauge, UserCheck } from "lucide-react";
+import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags, History, Gauge, UserCheck, HelpCircle, PlayCircle, RotateCcw } from "lucide-react";
 import { ParentUnlockGuard } from "./parent-unlock-guard";
 import { useIsSuperAdmin } from "@/hooks/use-superadmin";
+import { OnboardingTour, openOnboardingTour } from "./onboarding-tour";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { resetOnboarding } from "@/lib/onboarding.functions";
+import { getParentUnlockStatus } from "@/lib/pin.functions";
+import { useImpersonation } from "@/lib/impersonation";
 
 export function ParentShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
@@ -14,6 +21,20 @@ export function ParentShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   const { isSuperAdmin } = useIsSuperAdmin();
+  const { impersonation } = useImpersonation();
+  const qc = useQueryClient();
+  const resetFn = useServerFn(resetOnboarding);
+  const reset = useMutation({
+    mutationFn: () => resetFn() as any,
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["onboarding"] });
+      openOnboardingTour({ restart: true });
+    },
+  });
+  const unlockFn = useServerFn(getParentUnlockStatus);
+  const { data: unlockStatus } = useQuery<any>({ queryKey: ["parent-unlock-status"], queryFn: () => unlockFn() as any });
+  const pinLocked = !!unlockStatus?.hasPin && !unlockStatus?.unlocked;
+
 
   const nav = [
     { to: "/parent", label: t("parent.overview"), icon: LayoutDashboard, exact: true },
@@ -46,6 +67,7 @@ export function ParentShell({ children }: { children: ReactNode }) {
               <Link
                 key={n.to}
                 to={n.to as any}
+                data-tour={`nav-${n.to.split("/").pop()}`}
                 className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold ${active ? "bg-primary text-primary-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent"}`}
               >
                 <n.icon className="w-5 h-5" /> {n.label}
@@ -64,6 +86,23 @@ export function ParentShell({ children }: { children: ReactNode }) {
           <Link to="/" className="md:hidden text-2xl">🦄</Link>
           <div className="flex-1" />
           <LanguageSwitcher />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full" aria-label={t("tour.help")}>
+                <HelpCircle className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-60">
+              <DropdownMenuLabel>{t("tour.help")}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => openOnboardingTour()}>
+                <PlayCircle className="w-4 h-4 mr-2" /> {t("tour.helpOpen")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => reset.mutate()}>
+                <RotateCcw className="w-4 h-4 mr-2" /> {t("tour.helpRestart")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="ghost" size="icon" className="rounded-full" onClick={() => signOut()}>
             <LogOut className="w-5 h-5" />
           </Button>
@@ -89,6 +128,7 @@ export function ParentShell({ children }: { children: ReactNode }) {
         <main className="flex-1 px-4 md:px-8 py-6">{children}</main>
       </div>
       <ParentUnlockGuard />
+      <OnboardingTour suspended={pinLocked || !!impersonation} />
     </div>
   );
 }

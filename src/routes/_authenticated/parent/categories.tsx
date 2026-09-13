@@ -130,7 +130,7 @@ function CategoriesPage() {
   return (
     <ParentShell>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <h1 className="text-3xl font-display font-bold">{t("categories.title")}</h1>
+        <h1 data-tour="categories" className="text-3xl font-display font-bold">{t("categories.title")}</h1>
         <Button className="rounded-full" onClick={openNew}>
           <Plus className="w-4 h-4 mr-1" /> {t("parent.categoryNew")}
         </Button>

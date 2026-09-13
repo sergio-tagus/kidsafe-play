@@ -66,7 +66,7 @@ function ParentChildren() {
   return (
     <ParentShell>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-display font-bold">{t("parent.children")}</h1>
+        <h1 data-tour="children" className="text-3xl font-display font-bold">{t("parent.children")}</h1>
         <Button className="rounded-full" onClick={openNew}><Plus className="w-4 h-4 mr-1" /> {t("profile.add")}</Button>
       </div>
       {kids.length === 0 ? (
