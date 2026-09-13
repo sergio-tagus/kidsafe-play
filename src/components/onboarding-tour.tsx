@@ -10,12 +10,37 @@ import {
   getOnboardingState,
   setOnboardingStep,
   skipOnboarding,
+  dismissOnboarding,
   type OnboardingState,
 } from "@/lib/onboarding.functions";
 
 type Rect = { top: number; left: number; width: number; height: number };
 
 const OPEN_EVENT = "safetube:tour-open";
+
+/**
+ * The tour is rendered from ParentShell, which remounts on every parent-panel
+ * navigation. Keeping open/index in a module store lets the tour survive the
+ * screen changes it performs itself (step 3 onwards).
+ */
+type TourRun = { open: boolean; index: number };
+let runState: TourRun = { open: false, index: 0 };
+const runListeners = new Set<() => void>();
+function setRun(next: TourRun) {
+  runState = next;
+  runListeners.forEach((l) => l());
+}
+function subscribeRun(l: () => void) {
+  runListeners.add(l);
+  return () => runListeners.delete(l);
+}
+function useTourRun() {
+  return useSyncExternalStore(
+    subscribeRun,
+    () => runState,
+    () => runState,
+  );
+}
 
 export function openOnboardingTour(opts?: { restart?: boolean }) {
   window.dispatchEvent(new CustomEvent(OPEN_EVENT, { detail: { restart: !!opts?.restart } }));
