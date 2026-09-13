@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useIsSuperAdmin } from "@/hooks/use-superadmin";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
@@ -66,14 +67,17 @@ function ApiUsagePage() {
   const { data: summary } = useQuery({
     queryKey: ["api-usage", days],
     queryFn: () => summaryFn({ data: { days } }),
+    enabled: isSuperAdmin,
   });
   const { data: byChannel = [] } = useQuery({
     queryKey: ["api-usage-channels"],
     queryFn: () => byChannelFn(),
+    enabled: isSuperAdmin,
   });
   const { data: runs = [] } = useQuery({
     queryKey: ["api-usage-runs"],
     queryFn: () => runsFn({ data: { limit: 20 } }),
+    enabled: isSuperAdmin,
   });
 
   const [quotaInput, setQuotaInput] = useState("");
