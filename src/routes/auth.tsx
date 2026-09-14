@@ -1,5 +1,6 @@
-import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { Capacitor } from "@capacitor/core";
 import { lovable } from "@/integrations/lovable";
 import { useSession } from "@/lib/session";
 import { useI18n, LANGS } from "@/lib/i18n";
@@ -31,9 +32,10 @@ function AuthPage() {
   }, [session, loading, navigate, search.next]);
 
   const handleGoogle = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/auth`,
-    });
+    const redirectUri = Capacitor.isNativePlatform()
+      ? "com.safetube.kids://auth/callback"
+      : `${window.location.origin}/auth`;
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectUri });
     if (result.error) {
       toast.error(result.error.message || "Sign-in failed");
     }
@@ -62,6 +64,12 @@ function AuthPage() {
             </button>
           ))}
         </div>
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          {t("auth.privacy")}{" "}
+          <Link to="/privacy" className="underline hover:text-foreground">
+            {t("privacy.title")}
+          </Link>
+        </p>
       </div>
       <p className="mt-6 text-white/90 text-sm">SafeTube Kids · {new Date().getFullYear()}</p>
     </div>

@@ -12,7 +12,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "com.safetube.kids",
   appName: "SafeTube Kids",
-  webDir: "dist",
+  webDir: "dist/client",
   backgroundColor: "#FFF7EDFF",
   // server: {
   //   url: "https://safe-whitelisted-play.lovable.app",

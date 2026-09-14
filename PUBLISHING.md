@@ -1,6 +1,6 @@
 # Publicar SafeTube Kids
 
-Esta guía explica cómo pasar del código en Lovable a **PWA instalable**, **Google Play**, **App Store** y **Android TV**.
+Guía completa para pasar del código en Lovable a **PWA instalable**, **Google Play**, **App Store** y **Android TV**.
 
 ---
 
@@ -8,7 +8,7 @@ Esta guía explica cómo pasar del código en Lovable a **PWA instalable**, **Go
 
 | Plataforma | Coste | Qué necesitas |
 | --- | --- | --- |
-| **PWA** | Gratis | Nada. Ya está listo. |
+| **PWA** | Gratis | Nada. Ya está lista. |
 | **Google Play + Android TV** | 25 $ único | Cuenta [Google Play Console](https://play.google.com/console) + [Android Studio](https://developer.android.com/studio) |
 | **App Store** | 99 $/año | Cuenta [Apple Developer](https://developer.apple.com/programs/) + **macOS** con [Xcode](https://apps.apple.com/us/app/xcode/id497799835) |
 
@@ -33,11 +33,11 @@ Ya incluye: `manifest.webmanifest`, iconos 192/512 + maskable, apple-touch-icon,
 ### 2.1. Instalar dependencias (una vez)
 
 ```bash
-bun add @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android @capacitor/splash-screen @capacitor/status-bar
-bun run build
-npx cap add ios       # solo en macOS
-npx cap add android
+bun install
+bun run cap:build          # genera dist/client + index.html estático + npx cap sync
 ```
+
+> `capacitor.config.ts` apunta a `webDir: "dist/client"`. TanStack Start no genera un `index.html` estático, así que `scripts/build-capacitor.mjs` lo crea a partir de los assets hasheados antes de sincronizar.
 
 ### 2.2. Copiar iconos y splash a las carpetas nativas
 
@@ -46,15 +46,16 @@ Cuando regeneres el logo, corre esto:
 ```bash
 python3 scripts/generate-icons.py
 node scripts/sync-native-assets.mjs
-npx cap sync
+bun run cap:sync
 ```
 
 ### 2.3. Cada vez que actualices el código web
 
 ```bash
-bun run build
-npx cap sync
+bun run cap:build
 ```
+
+Esto ejecuta `vite build`, genera `dist/client/index.html` y corre `npx cap sync`.
 
 ---
 
@@ -63,7 +64,7 @@ npx cap sync
 ### 3.1. Abrir el proyecto
 
 ```bash
-npx cap open android
+bun run cap:open:android
 ```
 
 ### 3.2. Firma
@@ -77,28 +78,14 @@ En Android Studio → **Build → Generate Signed Bundle / APK → Android App B
 3. Rellena la ficha con los assets ya generados en `src/assets/store/`:
    - **Icono de alta resolución**: `play-icon-512.png`
    - **Gráfico destacado**: `play-feature-graphic-1024x500.png`
-   - **Capturas de pantalla**: teléfono ≥ 2, tablet 7", tablet 10" (ver §5).
+   - **Capturas de pantalla**: teléfono ≥ 2, tablet 7", tablet 10", Android TV (ver §5).
 
 ### 3.4. Android TV
 
-El manifest ya está preparado por Capacitor pero necesitas dos cambios en `android/app/src/main/AndroidManifest.xml`:
+El manifest ya está preparado:
 
-```xml
-<application ... android:banner="@drawable/banner">
-  <uses-feature android:name="android.software.leanback" android:required="false" />
-  <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
-
-  <activity ...>
-    <intent-filter>
-      <action android:name="android.intent.action.MAIN" />
-      <category android:name="android.intent.category.LAUNCHER" />
-      <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
-    </intent-filter>
-  </activity>
-</application>
-```
-
-El banner 320×180 ya está en `android-assets/drawable-xhdpi/banner.png` y `sync-native-assets.mjs` lo copia.
+- `android/app/src/main/AndroidManifest.xml` incluye `LEANBACK_LAUNCHER`, touchscreen opcional y `android:banner="@drawable/banner"`.
+- El banner 320×180 está en `android-assets/drawable-xhdpi/banner.png` y se copia con `sync-native-assets.mjs`.
 
 Para publicar en TV: en Play Console → Store presence → Store listing → **Android TV** → activa y sube 2 screenshots 1920×1080 landscape.
 
@@ -130,17 +117,28 @@ En Xcode:
 Genéralos con Playwright desde la app real:
 
 ```bash
-# ejemplo - añade los viewports que necesites
-node scripts/take-store-screenshots.mjs
+bun run screenshots
 ```
 
-Formatos requeridos:
+Output: `src/assets/store/screenshots/`. El script usa el Chromium del sistema (`/bin/chromium`) porque el sandbox no incluye los browsers de Playwright por defecto.
 
-- iPhone 6.7" — **1290×2796** portrait
-- iPad Pro 12.9" — **2048×2732** portrait
-- Android teléfono — mínimo **1080×1920**
-- Android tablet — mínimo **1600×2560**
-- Android TV — **1920×1080** landscape
+Formatos generados:
+
+| Dispositivo | Resolución | Escalas |
+| --- | --- | --- |
+| iPhone 6.7" | 1290×2796 | 3× |
+| iPhone 6.5" | 1284×2778 | 3× |
+| iPad Pro 12.9" | 2048×2732 | 2× |
+| Android teléfono | 1080×1920 | 2× |
+| Android tablet | 1600×2560 | 2× |
+| Android TV | 1920×1080 | 1× |
+
+Páginas capturadas:
+
+- Públicas: `/auth`, `/privacy`.
+- Autenticadas (si inyectas sesión): `/`, `/parent`, `/parent/whitelist`, `/parent/categories`, `/parent/history`.
+
+> Para capturar páginas autenticadas, exporta la sesión de Supabase en las variables `LOVABLE_BROWSER_SUPABASE_SESSION_JSON`, `LOVABLE_BROWSER_SUPABASE_STORAGE_KEY` y `LOVABLE_BROWSER_SUPABASE_COOKIES_JSON` antes de ejecutar el script.
 
 ---
 
@@ -152,19 +150,46 @@ El login social (Google) requiere un esquema personalizado. En el backend, añad
 com.safetube.kids://auth/callback
 ```
 
-Y en Capacitor añade el `CFBundleURLTypes` (iOS) e `intent-filter` con `android:scheme="com.safetube.kids"` (Android). La documentación oficial: https://capacitorjs.com/docs/guides/deep-links
+En `src/routes/auth.tsx`, el código ya selecciona el redirect según la plataforma:
+
+```ts
+const redirectUri = Capacitor.isNativePlatform()
+  ? "com.safetube.kids://auth/callback"
+  : `${window.location.origin}/auth`;
+```
+
+El `AndroidManifest.xml` incluye el `intent-filter` para capturar `com.safetube.kids://auth/callback`. En iOS añade el `CFBundleURLTypes` correspondiente en Xcode siguiendo la documentación oficial: https://capacitorjs.com/docs/guides/deep-links
 
 ---
 
-## 7. Actualizaciones
+## 7. Política de privacidad
 
-1. Cambia código → `bun run build` → `npx cap sync`.
+La app incluye una página pública `/privacy` multilingüe (es/en/pt). Enlaces:
+
+- Desde la pantalla de login (`/auth`).
+- Desde el menú lateral del panel de padres.
+
+URL pública para las tiendas:
+
+```
+https://kidsafe-play.lovable.app/privacy
+```
+
+(o la URL publicada que tengas conectada como dominio personalizado).
+
+---
+
+## 8. Actualizaciones
+
+1. Cambia código → `bun run cap:build`.
 2. En Xcode/Android Studio, sube el número de versión.
 3. Genera un nuevo binario firmado y súbelo a la store correspondiente.
 
 Los **cambios solo web** (PWA) se despliegan al hacer *Publish* en Lovable — sin re-subir binarios.
 
-## AirPlay / Chromecast blocking
+---
+
+## 9. AirPlay / Chromecast blocking
 
 The kids' video player blocks casting to external devices at multiple layers:
 
