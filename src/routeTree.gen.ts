@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -34,6 +35,11 @@ import { Route as AuthenticatedKidsChildIdWatchVideoIdRouteImport } from './rout
 import { Route as AuthenticatedKidsChildIdChannelsChannelIdRouteImport } from './routes/_authenticated/kids/$childId/channels/$channelId'
 import { Route as AuthenticatedKidsChildIdCategoriesCategoryRouteImport } from './routes/_authenticated/kids/$childId/categories/$category'
 
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -178,6 +184,7 @@ const AuthenticatedKidsChildIdCategoriesCategoryRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/privacy': typeof PrivacyRoute
   '/parent': typeof AuthenticatedParentRouteRouteWithChildren
   '/parent/api-usage': typeof AuthenticatedParentApiUsageRoute
   '/parent/categories': typeof AuthenticatedParentCategoriesRoute
@@ -203,6 +210,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/privacy': typeof PrivacyRoute
   '/parent/api-usage': typeof AuthenticatedParentApiUsageRoute
   '/parent/categories': typeof AuthenticatedParentCategoriesRoute
   '/parent/children': typeof AuthenticatedParentChildrenRoute
@@ -229,6 +237,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/privacy': typeof PrivacyRoute
   '/_authenticated/parent': typeof AuthenticatedParentRouteRouteWithChildren
   '/_authenticated/parent/api-usage': typeof AuthenticatedParentApiUsageRoute
   '/_authenticated/parent/categories': typeof AuthenticatedParentCategoriesRoute
@@ -256,6 +265,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/privacy'
     | '/parent'
     | '/parent/api-usage'
     | '/parent/categories'
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/privacy'
     | '/parent/api-usage'
     | '/parent/categories'
     | '/parent/children'
@@ -306,6 +317,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/privacy'
     | '/_authenticated/parent'
     | '/_authenticated/parent/api-usage'
     | '/_authenticated/parent/categories'
@@ -333,11 +345,19 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  PrivacyRoute: typeof PrivacyRoute
   ApiPublicHooksSyncWhitelistRoute: typeof ApiPublicHooksSyncWhitelistRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -582,6 +602,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  PrivacyRoute: PrivacyRoute,
   ApiPublicHooksSyncWhitelistRoute: ApiPublicHooksSyncWhitelistRoute,
 }
 export const routeTree = rootRouteImport
