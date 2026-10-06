@@ -9,36 +9,40 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthenticatedParentRouteRouteImport } from './routes/_authenticated/parent/route'
 import { Route as AuthenticatedParentIndexRouteImport } from './routes/_authenticated/parent/index'
-import { Route as AuthenticatedParentUnlockRouteImport } from './routes/_authenticated/parent/unlock'
-import { Route as AuthenticatedParentResetPinRouteImport } from './routes/_authenticated/parent/reset-pin'
-import { Route as AuthenticatedParentLinkedAccountsRouteImport } from './routes/_authenticated/parent/linked-accounts'
-import { Route as AuthenticatedParentImpersonateRouteImport } from './routes/_authenticated/parent/impersonate'
-import { Route as AuthenticatedParentHistoryRouteImport } from './routes/_authenticated/parent/history'
-import { Route as AuthenticatedParentChildrenRouteImport } from './routes/_authenticated/parent/children'
-import { Route as AuthenticatedParentCategoriesRouteImport } from './routes/_authenticated/parent/categories'
 import { Route as AuthenticatedParentApiUsageRouteImport } from './routes/_authenticated/parent/api-usage'
-import { Route as AuthenticatedParentWhitelistIndexRouteImport } from './routes/_authenticated/parent/whitelist/index'
+import { Route as AuthenticatedParentCategoriesRouteImport } from './routes/_authenticated/parent/categories'
+import { Route as AuthenticatedParentChildrenRouteImport } from './routes/_authenticated/parent/children'
+import { Route as AuthenticatedParentHistoryRouteImport } from './routes/_authenticated/parent/history'
+import { Route as AuthenticatedParentImpersonateRouteImport } from './routes/_authenticated/parent/impersonate'
+import { Route as AuthenticatedParentLinkedAccountsRouteImport } from './routes/_authenticated/parent/linked-accounts'
+import { Route as AuthenticatedParentResetPinRouteImport } from './routes/_authenticated/parent/reset-pin'
+import { Route as AuthenticatedParentUnlockRouteImport } from './routes/_authenticated/parent/unlock'
 import { Route as AuthenticatedKidsChildIdIndexRouteImport } from './routes/_authenticated/kids/$childId/index'
-import { Route as ApiPublicHooksSyncWhitelistRouteImport } from './routes/api/public/hooks/sync-whitelist'
-import { Route as AuthenticatedParentWhitelistChannelIdRouteImport } from './routes/_authenticated/parent/whitelist/$channelId'
-import { Route as AuthenticatedKidsChildIdSearchRouteImport } from './routes/_authenticated/kids/$childId/search'
-import { Route as AuthenticatedKidsChildIdHistoryRouteImport } from './routes/_authenticated/kids/$childId/history'
 import { Route as AuthenticatedKidsChildIdFavoritesRouteImport } from './routes/_authenticated/kids/$childId/favorites'
-import { Route as AuthenticatedKidsChildIdChannelsIndexRouteImport } from './routes/_authenticated/kids/$childId/channels/index'
+import { Route as AuthenticatedKidsChildIdHistoryRouteImport } from './routes/_authenticated/kids/$childId/history'
+import { Route as AuthenticatedKidsChildIdSearchRouteImport } from './routes/_authenticated/kids/$childId/search'
+import { Route as AuthenticatedParentWhitelistIndexRouteImport } from './routes/_authenticated/parent/whitelist/index'
+import { Route as AuthenticatedParentWhitelistChannelIdRouteImport } from './routes/_authenticated/parent/whitelist/$channelId'
+import { Route as ApiPublicHooksSyncWhitelistRouteImport } from './routes/api/public/hooks/sync-whitelist'
 import { Route as AuthenticatedKidsChildIdCategoriesIndexRouteImport } from './routes/_authenticated/kids/$childId/categories/index'
-import { Route as AuthenticatedKidsChildIdWatchVideoIdRouteImport } from './routes/_authenticated/kids/$childId/watch/$videoId'
-import { Route as AuthenticatedKidsChildIdChannelsChannelIdRouteImport } from './routes/_authenticated/kids/$childId/channels/$channelId'
 import { Route as AuthenticatedKidsChildIdCategoriesCategoryRouteImport } from './routes/_authenticated/kids/$childId/categories/$category'
+import { Route as AuthenticatedKidsChildIdChannelsIndexRouteImport } from './routes/_authenticated/kids/$childId/channels/index'
+import { Route as AuthenticatedKidsChildIdChannelsChannelIdRouteImport } from './routes/_authenticated/kids/$childId/channels/$channelId'
+import { Route as AuthenticatedKidsChildIdWatchVideoIdRouteImport } from './routes/_authenticated/kids/$childId/watch/$videoId'
 
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -46,13 +50,9 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedParentRouteRoute =
@@ -67,40 +67,10 @@ const AuthenticatedParentIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedParentRouteRoute,
   } as any)
-const AuthenticatedParentUnlockRoute =
-  AuthenticatedParentUnlockRouteImport.update({
-    id: '/unlock',
-    path: '/unlock',
-    getParentRoute: () => AuthenticatedParentRouteRoute,
-  } as any)
-const AuthenticatedParentResetPinRoute =
-  AuthenticatedParentResetPinRouteImport.update({
-    id: '/reset-pin',
-    path: '/reset-pin',
-    getParentRoute: () => AuthenticatedParentRouteRoute,
-  } as any)
-const AuthenticatedParentLinkedAccountsRoute =
-  AuthenticatedParentLinkedAccountsRouteImport.update({
-    id: '/linked-accounts',
-    path: '/linked-accounts',
-    getParentRoute: () => AuthenticatedParentRouteRoute,
-  } as any)
-const AuthenticatedParentImpersonateRoute =
-  AuthenticatedParentImpersonateRouteImport.update({
-    id: '/impersonate',
-    path: '/impersonate',
-    getParentRoute: () => AuthenticatedParentRouteRoute,
-  } as any)
-const AuthenticatedParentHistoryRoute =
-  AuthenticatedParentHistoryRouteImport.update({
-    id: '/history',
-    path: '/history',
-    getParentRoute: () => AuthenticatedParentRouteRoute,
-  } as any)
-const AuthenticatedParentChildrenRoute =
-  AuthenticatedParentChildrenRouteImport.update({
-    id: '/children',
-    path: '/children',
+const AuthenticatedParentApiUsageRoute =
+  AuthenticatedParentApiUsageRouteImport.update({
+    id: '/api-usage',
+    path: '/api-usage',
     getParentRoute: () => AuthenticatedParentRouteRoute,
   } as any)
 const AuthenticatedParentCategoriesRoute =
@@ -109,16 +79,40 @@ const AuthenticatedParentCategoriesRoute =
     path: '/categories',
     getParentRoute: () => AuthenticatedParentRouteRoute,
   } as any)
-const AuthenticatedParentApiUsageRoute =
-  AuthenticatedParentApiUsageRouteImport.update({
-    id: '/api-usage',
-    path: '/api-usage',
+const AuthenticatedParentChildrenRoute =
+  AuthenticatedParentChildrenRouteImport.update({
+    id: '/children',
+    path: '/children',
     getParentRoute: () => AuthenticatedParentRouteRoute,
   } as any)
-const AuthenticatedParentWhitelistIndexRoute =
-  AuthenticatedParentWhitelistIndexRouteImport.update({
-    id: '/whitelist/',
-    path: '/whitelist/',
+const AuthenticatedParentHistoryRoute =
+  AuthenticatedParentHistoryRouteImport.update({
+    id: '/history',
+    path: '/history',
+    getParentRoute: () => AuthenticatedParentRouteRoute,
+  } as any)
+const AuthenticatedParentImpersonateRoute =
+  AuthenticatedParentImpersonateRouteImport.update({
+    id: '/impersonate',
+    path: '/impersonate',
+    getParentRoute: () => AuthenticatedParentRouteRoute,
+  } as any)
+const AuthenticatedParentLinkedAccountsRoute =
+  AuthenticatedParentLinkedAccountsRouteImport.update({
+    id: '/linked-accounts',
+    path: '/linked-accounts',
+    getParentRoute: () => AuthenticatedParentRouteRoute,
+  } as any)
+const AuthenticatedParentResetPinRoute =
+  AuthenticatedParentResetPinRouteImport.update({
+    id: '/reset-pin',
+    path: '/reset-pin',
+    getParentRoute: () => AuthenticatedParentRouteRoute,
+  } as any)
+const AuthenticatedParentUnlockRoute =
+  AuthenticatedParentUnlockRouteImport.update({
+    id: '/unlock',
+    path: '/unlock',
     getParentRoute: () => AuthenticatedParentRouteRoute,
   } as any)
 const AuthenticatedKidsChildIdIndexRoute =
@@ -127,22 +121,10 @@ const AuthenticatedKidsChildIdIndexRoute =
     path: '/kids/$childId/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const ApiPublicHooksSyncWhitelistRoute =
-  ApiPublicHooksSyncWhitelistRouteImport.update({
-    id: '/api/public/hooks/sync-whitelist',
-    path: '/api/public/hooks/sync-whitelist',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const AuthenticatedParentWhitelistChannelIdRoute =
-  AuthenticatedParentWhitelistChannelIdRouteImport.update({
-    id: '/whitelist/$channelId',
-    path: '/whitelist/$channelId',
-    getParentRoute: () => AuthenticatedParentRouteRoute,
-  } as any)
-const AuthenticatedKidsChildIdSearchRoute =
-  AuthenticatedKidsChildIdSearchRouteImport.update({
-    id: '/kids/$childId/search',
-    path: '/kids/$childId/search',
+const AuthenticatedKidsChildIdFavoritesRoute =
+  AuthenticatedKidsChildIdFavoritesRouteImport.update({
+    id: '/kids/$childId/favorites',
+    path: '/kids/$childId/favorites',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedKidsChildIdHistoryRoute =
@@ -151,10 +133,40 @@ const AuthenticatedKidsChildIdHistoryRoute =
     path: '/kids/$childId/history',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedKidsChildIdFavoritesRoute =
-  AuthenticatedKidsChildIdFavoritesRouteImport.update({
-    id: '/kids/$childId/favorites',
-    path: '/kids/$childId/favorites',
+const AuthenticatedKidsChildIdSearchRoute =
+  AuthenticatedKidsChildIdSearchRouteImport.update({
+    id: '/kids/$childId/search',
+    path: '/kids/$childId/search',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedParentWhitelistIndexRoute =
+  AuthenticatedParentWhitelistIndexRouteImport.update({
+    id: '/whitelist/',
+    path: '/whitelist/',
+    getParentRoute: () => AuthenticatedParentRouteRoute,
+  } as any)
+const AuthenticatedParentWhitelistChannelIdRoute =
+  AuthenticatedParentWhitelistChannelIdRouteImport.update({
+    id: '/whitelist/$channelId',
+    path: '/whitelist/$channelId',
+    getParentRoute: () => AuthenticatedParentRouteRoute,
+  } as any)
+const ApiPublicHooksSyncWhitelistRoute =
+  ApiPublicHooksSyncWhitelistRouteImport.update({
+    id: '/api/public/hooks/sync-whitelist',
+    path: '/api/public/hooks/sync-whitelist',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedKidsChildIdCategoriesIndexRoute =
+  AuthenticatedKidsChildIdCategoriesIndexRouteImport.update({
+    id: '/kids/$childId/categories/',
+    path: '/kids/$childId/categories/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedKidsChildIdCategoriesCategoryRoute =
+  AuthenticatedKidsChildIdCategoriesCategoryRouteImport.update({
+    id: '/kids/$childId/categories/$category',
+    path: '/kids/$childId/categories/$category',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedKidsChildIdChannelsIndexRoute =
@@ -163,28 +175,16 @@ const AuthenticatedKidsChildIdChannelsIndexRoute =
     path: '/kids/$childId/channels/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedKidsChildIdCategoriesIndexRoute =
-  AuthenticatedKidsChildIdCategoriesIndexRouteImport.update({
-    id: '/kids/$childId/categories/',
-    path: '/kids/$childId/categories/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedKidsChildIdWatchVideoIdRoute =
-  AuthenticatedKidsChildIdWatchVideoIdRouteImport.update({
-    id: '/kids/$childId/watch/$videoId',
-    path: '/kids/$childId/watch/$videoId',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedKidsChildIdChannelsChannelIdRoute =
   AuthenticatedKidsChildIdChannelsChannelIdRouteImport.update({
     id: '/kids/$childId/channels/$channelId',
     path: '/kids/$childId/channels/$channelId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedKidsChildIdCategoriesCategoryRoute =
-  AuthenticatedKidsChildIdCategoriesCategoryRouteImport.update({
-    id: '/kids/$childId/categories/$category',
-    path: '/kids/$childId/categories/$category',
+const AuthenticatedKidsChildIdWatchVideoIdRoute =
+  AuthenticatedKidsChildIdWatchVideoIdRouteImport.update({
+    id: '/kids/$childId/watch/$videoId',
+    path: '/kids/$childId/watch/$videoId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
@@ -364,18 +364,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -385,11 +378,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/parent': {
@@ -406,46 +406,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedParentIndexRouteImport
       parentRoute: typeof AuthenticatedParentRouteRoute
     }
-    '/_authenticated/parent/unlock': {
-      id: '/_authenticated/parent/unlock'
-      path: '/unlock'
-      fullPath: '/parent/unlock'
-      preLoaderRoute: typeof AuthenticatedParentUnlockRouteImport
-      parentRoute: typeof AuthenticatedParentRouteRoute
-    }
-    '/_authenticated/parent/reset-pin': {
-      id: '/_authenticated/parent/reset-pin'
-      path: '/reset-pin'
-      fullPath: '/parent/reset-pin'
-      preLoaderRoute: typeof AuthenticatedParentResetPinRouteImport
-      parentRoute: typeof AuthenticatedParentRouteRoute
-    }
-    '/_authenticated/parent/linked-accounts': {
-      id: '/_authenticated/parent/linked-accounts'
-      path: '/linked-accounts'
-      fullPath: '/parent/linked-accounts'
-      preLoaderRoute: typeof AuthenticatedParentLinkedAccountsRouteImport
-      parentRoute: typeof AuthenticatedParentRouteRoute
-    }
-    '/_authenticated/parent/impersonate': {
-      id: '/_authenticated/parent/impersonate'
-      path: '/impersonate'
-      fullPath: '/parent/impersonate'
-      preLoaderRoute: typeof AuthenticatedParentImpersonateRouteImport
-      parentRoute: typeof AuthenticatedParentRouteRoute
-    }
-    '/_authenticated/parent/history': {
-      id: '/_authenticated/parent/history'
-      path: '/history'
-      fullPath: '/parent/history'
-      preLoaderRoute: typeof AuthenticatedParentHistoryRouteImport
-      parentRoute: typeof AuthenticatedParentRouteRoute
-    }
-    '/_authenticated/parent/children': {
-      id: '/_authenticated/parent/children'
-      path: '/children'
-      fullPath: '/parent/children'
-      preLoaderRoute: typeof AuthenticatedParentChildrenRouteImport
+    '/_authenticated/parent/api-usage': {
+      id: '/_authenticated/parent/api-usage'
+      path: '/api-usage'
+      fullPath: '/parent/api-usage'
+      preLoaderRoute: typeof AuthenticatedParentApiUsageRouteImport
       parentRoute: typeof AuthenticatedParentRouteRoute
     }
     '/_authenticated/parent/categories': {
@@ -455,18 +420,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedParentCategoriesRouteImport
       parentRoute: typeof AuthenticatedParentRouteRoute
     }
-    '/_authenticated/parent/api-usage': {
-      id: '/_authenticated/parent/api-usage'
-      path: '/api-usage'
-      fullPath: '/parent/api-usage'
-      preLoaderRoute: typeof AuthenticatedParentApiUsageRouteImport
+    '/_authenticated/parent/children': {
+      id: '/_authenticated/parent/children'
+      path: '/children'
+      fullPath: '/parent/children'
+      preLoaderRoute: typeof AuthenticatedParentChildrenRouteImport
       parentRoute: typeof AuthenticatedParentRouteRoute
     }
-    '/_authenticated/parent/whitelist/': {
-      id: '/_authenticated/parent/whitelist/'
-      path: '/whitelist'
-      fullPath: '/parent/whitelist/'
-      preLoaderRoute: typeof AuthenticatedParentWhitelistIndexRouteImport
+    '/_authenticated/parent/history': {
+      id: '/_authenticated/parent/history'
+      path: '/history'
+      fullPath: '/parent/history'
+      preLoaderRoute: typeof AuthenticatedParentHistoryRouteImport
+      parentRoute: typeof AuthenticatedParentRouteRoute
+    }
+    '/_authenticated/parent/impersonate': {
+      id: '/_authenticated/parent/impersonate'
+      path: '/impersonate'
+      fullPath: '/parent/impersonate'
+      preLoaderRoute: typeof AuthenticatedParentImpersonateRouteImport
+      parentRoute: typeof AuthenticatedParentRouteRoute
+    }
+    '/_authenticated/parent/linked-accounts': {
+      id: '/_authenticated/parent/linked-accounts'
+      path: '/linked-accounts'
+      fullPath: '/parent/linked-accounts'
+      preLoaderRoute: typeof AuthenticatedParentLinkedAccountsRouteImport
+      parentRoute: typeof AuthenticatedParentRouteRoute
+    }
+    '/_authenticated/parent/reset-pin': {
+      id: '/_authenticated/parent/reset-pin'
+      path: '/reset-pin'
+      fullPath: '/parent/reset-pin'
+      preLoaderRoute: typeof AuthenticatedParentResetPinRouteImport
+      parentRoute: typeof AuthenticatedParentRouteRoute
+    }
+    '/_authenticated/parent/unlock': {
+      id: '/_authenticated/parent/unlock'
+      path: '/unlock'
+      fullPath: '/parent/unlock'
+      preLoaderRoute: typeof AuthenticatedParentUnlockRouteImport
       parentRoute: typeof AuthenticatedParentRouteRoute
     }
     '/_authenticated/kids/$childId/': {
@@ -476,25 +469,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKidsChildIdIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/hooks/sync-whitelist': {
-      id: '/api/public/hooks/sync-whitelist'
-      path: '/api/public/hooks/sync-whitelist'
-      fullPath: '/api/public/hooks/sync-whitelist'
-      preLoaderRoute: typeof ApiPublicHooksSyncWhitelistRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/parent/whitelist/$channelId': {
-      id: '/_authenticated/parent/whitelist/$channelId'
-      path: '/whitelist/$channelId'
-      fullPath: '/parent/whitelist/$channelId'
-      preLoaderRoute: typeof AuthenticatedParentWhitelistChannelIdRouteImport
-      parentRoute: typeof AuthenticatedParentRouteRoute
-    }
-    '/_authenticated/kids/$childId/search': {
-      id: '/_authenticated/kids/$childId/search'
-      path: '/kids/$childId/search'
-      fullPath: '/kids/$childId/search'
-      preLoaderRoute: typeof AuthenticatedKidsChildIdSearchRouteImport
+    '/_authenticated/kids/$childId/favorites': {
+      id: '/_authenticated/kids/$childId/favorites'
+      path: '/kids/$childId/favorites'
+      fullPath: '/kids/$childId/favorites'
+      preLoaderRoute: typeof AuthenticatedKidsChildIdFavoritesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/kids/$childId/history': {
@@ -504,11 +483,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKidsChildIdHistoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/kids/$childId/favorites': {
-      id: '/_authenticated/kids/$childId/favorites'
-      path: '/kids/$childId/favorites'
-      fullPath: '/kids/$childId/favorites'
-      preLoaderRoute: typeof AuthenticatedKidsChildIdFavoritesRouteImport
+    '/_authenticated/kids/$childId/search': {
+      id: '/_authenticated/kids/$childId/search'
+      path: '/kids/$childId/search'
+      fullPath: '/kids/$childId/search'
+      preLoaderRoute: typeof AuthenticatedKidsChildIdSearchRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/parent/whitelist/': {
+      id: '/_authenticated/parent/whitelist/'
+      path: '/whitelist'
+      fullPath: '/parent/whitelist/'
+      preLoaderRoute: typeof AuthenticatedParentWhitelistIndexRouteImport
+      parentRoute: typeof AuthenticatedParentRouteRoute
+    }
+    '/_authenticated/parent/whitelist/$channelId': {
+      id: '/_authenticated/parent/whitelist/$channelId'
+      path: '/whitelist/$channelId'
+      fullPath: '/parent/whitelist/$channelId'
+      preLoaderRoute: typeof AuthenticatedParentWhitelistChannelIdRouteImport
+      parentRoute: typeof AuthenticatedParentRouteRoute
+    }
+    '/api/public/hooks/sync-whitelist': {
+      id: '/api/public/hooks/sync-whitelist'
+      path: '/api/public/hooks/sync-whitelist'
+      fullPath: '/api/public/hooks/sync-whitelist'
+      preLoaderRoute: typeof ApiPublicHooksSyncWhitelistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/kids/$childId/categories/': {
+      id: '/_authenticated/kids/$childId/categories/'
+      path: '/kids/$childId/categories'
+      fullPath: '/kids/$childId/categories/'
+      preLoaderRoute: typeof AuthenticatedKidsChildIdCategoriesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/kids/$childId/categories/$category': {
+      id: '/_authenticated/kids/$childId/categories/$category'
+      path: '/kids/$childId/categories/$category'
+      fullPath: '/kids/$childId/categories/$category'
+      preLoaderRoute: typeof AuthenticatedKidsChildIdCategoriesCategoryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/kids/$childId/channels/': {
@@ -518,20 +532,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKidsChildIdChannelsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/kids/$childId/categories/': {
-      id: '/_authenticated/kids/$childId/categories/'
-      path: '/kids/$childId/categories'
-      fullPath: '/kids/$childId/categories/'
-      preLoaderRoute: typeof AuthenticatedKidsChildIdCategoriesIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/kids/$childId/watch/$videoId': {
-      id: '/_authenticated/kids/$childId/watch/$videoId'
-      path: '/kids/$childId/watch/$videoId'
-      fullPath: '/kids/$childId/watch/$videoId'
-      preLoaderRoute: typeof AuthenticatedKidsChildIdWatchVideoIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/kids/$childId/channels/$channelId': {
       id: '/_authenticated/kids/$childId/channels/$channelId'
       path: '/kids/$childId/channels/$channelId'
@@ -539,11 +539,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedKidsChildIdChannelsChannelIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/kids/$childId/categories/$category': {
-      id: '/_authenticated/kids/$childId/categories/$category'
-      path: '/kids/$childId/categories/$category'
-      fullPath: '/kids/$childId/categories/$category'
-      preLoaderRoute: typeof AuthenticatedKidsChildIdCategoriesCategoryRouteImport
+    '/_authenticated/kids/$childId/watch/$videoId': {
+      id: '/_authenticated/kids/$childId/watch/$videoId'
+      path: '/kids/$childId/watch/$videoId'
+      fullPath: '/kids/$childId/watch/$videoId'
+      preLoaderRoute: typeof AuthenticatedKidsChildIdWatchVideoIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
