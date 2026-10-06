@@ -184,6 +184,33 @@ export type Database = {
         }
         Relationships: []
       }
+      linked_accounts: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          last_used_at: string | null
+          linked_user_id: string | null
+          primary_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          last_used_at?: string | null
+          linked_user_id?: string | null
+          primary_user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          last_used_at?: string | null
+          linked_user_id?: string | null
+          primary_user_id?: string
+        }
+        Relationships: []
+      }
       parent_pins: {
         Row: {
           created_at: string
