@@ -91,7 +91,9 @@ export function ParentShell({ children }: { children: ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="sticky top-0 z-30 flex items-center gap-2 bg-background/95 backdrop-blur border-b border-border px-4 py-3">
           <Link to="/" className="md:hidden text-2xl">🦄</Link>
-          <div className="flex-1" />
+          <div className="flex-1 min-w-0 truncate text-xs text-muted-foreground">
+            {linkedEmail ? (lang === "en" ? "Signed in with: " : lang === "pt" ? "Entrou com: " : "Has entrado con: ") + linkedEmail : null}
+          </div>
           <LanguageSwitcher />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
