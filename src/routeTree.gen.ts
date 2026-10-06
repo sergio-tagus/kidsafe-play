@@ -17,6 +17,7 @@ import { Route as AuthenticatedParentRouteRouteImport } from './routes/_authenti
 import { Route as AuthenticatedParentIndexRouteImport } from './routes/_authenticated/parent/index'
 import { Route as AuthenticatedParentUnlockRouteImport } from './routes/_authenticated/parent/unlock'
 import { Route as AuthenticatedParentResetPinRouteImport } from './routes/_authenticated/parent/reset-pin'
+import { Route as AuthenticatedParentLinkedAccountsRouteImport } from './routes/_authenticated/parent/linked-accounts'
 import { Route as AuthenticatedParentImpersonateRouteImport } from './routes/_authenticated/parent/impersonate'
 import { Route as AuthenticatedParentHistoryRouteImport } from './routes/_authenticated/parent/history'
 import { Route as AuthenticatedParentChildrenRouteImport } from './routes/_authenticated/parent/children'
@@ -76,6 +77,12 @@ const AuthenticatedParentResetPinRoute =
   AuthenticatedParentResetPinRouteImport.update({
     id: '/reset-pin',
     path: '/reset-pin',
+    getParentRoute: () => AuthenticatedParentRouteRoute,
+  } as any)
+const AuthenticatedParentLinkedAccountsRoute =
+  AuthenticatedParentLinkedAccountsRouteImport.update({
+    id: '/linked-accounts',
+    path: '/linked-accounts',
     getParentRoute: () => AuthenticatedParentRouteRoute,
   } as any)
 const AuthenticatedParentImpersonateRoute =
@@ -191,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/parent/children': typeof AuthenticatedParentChildrenRoute
   '/parent/history': typeof AuthenticatedParentHistoryRoute
   '/parent/impersonate': typeof AuthenticatedParentImpersonateRoute
+  '/parent/linked-accounts': typeof AuthenticatedParentLinkedAccountsRoute
   '/parent/reset-pin': typeof AuthenticatedParentResetPinRoute
   '/parent/unlock': typeof AuthenticatedParentUnlockRoute
   '/parent/': typeof AuthenticatedParentIndexRoute
@@ -216,6 +224,7 @@ export interface FileRoutesByTo {
   '/parent/children': typeof AuthenticatedParentChildrenRoute
   '/parent/history': typeof AuthenticatedParentHistoryRoute
   '/parent/impersonate': typeof AuthenticatedParentImpersonateRoute
+  '/parent/linked-accounts': typeof AuthenticatedParentLinkedAccountsRoute
   '/parent/reset-pin': typeof AuthenticatedParentResetPinRoute
   '/parent/unlock': typeof AuthenticatedParentUnlockRoute
   '/parent': typeof AuthenticatedParentIndexRoute
@@ -244,6 +253,7 @@ export interface FileRoutesById {
   '/_authenticated/parent/children': typeof AuthenticatedParentChildrenRoute
   '/_authenticated/parent/history': typeof AuthenticatedParentHistoryRoute
   '/_authenticated/parent/impersonate': typeof AuthenticatedParentImpersonateRoute
+  '/_authenticated/parent/linked-accounts': typeof AuthenticatedParentLinkedAccountsRoute
   '/_authenticated/parent/reset-pin': typeof AuthenticatedParentResetPinRoute
   '/_authenticated/parent/unlock': typeof AuthenticatedParentUnlockRoute
   '/_authenticated/parent/': typeof AuthenticatedParentIndexRoute
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/parent/children'
     | '/parent/history'
     | '/parent/impersonate'
+    | '/parent/linked-accounts'
     | '/parent/reset-pin'
     | '/parent/unlock'
     | '/parent/'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/parent/children'
     | '/parent/history'
     | '/parent/impersonate'
+    | '/parent/linked-accounts'
     | '/parent/reset-pin'
     | '/parent/unlock'
     | '/parent'
@@ -324,6 +336,7 @@ export interface FileRouteTypes {
     | '/_authenticated/parent/children'
     | '/_authenticated/parent/history'
     | '/_authenticated/parent/impersonate'
+    | '/_authenticated/parent/linked-accounts'
     | '/_authenticated/parent/reset-pin'
     | '/_authenticated/parent/unlock'
     | '/_authenticated/parent/'
@@ -405,6 +418,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-pin'
       fullPath: '/parent/reset-pin'
       preLoaderRoute: typeof AuthenticatedParentResetPinRouteImport
+      parentRoute: typeof AuthenticatedParentRouteRoute
+    }
+    '/_authenticated/parent/linked-accounts': {
+      id: '/_authenticated/parent/linked-accounts'
+      path: '/linked-accounts'
+      fullPath: '/parent/linked-accounts'
+      preLoaderRoute: typeof AuthenticatedParentLinkedAccountsRouteImport
       parentRoute: typeof AuthenticatedParentRouteRoute
     }
     '/_authenticated/parent/impersonate': {
@@ -535,6 +555,7 @@ interface AuthenticatedParentRouteRouteChildren {
   AuthenticatedParentChildrenRoute: typeof AuthenticatedParentChildrenRoute
   AuthenticatedParentHistoryRoute: typeof AuthenticatedParentHistoryRoute
   AuthenticatedParentImpersonateRoute: typeof AuthenticatedParentImpersonateRoute
+  AuthenticatedParentLinkedAccountsRoute: typeof AuthenticatedParentLinkedAccountsRoute
   AuthenticatedParentResetPinRoute: typeof AuthenticatedParentResetPinRoute
   AuthenticatedParentUnlockRoute: typeof AuthenticatedParentUnlockRoute
   AuthenticatedParentIndexRoute: typeof AuthenticatedParentIndexRoute
@@ -549,6 +570,8 @@ const AuthenticatedParentRouteRouteChildren: AuthenticatedParentRouteRouteChildr
     AuthenticatedParentChildrenRoute: AuthenticatedParentChildrenRoute,
     AuthenticatedParentHistoryRoute: AuthenticatedParentHistoryRoute,
     AuthenticatedParentImpersonateRoute: AuthenticatedParentImpersonateRoute,
+    AuthenticatedParentLinkedAccountsRoute:
+      AuthenticatedParentLinkedAccountsRoute,
     AuthenticatedParentResetPinRoute: AuthenticatedParentResetPinRoute,
     AuthenticatedParentUnlockRoute: AuthenticatedParentUnlockRoute,
     AuthenticatedParentIndexRoute: AuthenticatedParentIndexRoute,

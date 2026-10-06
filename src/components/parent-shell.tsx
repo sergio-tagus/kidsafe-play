@@ -1,10 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { LanguageSwitcher } from "./language-switcher";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags, History, Gauge, UserCheck, HelpCircle, PlayCircle, RotateCcw } from "lucide-react";
+import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags, History, Gauge, UserCheck, HelpCircle, PlayCircle, RotateCcw, Link2 } from "lucide-react";
 import { ParentUnlockGuard } from "./parent-unlock-guard";
 import { useIsSuperAdmin } from "@/hooks/use-superadmin";
 import { OnboardingTour, openOnboardingTour } from "./onboarding-tour";
@@ -16,7 +16,10 @@ import { getParentUnlockStatus } from "@/lib/pin.functions";
 import { useImpersonation } from "@/lib/impersonation";
 
 export function ParentShell({ children }: { children: ReactNode }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const linkedLabel = lang === "en" ? "Linked accounts" : lang === "pt" ? "Contas vinculadas" : "Cuentas vinculadas";
+  const [linkedEmail, setLinkedEmail] = useState<string | null>(null);
+  useEffect(() => setLinkedEmail(localStorage.getItem("safetube.linkedEmail")), []);
   const { signOut } = useSession();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
@@ -42,6 +45,7 @@ export function ParentShell({ children }: { children: ReactNode }) {
     { to: "/parent/whitelist", label: t("parent.whitelist"), icon: ListChecks, exact: false },
     { to: "/parent/categories", label: t("parent.categories"), icon: Tags, exact: false },
     { to: "/parent/history", label: t("parent.history"), icon: History, exact: false },
+    { to: "/parent/linked-accounts", label: linkedLabel, icon: Link2, exact: false },
     ...(isSuperAdmin
       ? [
           { to: "/parent/api-usage", label: t("parent.apiUsage"), icon: Gauge, exact: false },
@@ -87,7 +91,9 @@ export function ParentShell({ children }: { children: ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="sticky top-0 z-30 flex items-center gap-2 bg-background/95 backdrop-blur border-b border-border px-4 py-3">
           <Link to="/" className="md:hidden text-2xl">🦄</Link>
-          <div className="flex-1" />
+          <div className="flex-1 min-w-0 truncate text-xs text-muted-foreground">
+            {linkedEmail ? (lang === "en" ? "Signed in with: " : lang === "pt" ? "Entrou com: " : "Has entrado con: ") + linkedEmail : null}
+          </div>
           <LanguageSwitcher />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
