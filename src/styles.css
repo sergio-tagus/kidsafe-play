@@ -176,6 +176,19 @@
   @media (min-width: 2560px) {
     html { font-size: 22px; }
   }
+
+  /* Google TV mode: 10-foot UI, overscan-safe margins, strong focus */
+  html.tv { font-size: 20px; cursor: none; }
+  html.tv body { padding: 2.5vh 5vw; }
+  html.tv :where(a, button, [role="button"], [role="tab"], [role="option"], [tabindex]):focus-visible,
+  html.tv :where(a, button, [role="button"], [role="tab"], [role="option"], [tabindex]):focus {
+    outline: 4px solid var(--color-primary);
+    outline-offset: 4px;
+    transform: scale(1.06);
+    transition: transform 150ms ease;
+    z-index: 1;
+  }
+  html.tv .tv-hide { display: none !important; }
 }
 
 @utility gradient-fun {

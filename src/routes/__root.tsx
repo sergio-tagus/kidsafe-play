@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { OfflinePersistProvider, clearOfflineCache } from "../lib/query-persist";
 import { registerServiceWorker } from "../lib/pwa";
+import { initTvMode } from "../lib/tv-mode";
 
 function NotFoundComponent() {
   return (
@@ -135,6 +136,7 @@ function RootComponent() {
 
   useEffect(() => {
     registerServiceWorker();
+    initTvMode();
   }, []);
 
   return (
