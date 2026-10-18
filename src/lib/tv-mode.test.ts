@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { detectTv, keyToDir, isBackKey, scoreCandidate } from "./tv-mode";
+import { detectTv, keyToDir, isBackKey, scoreCandidate, mediaKeyAction } from "./tv-mode";
 
 const base = { width: 1920, coarse: false, touch: false };
 
@@ -25,5 +25,17 @@ describe("tv mode", () => {
     const diagonal = scoreCandidate(from, { left: 120, top: 200, right: 220, bottom: 300 }, "right")!;
     expect(aligned).toBeLessThan(diagonal);
     expect(scoreCandidate(from, { left: -200, top: 0, right: -100, bottom: 100 }, "right")).toBeNull();
+  });
+  it("maps remote media keys", () => {
+    expect(mediaKeyAction("MediaPlayPause")).toBe("toggle");
+    expect(mediaKeyAction("MediaFastForward")).toBe("forward");
+    expect(mediaKeyAction("MediaRewind")).toBe("rewind");
+    expect(mediaKeyAction("ArrowRight")).toBe(null);
+  });
+  it("left/right prefer the same row over another zone", () => {
+    const from = { left: 0, top: 0, right: 100, bottom: 100 };
+    const sameRowFar = { left: 400, top: 0, right: 500, bottom: 100 };
+    const otherZoneNear = { left: 120, top: 40, right: 220, bottom: 140 };
+    expect(scoreCandidate(from, sameRowFar, "right", true)!).toBeLessThan(scoreCandidate(from, otherZoneNear, "right", false)!);
   });
 });
