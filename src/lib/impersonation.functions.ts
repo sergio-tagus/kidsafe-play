@@ -5,8 +5,9 @@ import { isLovableHost } from "@/lib/lovable-host";
 
 /** Impersonation is only allowed from the Lovable preview, never the published sites. */
 async function assertLovableOrigin() {
-  const { getRequestHeader } = await import("@tanstack/react-start/server");
-  const src = getRequestHeader("origin") || getRequestHeader("referer") || "";
+  const { getRequest } = await import("@tanstack/react-start/server");
+  const h = getRequest().headers;
+  const src = h.get("origin") || h.get("referer") || "";
   let host = "";
   try { host = new URL(src).hostname; } catch { host = ""; }
   if (!isLovableHost(host)) throw new Error("Impersonation is only available in the Lovable preview");
