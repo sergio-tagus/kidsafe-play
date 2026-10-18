@@ -90,6 +90,46 @@ async function maskSensitive(page) {
 // Channel/video thumbnails come from yt3.ggpht.com and may be lazy-loaded;
 // force eager loading and wait until every visible image is decoded before
 // capturing, otherwise screenshots show empty thumbnail boxes.
+//
+// Headless Chromium also drops some yt3.ggpht.com responses with
+// net::ERR_BLOCKED_BY_ORB (Opaque Response Blocking), leaving empty boxes in
+// captures even though the same URL loads in a real browser. Route those
+// hosts through Playwright's own HTTP client instead: it is not subject to
+// renderer-level blocking, and responses are cached per run so every device
+// reuses them.
+async function installImageRouting(ctx, page) {
+  const cache = new Map();
+  const handler = async (route) => {
+    const url = route.request().url();
+    let entry = cache.get(url);
+    if (!entry) {
+      for (let attempt = 0; attempt < 3 && !entry; attempt++) {
+        try {
+          const resp = await ctx.request.get(url, { timeout: 15000 });
+          const body = await resp.body();
+          if (resp.ok() && body.length > 0) {
+            entry = { body, contentType: resp.headers()["content-type"] ?? "image/jpeg" };
+            cache.set(url, entry);
+          }
+        } catch {
+          await new Promise((r) => setTimeout(r, 1000));
+        }
+      }
+    }
+    if (entry) {
+      await route.fulfill({
+        status: 200,
+        body: entry.body,
+        headers: { "content-type": entry.contentType, "cache-control": "public, max-age=86400" },
+      });
+    } else {
+      await route.abort();
+    }
+  };
+  await page.route("**/yt3.ggpht.com/**", handler);
+  await page.route("**/i.ytimg.com/**", handler);
+}
+
 async function waitForImages(page) {
   await page.evaluate(() => {
     document.querySelectorAll("img").forEach((i) => { i.loading = "eager"; });
@@ -139,6 +179,7 @@ for (const d of DEVICES) {
     deviceScaleFactor: d.scale,
   });
   const page = await ctx.newPage();
+  await installImageRouting(ctx, page);
   await restoreSession(page);
 
   for (const p of PAGES) {
