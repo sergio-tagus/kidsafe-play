@@ -5,6 +5,7 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { tvTriggerKeyCapture } from "@/lib/tv-mode";
 
 const Select = SelectPrimitive.Root;
 
@@ -23,6 +24,7 @@ const SelectTrigger = React.forwardRef<
       className,
     )}
     {...props}
+    onKeyDownCapture={(e) => { tvTriggerKeyCapture(e); props.onKeyDownCapture?.(e); }}
   >
     {children}
     <SelectPrimitive.Icon asChild>

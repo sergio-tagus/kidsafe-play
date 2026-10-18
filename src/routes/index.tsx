@@ -14,6 +14,7 @@ import { useState } from "react";
 import { isTvMode } from "@/lib/tv-mode";
 import { getTvSetupStatus } from "@/lib/tv-setup.functions";
 import { TvWelcome } from "@/components/tv-welcome";
+import { useLockParentZone } from "@/lib/use-lock-parent";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -38,6 +39,7 @@ export const Route = createFileRoute("/")({
 
 function HomeSelector() {
   const navigate = useNavigate();
+  useLockParentZone();
   const { setActiveChildId, signOut } = useSession();
   const { t } = useI18n();
   const list = useServerFn(listChildProfiles);

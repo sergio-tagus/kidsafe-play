@@ -6,10 +6,12 @@ import { useSession } from "@/lib/session";
 import { LanguageSwitcher } from "./language-switcher";
 import { Button } from "@/components/ui/button";
 import { OfflineBanner } from "@/components/offline-banner";
+import { useLockParentZone } from "@/lib/use-lock-parent";
 
 export function KidShell({ childId, child, children }: { childId: string; child?: { profile_name: string; avatar_emoji: string } | null; children: ReactNode }) {
   const { t } = useI18n();
   const { signOut } = useSession();
+  useLockParentZone();
   const path = useRouterState({ select: (s) => s.location.pathname });
 
   const nav = [
