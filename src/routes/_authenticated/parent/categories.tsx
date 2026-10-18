@@ -53,7 +53,7 @@ function CategoriesPage() {
   const upsertFn = useServerFn(upsertCategory);
   const delFn = useServerFn(deleteCategory);
 
-  const { data: cats = [] } = useQuery<CatRow[]>({ queryKey: ["categories"], queryFn: () => listFn() as any });
+  const { data: cats = [] } = useQuery<CatRow[]>({ queryKey: ["categories", "with-counts"], queryFn: () => listFn() as any });
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Partial<CatRow> & { slugTouched?: boolean } | null>(null);

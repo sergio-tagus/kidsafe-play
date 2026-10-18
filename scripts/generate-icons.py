@@ -150,21 +150,88 @@ val = AND / "values"; val.mkdir(parents=True, exist_ok=True)
 ''')
 
 # ---- TV banner design (mark left + big "SafeTube Kids" wordmark) ----
+# The wordmark uses the project's Fredoka font (@fontsource/fredoka),
+# converted from .woff to .ttf at build time with fontTools (the .woff
+# container needs only zlib, so no brotli dependency).
+FREDOKA_WOFF = ROOT / "node_modules/@fontsource/fredoka/files/fredoka-latin-700-normal.woff"
+FREDOKA_TTF = Path("/tmp/Fredoka-Bold.ttf")
+
+def fredoka_ttf():
+    if not FREDOKA_TTF.exists():
+        from fontTools.ttLib import TTFont as FTFont
+        f = FTFont(str(FREDOKA_WOFF))
+        f.flavor = None
+        f.save(str(FREDOKA_TTF))
+    return FREDOKA_TTF
+
+def fredoka(size):
+    return ImageFont.truetype(str(fredoka_ttf()), size)
+
+def fredoka_for_bbox(text, target_h):
+    """Font size whose glyph bounding-box height for `text` equals target_h."""
+    size = max(1, round(target_h))
+    for _ in range(5):
+        f = fredoka(size)
+        b = f.getbbox(text)
+        h = b[3] - b[1]
+        if h <= 0:
+            break
+        new_size = max(1, round(size * target_h / h))
+        if new_size == size:
+            break
+        size = new_size
+    return fredoka(size)
+
+def verify_banner_text(im, y0, y1, lines, target, path):
+    """Measure the wordmark glyph bounding boxes in the FINAL PNG.
+    The cropped strip (y0..y1) contains only the text lines."""
+    arr = np.array(im.crop((0, y0, im.width, y1))).astype(int)
+    diff = (np.abs(arr - np.array(BG)).sum(axis=-1) > 30)  # not background
+    rows = np.where(diff.any(axis=1))[0]
+    if len(rows) == 0:
+        raise SystemExit(f"BANNER VERIFICATION FAILED: no text pixels in {path}")
+    groups, start = [], rows[0]
+    for a, b in zip(rows, rows[1:]):
+        if b > a + 3:  # gap between lines
+            groups.append((start, a)); start = b
+    groups.append((start, rows[-1]))
+    print(f"  {path.name}: {len(groups)} text line(s), target {target:.0f}px")
+    ok = len(groups) == len(lines)
+    for (gy0, gy1), (t, _) in zip(groups, lines):
+        hh = int(gy1 - gy0 + 1)
+        print(f"    {t!r}: bbox height {hh}px = {hh/target:.2f} x target ({hh/im.height:.3f} x H)")
+        if not (0.90 <= hh / target <= 1.15):
+            ok = False
+    if not ok:
+        raise SystemExit(f"BANNER VERIFICATION FAILED for {path}")
+
 def tv_banner(w, h, path):
-    """TV / feature banner. Text height is at least h/6 for legibility."""
+    """TV / feature banner: mark on top, wordmark stacked below.
+    Each wordmark line's glyph bbox is ~h/4 tall, verified on the final PNG."""
     im = Image.new("RGB", (w, h), BG)
     draw = ImageDraw.Draw(im)
-    mark_side = int(h * 0.78)
-    mk = mark.copy(); mk.thumbnail((mark_side, mark_side), Image.LANCZOS)
-    mk_x = int(w * 0.06)
-    im.paste(mk, (mk_x, (h - mk.height)//2), mk)
-    text_x = mk_x + mk.width + int(w * 0.03)
-    line_h = int(h / 4.2)  # two lines, each comfortably above h/6
-    f_big = font(line_h)
-    f_sub = font(int(h / 11), bold=False)
-    draw.text((text_x, int(h * 0.12)), "SafeTube", font=f_big, fill=PLUM)
-    draw.text((text_x, int(h * 0.12) + line_h + int(h*0.02)), "Kids", font=f_big, fill=ACCENT)
+
+    target = h / 4.0
+    gap = int(h * 0.04)
+    lines = [("SafeTube", PLUM), ("Kids", ACCENT)]
+    fonts = [fredoka_for_bbox(t, target) for t, _ in lines]
+    boxes = [f.getbbox(t) for f, (t, _) in zip(fonts, lines)]
+    heights = [b[3] - b[1] for b in boxes]
+    block = sum(heights) + gap
+
+    text_top = h - int(h * 0.06) - block
+    avail = text_top - int(h * 0.05)
+    mk = mark.copy()
+    mk.thumbnail((min(avail, int(w * 0.5)), avail), Image.LANCZOS)
+    im.paste(mk, ((w - mk.width)//2, int(h * 0.05) + max(0, (avail - mk.height)//2)), mk)
+
+    y = text_top
+    for f, (t, col), b in zip(fonts, lines, boxes):
+        x = (w - (b[2] - b[0]))//2 - b[0]
+        draw.text((x, y - b[1]), t, font=f, fill=col)
+        y += (b[3] - b[1]) + gap
     im.save(path)
+    verify_banner_text(im, text_top, h, lines, target, path)
     return im
 
 tv = AND / "drawable-xhdpi"; tv.mkdir(parents=True, exist_ok=True)
