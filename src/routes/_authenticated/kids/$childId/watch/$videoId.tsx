@@ -504,7 +504,7 @@ useEffect(() => {
             className={
               isFullscreen
                 ? `${pseudoFullscreen ? "fixed inset-0 z-50" : "relative w-full h-full"} bg-black`
-                : ""
+                : "relative"
             }
           >
 
