@@ -7,7 +7,8 @@ android {
         applicationId "com.safetube.kids"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
+        // GitHub Actions run number keeps every CI build's versionCode increasing; 2 locally.
+        versionCode((System.getenv("GITHUB_RUN_NUMBER") ?: "2").toInteger())
         versionName "1.1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
