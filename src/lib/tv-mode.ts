@@ -201,3 +201,13 @@ export function initTvMode() {
 export function isTvMode() {
   return typeof document !== "undefined" && document.documentElement.classList.contains("tv");
 }
+
+/** onKeyDownCapture for menu/select triggers: on TV, arrows move focus instead of opening; OK opens. */
+export function tvTriggerKeyCapture(e: { key: string; stopPropagation(): void; preventDefault(): void }) {
+  if (!isTvMode()) return;
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.stopPropagation();
+    e.preventDefault();
+    moveFocus(e.key === "ArrowDown" ? "down" : "up");
+  }
+}
