@@ -39,7 +39,8 @@ const html = `<!DOCTYPE html>
     function off(){document.getElementById('load').style.display='none';document.getElementById('off').style.display='block';}
     if(!navigator.onLine) off();
     window.addEventListener('offline', off);
-    setTimeout(function(){ if(!navigator.onLine) off(); }, 8000);
+    // If the remote site has not replaced this page after 15s, offer a retry.
+    setTimeout(off, 15000);
   </script>
 </body>
 </html>
