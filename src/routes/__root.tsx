@@ -21,6 +21,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { OfflinePersistProvider, clearOfflineCache } from "../lib/query-persist";
 import { registerServiceWorker } from "../lib/pwa";
 import { initTvMode } from "../lib/tv-mode";
+import { initDisplayScale } from "../lib/display-scale";
 
 function NotFoundComponent() {
   return (
@@ -137,6 +138,7 @@ function RootComponent() {
   useEffect(() => {
     registerServiceWorker();
     initTvMode();
+    initDisplayScale();
     void import("../lib/native-auth").then((m) => m.initNativeAuth());
   }, []);
 

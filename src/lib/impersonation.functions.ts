@@ -1,6 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSuperAdmin } from "@/lib/require-superadmin";
+import { isLovableHost } from "@/lib/lovable-host";
+
+/** Impersonation is only allowed from the Lovable preview, never the published sites. */
+async function assertLovableOrigin() {
+  const { getRequest } = await import("@tanstack/react-start/server");
+  const h = getRequest().headers;
+  const src = h.get("origin") || h.get("referer") || "";
+  let host = "";
+  try { host = new URL(src).hostname; } catch { host = ""; }
+  if (!isLovableHost(host)) throw new Error("Impersonation is only available in the Lovable preview");
+}
 
 export type FoundUser = {
   id: string;
@@ -14,6 +25,7 @@ export const searchUsers = createServerFn({ method: "POST" })
   .middleware([requireSuperAdmin])
   .inputValidator((d: unknown) => z.object({ term: z.string().max(120).default("") }).parse(d))
   .handler(async ({ data, context }) => {
+    await assertLovableOrigin();
     const { data: rows, error } = await context.supabase.rpc("search_users", { term: data.term.trim() });
     if (error) throw new Error(error.message);
     return { users: (rows ?? []) as FoundUser[] };
@@ -27,6 +39,7 @@ export const startImpersonation = createServerFn({ method: "POST" })
   .middleware([requireSuperAdmin])
   .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    await assertLovableOrigin();
     if (data.userId === context.userId) throw new Error("Cannot impersonate yourself");
 
     const { data: profile, error: pErr } = await context.supabase

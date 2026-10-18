@@ -14,6 +14,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { resetOnboarding } from "@/lib/onboarding.functions";
 import { getParentUnlockStatus } from "@/lib/pin.functions";
 import { useImpersonation } from "@/lib/impersonation";
+import { isLovableClient } from "@/lib/lovable-host";
 
 export function ParentShell({ children }: { children: ReactNode }) {
   const { t, lang } = useI18n();
@@ -39,6 +40,8 @@ export function ParentShell({ children }: { children: ReactNode }) {
   const pinLocked = !!unlockStatus?.hasPin && !unlockStatus?.unlocked;
 
 
+  const [showImp, setShowImp] = useState(false);
+  useEffect(() => setShowImp(isLovableClient()), []);
   const nav = [
     { to: "/parent", label: t("parent.overview"), icon: LayoutDashboard, exact: true },
     { to: "/parent/children", label: t("parent.children"), icon: Users, exact: false },
@@ -49,7 +52,7 @@ export function ParentShell({ children }: { children: ReactNode }) {
     ...(isSuperAdmin
       ? [
           { to: "/parent/api-usage", label: t("parent.apiUsage"), icon: Gauge, exact: false },
-          { to: "/parent/impersonate", label: t("imp.nav"), icon: UserCheck, exact: false },
+          ...(showImp ? [{ to: "/parent/impersonate", label: t("imp.nav"), icon: UserCheck, exact: false }] : []),
         ]
       : []),
   ];

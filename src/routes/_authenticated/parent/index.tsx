@@ -8,8 +8,9 @@ import { ParentShell } from "@/components/parent-shell";
 import { OnboardingResumeBanner } from "@/components/onboarding-tour";
 import { useI18n } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect, useState } from "react";
+import { getForcedResolution, setForcedResolution, readDisplayInfo, type ForcedResolution } from "@/lib/display-scale";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from "recharts";
 import { toast } from "sonner";
 import { useIsSuperAdmin } from "@/hooks/use-superadmin";
@@ -129,6 +130,7 @@ function ParentDashboard() {
         </CardContent>
       </Card>
 
+      <DisplayCard />
       <SyncSettingsCard />
     </ParentShell>
   );
@@ -166,20 +168,13 @@ function SyncSettingsCard() {
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground mb-4">{t("parent.syncDesc")}</p>
-        <RadioGroup value={freq} onValueChange={save} className="grid grid-cols-2 gap-3">
-          {[
-            { v: "off", label: t("parent.syncOff") },
-            { v: "biweekly", label: t("parent.syncBiweekly") },
-          ].map((opt) => (
-            <Label
-              key={opt.v}
-              className="flex items-center gap-2 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/50 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5"
-            >
-              <RadioGroupItem value={opt.v} />
-              <span className="font-semibold">{opt.label}</span>
-            </Label>
-          ))}
-        </RadioGroup>
+        <Select value={freq} onValueChange={save}>
+          <SelectTrigger className="w-full sm:w-72 rounded-xl"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="off">{t("parent.syncOff")}</SelectItem>
+            <SelectItem value="biweekly">{t("parent.syncBiweekly")}</SelectItem>
+          </SelectContent>
+        </Select>
         {(s as any)?.auto_paused && (
           <div className="text-xs text-amber-600 mt-3">{t("parent.syncPaused")}</div>
         )}
@@ -198,6 +193,50 @@ function StatCard({ label, value, unit }: { label: string; value: string; unit: 
       <CardContent className="p-5">
         <div className="text-sm text-muted-foreground">{label}</div>
         <div className="mt-2 text-4xl font-display font-bold">{value}<span className="text-lg ml-1 text-muted-foreground">{unit}</span></div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DisplayCard() {
+  const { t } = useI18n();
+  const [res, setRes] = useState<ForcedResolution>("auto");
+  const [info, setInfo] = useState<ReturnType<typeof readDisplayInfo> | null>(null);
+  useEffect(() => {
+    setRes(getForcedResolution());
+    const upd = () => setInfo(readDisplayInfo());
+    upd();
+    window.addEventListener("resize", upd);
+    return () => window.removeEventListener("resize", upd);
+  }, []);
+  const change = (v: string) => {
+    setForcedResolution(v as ForcedResolution);
+    setRes(v as ForcedResolution);
+    setTimeout(() => setInfo(readDisplayInfo()), 50);
+  };
+  return (
+    <Card className="mt-6">
+      <CardHeader><CardTitle>{t("display.title")}</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        {info && (
+          <div className="text-sm space-y-1">
+            <div><span className="text-muted-foreground">{t("display.current")}:</span> <span className="font-semibold">{info.screenW}×{info.screenH}</span> · {info.dpr}×</div>
+            <div><span className="text-muted-foreground">{t("display.viewport")}:</span> {info.viewW}×{info.viewH}</div>
+          </div>
+        )}
+        <div>
+          <div className="text-sm font-semibold mb-2">{t("display.force")}</div>
+          <Select value={res} onValueChange={change}>
+            <SelectTrigger className="w-full sm:w-72 rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">{t("display.auto")}</SelectItem>
+              <SelectItem value="720">720p (1280×720)</SelectItem>
+              <SelectItem value="1080">1080p (1920×1080)</SelectItem>
+              <SelectItem value="2160">4K (3840×2160)</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-2">{t("display.note")}</p>
+        </div>
       </CardContent>
     </Card>
   );

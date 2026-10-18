@@ -143,6 +143,34 @@ function focusFirstUseful() {
   el?.focus({ preventScroll: true });
 }
 
+/** Decide what a key does on a TV text field. Not editing: OK enters edit, arrows navigate. Editing: Back/Enter leave edit. */
+export function textFieldKeyAction(editing: boolean, key: string, keyCode?: number): "enter-edit" | "exit-edit" | "navigate" | "pass" {
+  const back = isBackKey(key, keyCode);
+  if (!editing) {
+    if (key === "Enter") return "enter-edit";
+    if (back) return "pass";
+    return keyToDir(key) ? "navigate" : "pass";
+  }
+  // Backspace deletes text while editing; only real Back/Escape leave.
+  if (key === "Escape" || (back && key !== "Backspace") || key === "Enter") return "exit-edit";
+  return "pass";
+}
+
+const editingFields = new WeakSet<Element>();
+function lockField(el: HTMLInputElement | HTMLTextAreaElement) {
+  editingFields.delete(el);
+  if (!el.hasAttribute("data-tv-ro")) el.setAttribute("data-tv-ro", el.readOnly ? "1" : "0");
+  el.readOnly = true;
+  el.setAttribute("inputmode", "none");
+}
+function unlockField(el: HTMLInputElement | HTMLTextAreaElement) {
+  editingFields.add(el);
+  el.readOnly = el.getAttribute("data-tv-ro") === "1";
+  el.removeAttribute("inputmode");
+  el.blur();
+  el.focus();
+}
+
 let started = false;
 
 export function initTvMode() {
@@ -168,6 +196,13 @@ export function initTvMode() {
     const t = e.target as HTMLElement;
     const z = zoneOf(t);
     if (z) lastInZone.set(z, t);
+    if (isTextField(t) && !editingFields.has(t)) lockField(t as HTMLInputElement);
+  });
+  document.addEventListener("focusout", (e) => {
+    const t = e.target as HTMLElement;
+    if (isTextField(t) && editingFields.has(t) && document.hasFocus()) {
+      setTimeout(() => { if (document.activeElement !== t) lockField(t as HTMLInputElement); }, 0);
+    }
   });
 
   // Autofocus the first useful element whenever the page changes.
@@ -180,6 +215,21 @@ export function initTvMode() {
 
   window.addEventListener("keydown", (e) => {
     if (e.defaultPrevented) return;
+    const act = document.activeElement;
+    if (isTextField(act)) {
+      const field = act as HTMLInputElement;
+      const a = textFieldKeyAction(editingFields.has(field), e.key, e.keyCode);
+      if (a === "enter-edit") { e.preventDefault(); unlockField(field); return; }
+      if (a === "exit-edit") {
+        // Let Enter submit forms; Back only leaves edit mode.
+        if (e.key !== "Enter") e.preventDefault();
+        lockField(field);
+        return;
+      }
+      if (a === "navigate") { const d = keyToDir(e.key)!; if (moveFocus(d)) e.preventDefault(); return; }
+      if (!editingFields.has(field) && isBackKey(e.key, e.keyCode)) { if (goBack()) e.preventDefault(); return; }
+      return;
+    }
     if (isBackKey(e.key, e.keyCode) && !isTextField(document.activeElement)) {
       if (goBack()) e.preventDefault();
       return;
