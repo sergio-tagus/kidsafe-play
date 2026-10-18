@@ -50,12 +50,41 @@ const AUTH_PAGES = hasSession
 
 const PAGES = [...PUBLIC_PAGES, ...AUTH_PAGES];
 
+// Sensitive-data masking: comma-separated literals (child names, emails…) to
+// blur before capture, plus automatic email blur. Set MASK_TEXTS="Eluise,...".
+const MASK_TEXTS = (process.env.MASK_TEXTS ?? "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+async function maskSensitive(page) {
+  await page.evaluate((texts) => {
+    const EMAIL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const hits = [];
+    let node;
+    while ((node = walker.nextNode())) {
+      const t = node.textContent ?? "";
+      if (EMAIL.test(t) || texts.some((m) => t.includes(m))) {
+        if (node.parentElement) hits.push(node.parentElement);
+      }
+    }
+    for (const el of hits) {
+      el.style.filter = "blur(10px)";
+      el.style.userSelect = "none";
+    }
+  }, MASK_TEXTS);
+}
+
 async function restoreSession(page) {
   if (!hasSession) return;
   await page.goto(URL);
   await page.evaluate(
     (args) => {
       window.localStorage.setItem(args.key, args.value);
+      // Parent menu session gate (see src/routes/_authenticated/parent/route.tsx).
+      // The server-side unlock window must also be active for this user.
+      window.sessionStorage.setItem("safetube.parent_pin_ok", "1");
     },
     { key: storageKey, value: sessionJson },
   );
@@ -76,6 +105,7 @@ for (const d of DEVICES) {
     const tvq = d.name === "android-tv" ? (p.path.includes("?") ? "&tv=1" : "?tv=1") : "";
     await page.goto(URL + p.path + tvq, { waitUntil: "networkidle" });
     await page.waitForTimeout(800);
+    await maskSensitive(page);
     await page.screenshot({ path: join(OUT, `${d.name}-${p.name}.png`) });
     console.log(`✓ ${d.name}-${p.name}.png`);
   }
