@@ -56,9 +56,14 @@ function PrivacyPage() {
           <h2 className="text-xl font-bold mt-8 mb-3">{t("privacy.contact.title")}</h2>
           <p>{t("privacy.contact.email")}</p>
 
-          <div className="mt-10 p-4 rounded-2xl bg-muted/50 border border-border">
-            <p className="text-sm text-muted-foreground m-0">{t("privacy.legalNotice")}</p>
-          </div>
+          <h2 id="eliminar-cuenta" className="text-xl font-bold mt-8 mb-3 scroll-mt-24">{t("privacy.delete.title")}</h2>
+          <p>{t("privacy.delete.intro")}</p>
+          <ol className="list-decimal pl-5 space-y-2 mt-3">
+            <li>{t("privacy.delete.step1")}</li>
+            <li>{t("privacy.delete.step2")}</li>
+            <li>{t("privacy.delete.step3")}</li>
+          </ol>
+          <p className="mt-3">{t("privacy.delete.deadline")}</p>
         </section>
       </main>
     </div>
