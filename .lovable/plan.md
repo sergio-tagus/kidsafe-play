@@ -2,13 +2,19 @@
 
 ## 1. Pantalla de bienvenida en modo TV
 - Nueva pantalla que aparece solo en modo TV cuando el padre no tiene canales aprobados ni PIN.
-- Contenido: saludo, 2 pasos claros ("Configura el PIN" y "Añade canales") y un QR + enlace corto para hacerlo desde el móvil (escribir en la TV con el mando es incómodo).
-- Botones grandes navegables con el mando: "Configurar en el móvil", "Continuar en la TV".
+- Contenido: saludo y 2 pasos: "Configura el PIN" y "Añade canales desde el ordenador", con la dirección web bien visible (recomendado: más cómodo para buscar y revisar canales) y un QR como alternativa para el móvil.
+- Botones grandes navegables con el mando: "Ya lo he configurado" y "Continuar en la TV".
 - Desaparece sola cuando ya hay PIN y al menos un canal.
 - Textos en español, inglés y portugués.
 
+## Pantallas 4K y 8K
+- Tamaños de texto, botones, miniaturas y QR proporcionales a la pantalla, para que se vean igual de nítidos y legibles en Full HD, 4K y 8K.
+- Imágenes de canales y vídeos en la mayor calidad disponible en pantallas grandes.
+- Comprobación visual en 1920x1080, 3840x2160 y 7680x4320.
+
 ## 2. Capturas de Google TV con sesión real
-- Iniciar sesión en la vista previa con tu cuenta real y abrir la app en modo TV a 1920x1080.
+- Iniciar sesión en la vista previa con tu cuenta real y abrir la app en modo TV.
+- Capturar a 1920x1080 (formato que pide Play Console) y además a 3840x2160 para revisar la calidad en 4K.
 - Capturar: inicio del niño, categorías, un canal, reproductor, búsqueda, selección de perfil y la nueva bienvenida.
 - Guardarlas listas para subir a Play Console (sección Android TV) y enseñártelas antes.
 
