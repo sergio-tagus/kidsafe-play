@@ -102,10 +102,10 @@ function TvSimulator() {
   return (
     <div className="flex h-screen flex-col bg-background text-foreground lg:flex-row">
       <div ref={stage} className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden">
-        <div style={{ width: w * scale, height: h * scale }} className="relative">
+        <div style={{ width: (w + 28) * scale, height: (h + 28) * scale }} className="relative">
           <div
             className="absolute left-0 top-0 origin-top-left overflow-hidden rounded-[12px] border-[14px] border-foreground/90 bg-foreground shadow-2xl"
-            style={{ width: w + 28, height: h + 28, transform: `scale(${scale})`, margin: -14 * scale }}
+            style={{ width: w + 28, height: h + 28, transform: `scale(${scale})` }}
           >
             <iframe ref={frame} title="TV" src="/?tv=sim" width={w} height={h} className="block border-0 bg-background" />
             {safe && (
