@@ -12,7 +12,15 @@ export function VideoCard({ video, childId }: { video: SafeVideo; childId: strin
       className="group block rounded-2xl overflow-hidden bg-card shadow-md hover:shadow-xl transition-all hover:-translate-y-1"
     >
       <div className="relative aspect-video bg-muted overflow-hidden">
-        <img src={thumb} alt={video.title} loading="lazy" className="w-full h-full object-cover" />
+        <img
+          src={thumb}
+          srcSet={`${thumb} 480w, https://i.ytimg.com/vi/${video.youtube_video_id}/sddefault.jpg 640w`}
+          sizes="(min-width: 2560px) 25vw, 480px"
+          alt={video.title}
+          loading="lazy"
+          className="w-full h-full object-cover"
+        />
+
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
           <PlayCircle className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
