@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as TvSimulatorRouteImport } from './routes/tv-simulator'
 import { Route as AuthenticatedParentRouteRouteImport } from './routes/_authenticated/parent/route'
 import { Route as AuthenticatedTvLinkRouteImport } from './routes/_authenticated/tv-link'
 import { Route as AuthenticatedParentIndexRouteImport } from './routes/_authenticated/parent/index'
@@ -54,6 +55,11 @@ const AuthRoute = AuthRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TvSimulatorRoute = TvSimulatorRouteImport.update({
+  id: '/tv-simulator',
+  path: '/tv-simulator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedParentRouteRoute =
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
+  '/tv-simulator': typeof TvSimulatorRoute
   '/parent': typeof AuthenticatedParentRouteRouteWithChildren
   '/tv-link': typeof AuthenticatedTvLinkRoute
   '/parent/api-usage': typeof AuthenticatedParentApiUsageRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
+  '/tv-simulator': typeof TvSimulatorRoute
   '/tv-link': typeof AuthenticatedTvLinkRoute
   '/parent/api-usage': typeof AuthenticatedParentApiUsageRoute
   '/parent/categories': typeof AuthenticatedParentCategoriesRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
+  '/tv-simulator': typeof TvSimulatorRoute
   '/_authenticated/parent': typeof AuthenticatedParentRouteRouteWithChildren
   '/_authenticated/tv-link': typeof AuthenticatedTvLinkRoute
   '/_authenticated/parent/api-usage': typeof AuthenticatedParentApiUsageRoute
@@ -285,6 +294,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/privacy'
+    | '/tv-simulator'
     | '/parent'
     | '/tv-link'
     | '/parent/api-usage'
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/privacy'
+    | '/tv-simulator'
     | '/tv-link'
     | '/parent/api-usage'
     | '/parent/categories'
@@ -341,6 +352,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/privacy'
+    | '/tv-simulator'
     | '/_authenticated/parent'
     | '/_authenticated/tv-link'
     | '/_authenticated/parent/api-usage'
@@ -371,6 +383,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   PrivacyRoute: typeof PrivacyRoute
+  TvSimulatorRoute: typeof TvSimulatorRoute
   ApiPublicHooksSyncWhitelistRoute: typeof ApiPublicHooksSyncWhitelistRoute
 }
 
@@ -402,6 +415,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tv-simulator': {
+      id: '/tv-simulator'
+      path: '/tv-simulator'
+      fullPath: '/tv-simulator'
+      preLoaderRoute: typeof TvSimulatorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/parent': {
@@ -647,6 +667,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   PrivacyRoute: PrivacyRoute,
+  TvSimulatorRoute: TvSimulatorRoute,
   ApiPublicHooksSyncWhitelistRoute: ApiPublicHooksSyncWhitelistRoute,
 }
 export const routeTree = rootRouteImport
