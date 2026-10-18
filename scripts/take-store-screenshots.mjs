@@ -76,6 +76,38 @@ async function maskSensitive(page) {
   }, MASK_TEXTS);
 }
 
+// Emojis (kid avatars, language flags) render via the system font. Install
+// Noto Color Emoji first:  fc-list | grep -i emoji
+//
+// Channel/video thumbnails come from yt3.ggpht.com and may be lazy-loaded;
+// force eager loading and wait until every visible image is decoded before
+// capturing, otherwise screenshots show empty thumbnail boxes.
+async function waitForImages(page) {
+  await page.evaluate(() => {
+    document.querySelectorAll("img").forEach((i) => { i.loading = "eager"; });
+  });
+  await page
+    .waitForFunction(
+      () => {
+        const imgs = Array.from(document.querySelectorAll("img")).filter((i) => {
+          const r = i.getBoundingClientRect();
+          return r.width > 0 && r.bottom > -innerHeight && r.top < innerHeight * 1.5;
+        });
+        return imgs.every((i) => i.complete);
+      },
+      { timeout: 20000 }
+    )
+    .catch(() => {});
+  // Wait for decode so the pixels are actually paintable.
+  await page.evaluate(() =>
+    Promise.all(
+      Array.from(document.querySelectorAll("img"))
+        .filter((i) => i.complete && i.naturalWidth > 0)
+        .map((i) => i.decode().catch(() => {}))
+    )
+  );
+}
+
 async function restoreSession(page) {
   if (!hasSession) return;
   await page.goto(URL);
