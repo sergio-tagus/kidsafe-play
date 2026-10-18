@@ -28,6 +28,11 @@
 - Arreglo: el vídeo a pantalla completa siempre ocupa toda la pantalla real, sea cual sea la resolución elegida; solo los botones mantienen el tamaño elegido.
 - Técnico: revisar `src/lib/display-scale.ts`; el contenedor `data-pseudo-fullscreen` usará medidas de la ventana real (no las escaladas) o quedará fuera del escalado.
 
+## 6. Salir de la app con doble Atrás
+- Desde cualquier pantalla, dos pulsaciones seguidas de Atrás (en menos de 1,5 s) cierran la app.
+- Una sola pulsación sigue funcionando como ahora (cierra menús, sale de pantalla completa, vuelve atrás). Tras la primera aparece el aviso "Pulsa Atrás otra vez para salir".
+- Técnico: en `goBack()` de `src/lib/tv-mode.ts`, registrar la hora del último Atrás; si el siguiente llega dentro de la ventana, devolver "exit" (`App.exitApp()` en la app nativa). Test nuevo para la ventana de 1,5 s.
+
 ## Detalles técnicos
 - Archivo principal: `src/routes/_authenticated/kids/$childId/watch/$videoId.tsx`; ajustes en `src/lib/tv-mode.ts` (zona `data-focus-zone="player"`, tratar los controles ocultos como destino válido hacia arriba) y textos nuevos en `src/lib/i18n.tsx` (es/en/pt: "Siguiente vídeo", "Ver ahora", "Cancelar", "en {s} s").
 - Detectar `YT.PlayerState.ENDED` por separado del resto de estados para lanzar la tarjeta; constante `AUTOPLAY_NEXT_SECONDS = 10`.
