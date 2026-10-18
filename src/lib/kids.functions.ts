@@ -250,6 +250,8 @@ export const listContinueWatching = createServerFn({ method: "POST" })
   });
 
 // ---------- Watch tick + screen time ----------
+/** The player sends one tick every 15 s; each tick counts exactly this much. */
+const WATCH_TICK_SECONDS = 15;
 export const recordWatchTick = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
@@ -258,7 +260,7 @@ export const recordWatchTick = createServerFn({ method: "POST" })
       videoId: z.string().min(6).max(20),
       progressSeconds: z.number().int().min(0).max(60 * 60 * 24),
       totalSeconds: z.number().int().min(0).max(60 * 60 * 24).optional(),
-      deltaSeconds: z.number().min(0).max(120),
+      deltaSeconds: z.number().min(0).max(120).optional(), // ignored: kept for older clients
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -299,22 +301,23 @@ export const recordWatchTick = createServerFn({ method: "POST" })
       });
     }
 
-    // increment screen_time_daily
+    // increment screen_time_daily by the fixed heartbeat interval (never caller-chosen).
     const today = new Date().toISOString().slice(0, 10);
-    const minutes = data.deltaSeconds / 60;
-    const { data: st } = await context.supabase
+    const minutes = WATCH_TICK_SECONDS / 60;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: st } = await supabaseAdmin
       .from("screen_time_daily")
       .select("id, minutes_watched")
       .eq("child_profile_id", data.childId)
       .eq("date", today)
       .maybeSingle();
     if (st) {
-      await context.supabase
+      await supabaseAdmin
         .from("screen_time_daily")
         .update({ minutes_watched: Number(st.minutes_watched) + minutes })
         .eq("id", st.id);
     } else {
-      await context.supabase.from("screen_time_daily").insert({
+      await supabaseAdmin.from("screen_time_daily").insert({
         child_profile_id: data.childId,
         date: today,
         minutes_watched: minutes,

@@ -37,16 +37,32 @@ export const getParentUnlockStatus = createServerFn({ method: "GET" })
     };
   });
 
+/** True when the session was just created from an emailed sign-in link (PIN reset flow). */
+function recentEmailLinkSignIn(claims: any): boolean {
+  const amr = Array.isArray(claims?.amr) ? claims.amr : [];
+  const now = Date.now() / 1000;
+  return amr.some((a: any) => (a?.method === "otp" || a?.method === "magiclink") && now - Number(a?.timestamp ?? 0) < 15 * 60);
+}
+
 export const setPin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => pinSchema.parse(d))
+  .inputValidator((d: unknown) => z.object({ pin: pinSchema.shape.pin, currentPin: pinSchema.shape.pin.optional() }).parse(d))
   .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await supabaseAdmin
+      .from("parent_pins").select("pin_hash, unlocked_until").eq("user_id", context.userId).maybeSingle();
+    if (existing) {
+      // Replacing a PIN requires the current PIN, an open parent session, or a fresh email-link sign-in.
+      const unlocked = existing.unlocked_until && new Date(existing.unlocked_until as string).getTime() > Date.now();
+      const knowsPin = data.currentPin ? await bcrypt.compare(data.currentPin, existing.pin_hash) : false;
+      if (!unlocked && !knowsPin && !recentEmailLinkSignIn(context.claims)) throw new Error("Not allowed");
+    }
     const pin_hash = await bcrypt.hash(data.pin, 10);
     const unlocked_until = new Date(Date.now() + PARENT_UNLOCK_WINDOW_MS).toISOString();
-    const { error } = await context.supabase
+    const { error } = await supabaseAdmin
       .from("parent_pins")
       .upsert({ user_id: context.userId, pin_hash, unlocked_until }, { onConflict: "user_id" });
-    if (error) throw new Error(error.message);
+    if (error) throw new Error("Could not save PIN");
     return { ok: true };
   });
 
@@ -64,7 +80,8 @@ export const verifyPin = createServerFn({ method: "POST" })
     const ok = await bcrypt.compare(data.pin, row.pin_hash);
     if (ok) {
       const unlocked_until = new Date(Date.now() + PARENT_UNLOCK_WINDOW_MS).toISOString();
-      await context.supabase
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin
         .from("parent_pins")
         .update({ unlocked_until })
         .eq("user_id", context.userId);
@@ -75,7 +92,8 @@ export const verifyPin = createServerFn({ method: "POST" })
 export const lockParent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
       .from("parent_pins")
       .update({ unlocked_until: null })
       .eq("user_id", context.userId);
