@@ -22,6 +22,12 @@
 - No se activa si se ha alcanzado el límite de tiempo de pantalla (se muestra la pantalla de bloqueo como hoy). Solo se sugieren vídeos de canales aprobados (lista ya filtrada).
 - Funciona igual en TV, móvil y ordenador.
 
+## 5. Pantalla completa con resolución forzada no ocupa toda la pantalla
+- Al elegir 720p/1080p/4K en el panel de padres, el vídeo en pantalla completa queda más pequeño o descentrado.
+- Comprobar en el simulador con cada resolución. Causa probable (sin confirmar): el escalado del contenido también reduce el vídeo a pantalla completa.
+- Arreglo: el vídeo a pantalla completa siempre ocupa toda la pantalla real, sea cual sea la resolución elegida; solo los botones mantienen el tamaño elegido.
+- Técnico: revisar `src/lib/display-scale.ts`; el contenedor `data-pseudo-fullscreen` usará medidas de la ventana real (no las escaladas) o quedará fuera del escalado.
+
 ## Detalles técnicos
 - Archivo principal: `src/routes/_authenticated/kids/$childId/watch/$videoId.tsx`; ajustes en `src/lib/tv-mode.ts` (zona `data-focus-zone="player"`, tratar los controles ocultos como destino válido hacia arriba) y textos nuevos en `src/lib/i18n.tsx` (es/en/pt: "Siguiente vídeo", "Ver ahora", "Cancelar", "en {s} s").
 - Detectar `YT.PlayerState.ENDED` por separado del resto de estados para lanzar la tarjeta; constante `AUTOPLAY_NEXT_SECONDS = 10`.
