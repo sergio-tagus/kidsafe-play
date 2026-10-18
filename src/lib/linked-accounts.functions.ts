@@ -62,6 +62,12 @@ export const resolveLinkedLogin = createServerFn({ method: "POST" })
     const email = (context.claims as any)?.email as string | undefined;
     if (!email) return { tokenHash: null as string | null, email: null as string | null };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Only a verified email on the signed-in account may unlock a linked primary account.
+    const { data: me } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+    const meUser = me?.user;
+    if (!meUser?.email_confirmed_at || normalizeEmail(meUser.email ?? "") !== normalizeEmail(email)) {
+      return { tokenHash: null, email: null };
+    }
     const { data: link } = await supabaseAdmin
       .from("linked_accounts").select("id, primary_user_id").eq("email", normalizeEmail(email)).maybeSingle();
     if (!link || link.primary_user_id === context.userId) return { tokenHash: null, email: null };
