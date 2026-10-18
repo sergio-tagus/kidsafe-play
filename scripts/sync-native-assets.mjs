@@ -33,7 +33,7 @@ if (existsSync(join(ROOT, "ios"))) {
 }
 
 if (existsSync(join(ROOT, "android"))) {
-  for (const d of ["mipmap-mdpi","mipmap-hdpi","mipmap-xhdpi","mipmap-xxhdpi","mipmap-xxxhdpi","mipmap-anydpi-v26","drawable-mdpi","drawable-hdpi","drawable-xhdpi","drawable-xxhdpi","drawable-xxxhdpi","values"]) {
+  for (const d of ["mipmap-mdpi","mipmap-hdpi","mipmap-xhdpi","mipmap-xxhdpi","mipmap-xxxhdpi","mipmap-anydpi-v26","drawable","drawable-port-mdpi","drawable-port-hdpi","drawable-port-xhdpi","drawable-port-xxhdpi","drawable-port-xxxhdpi","drawable-land-mdpi","drawable-land-hdpi","drawable-land-xhdpi","drawable-land-xxhdpi","drawable-land-xxxhdpi","drawable-mdpi","drawable-hdpi","drawable-xhdpi","drawable-xxhdpi","drawable-xxxhdpi","values"]) {
     copyIfExists(join(AND_SRC, d), join(AND_DEST, d), `Android ${d}`);
   }
 } else {
