@@ -76,7 +76,7 @@ function zoneOf(el: Element): Element | null {
 
 const lastInZone = new WeakMap<Element, HTMLElement>();
 
-function moveFocus(dir: Dir): boolean {
+export function moveFocus(dir: Dir): boolean {
   const active = document.activeElement as HTMLElement | null;
   const scope: ParentNode = document.querySelector('[role="dialog"][data-state="open"], [role="alertdialog"], [data-pseudo-fullscreen]') ?? document;
   const all = Array.from(scope.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((e) => e !== active && visible(e));

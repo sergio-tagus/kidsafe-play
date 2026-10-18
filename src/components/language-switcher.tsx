@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Globe } from "lucide-react";
-import { isTvMode } from "@/lib/tv-mode";
+import { isTvMode, moveFocus } from "@/lib/tv-mode";
 
 export function LanguageSwitcher() {
   const { lang, setLang } = useI18n();
@@ -21,19 +21,13 @@ export function LanguageSwitcher() {
           variant="ghost"
           size="sm"
           className="rounded-full text-white hover:bg-white/10"
-          onKeyDown={(e) => {
-            if (!isTvMode()) return;
-            // TV: arrows only move focus; the menu opens with OK.
-            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-              e.preventDefault();
-              (e.nativeEvent as any).__tvSkipPrevent = true;
-            }
-          }}
           onKeyDownCapture={(e) => {
             if (!isTvMode()) return;
             if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-              // Stop Radix from opening, but let the global D-pad navigator move focus.
+              // Stop Radix from opening on arrows; move focus like the D-pad does.
               e.stopPropagation();
+              e.preventDefault();
+              moveFocus(e.key === "ArrowDown" ? "down" : "up");
             }
           }}
         >
