@@ -8,6 +8,14 @@
  *
  * Output: src/assets/store/screenshots/
  *
+ * Requirements:
+ *  - Noto Color Emoji installed as a system font, or kid avatars and
+ *    language flags render as empty boxes:
+ *      cp NotoColorEmoji.ttf /usr/share/fonts/truetype/noto/ && fc-cache -f
+ *  - Capture with a NON-superadmin session: the parent menu hides
+ *    "Impersonar usuario", "Consumo API" and "Cuentas vinculadas" for
+ *    regular users.
+ *
  * For authenticated pages, set LOVABLE_BROWSER_SUPABASE_STORAGE_KEY and
  * LOVABLE_BROWSER_SUPABASE_SESSION_JSON (or SESSION_JSON) in the env.
  * Without a session the script captures only public routes.
