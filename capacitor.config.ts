@@ -17,7 +17,10 @@ const config: CapacitorConfig = {
   webDir: "capacitor-shell",
   backgroundColor: "#FFF7EDFF",
   server: {
-    url: "https://kidsafe-play.lovable.app",
+    // Load the primary domain directly: lovable.app redirects here, and a
+    // cross-host redirect is treated as external (blank screen on Google TV).
+    url: "https://kidsafe-play.mediaatlastv.com",
+    allowNavigation: ["kidsafe-play.mediaatlastv.com", "kidsafe-play.lovable.app"],
     cleartext: false,
     androidScheme: "https",
   },

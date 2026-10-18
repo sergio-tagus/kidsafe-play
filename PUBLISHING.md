@@ -172,7 +172,7 @@ La app incluye una página pública `/privacy` multilingüe (es/en/pt). Enlaces:
 URL pública para las tiendas:
 
 ```
-https://kidsafe-play.lovable.app/privacy
+https://kidsafe-play.mediaatlastv.com/privacy
 ```
 
 (o la URL publicada que tengas conectada como dominio personalizado).
@@ -218,4 +218,4 @@ The kids' video player blocks casting to external devices at multiple layers:
 
 ## 11. Modo remoto (Capacitor)
 
-La app nativa carga `https://kidsafe-play.lovable.app` (ver `capacitor.config.ts`). `bun run cap:build` solo genera `capacitor-shell/index.html` y hace `cap sync`. Los cambios web llegan al publicar en Lovable, sin subir otro .aab. En la app nativa el login recomendado es "Entrar con el móvil" (Google bloquea el login dentro de WebViews).
+La app nativa carga `https://kidsafe-play.mediaatlastv.com` (ver `capacitor.config.ts`). `bun run cap:build` solo genera `capacitor-shell/index.html` y hace `cap sync`. Los cambios web llegan al publicar en Lovable, sin subir otro .aab. En la app nativa el login recomendado es "Entrar con el móvil" (Google bloquea el login dentro de WebViews).
