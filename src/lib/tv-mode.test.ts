@@ -39,3 +39,16 @@ describe("tv mode", () => {
     expect(scoreCandidate(from, sameRowFar, "right", true)!).toBeLessThan(scoreCandidate(from, otherZoneNear, "right", false)!);
   });
 });
+
+import { textFieldKeyAction } from "./tv-mode";
+describe("textFieldKeyAction", () => {
+  it("OK starts editing, arrows navigate while not editing", () => {
+    expect(textFieldKeyAction(false, "Enter")).toBe("enter-edit");
+    expect(textFieldKeyAction(false, "ArrowLeft")).toBe("navigate");
+  });
+  it("Back or Enter leaves editing; arrows stay in the field", () => {
+    expect(textFieldKeyAction(true, "Escape")).toBe("exit-edit");
+    expect(textFieldKeyAction(true, "Enter")).toBe("exit-edit");
+    expect(textFieldKeyAction(true, "ArrowLeft")).toBe("pass");
+  });
+});
