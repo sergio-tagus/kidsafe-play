@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthenticatedParentRouteRouteImport } from './routes/_authenticated/parent/route'
+import { Route as AuthenticatedTvLinkRouteImport } from './routes/_authenticated/tv-link'
 import { Route as AuthenticatedParentIndexRouteImport } from './routes/_authenticated/parent/index'
 import { Route as AuthenticatedParentApiUsageRouteImport } from './routes/_authenticated/parent/api-usage'
 import { Route as AuthenticatedParentCategoriesRouteImport } from './routes/_authenticated/parent/categories'
@@ -61,6 +62,11 @@ const AuthenticatedParentRouteRoute =
     path: '/parent',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTvLinkRoute = AuthenticatedTvLinkRouteImport.update({
+  id: '/tv-link',
+  path: '/tv-link',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedParentIndexRoute =
   AuthenticatedParentIndexRouteImport.update({
     id: '/',
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
   '/parent': typeof AuthenticatedParentRouteRouteWithChildren
+  '/tv-link': typeof AuthenticatedTvLinkRoute
   '/parent/api-usage': typeof AuthenticatedParentApiUsageRoute
   '/parent/categories': typeof AuthenticatedParentCategoriesRoute
   '/parent/children': typeof AuthenticatedParentChildrenRoute
@@ -219,6 +226,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
+  '/tv-link': typeof AuthenticatedTvLinkRoute
   '/parent/api-usage': typeof AuthenticatedParentApiUsageRoute
   '/parent/categories': typeof AuthenticatedParentCategoriesRoute
   '/parent/children': typeof AuthenticatedParentChildrenRoute
@@ -248,6 +256,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/privacy': typeof PrivacyRoute
   '/_authenticated/parent': typeof AuthenticatedParentRouteRouteWithChildren
+  '/_authenticated/tv-link': typeof AuthenticatedTvLinkRoute
   '/_authenticated/parent/api-usage': typeof AuthenticatedParentApiUsageRoute
   '/_authenticated/parent/categories': typeof AuthenticatedParentCategoriesRoute
   '/_authenticated/parent/children': typeof AuthenticatedParentChildrenRoute
@@ -277,6 +286,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/privacy'
     | '/parent'
+    | '/tv-link'
     | '/parent/api-usage'
     | '/parent/categories'
     | '/parent/children'
@@ -303,6 +313,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/privacy'
+    | '/tv-link'
     | '/parent/api-usage'
     | '/parent/categories'
     | '/parent/children'
@@ -331,6 +342,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/privacy'
     | '/_authenticated/parent'
+    | '/_authenticated/tv-link'
     | '/_authenticated/parent/api-usage'
     | '/_authenticated/parent/categories'
     | '/_authenticated/parent/children'
@@ -397,6 +409,13 @@ declare module '@tanstack/react-router' {
       path: '/parent'
       fullPath: '/parent'
       preLoaderRoute: typeof AuthenticatedParentRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tv-link': {
+      id: '/_authenticated/tv-link'
+      path: '/tv-link'
+      fullPath: '/tv-link'
+      preLoaderRoute: typeof AuthenticatedTvLinkRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/parent/': {
@@ -588,6 +607,7 @@ const AuthenticatedParentRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedParentRouteRoute: typeof AuthenticatedParentRouteRouteWithChildren
+  AuthenticatedTvLinkRoute: typeof AuthenticatedTvLinkRoute
   AuthenticatedKidsChildIdFavoritesRoute: typeof AuthenticatedKidsChildIdFavoritesRoute
   AuthenticatedKidsChildIdHistoryRoute: typeof AuthenticatedKidsChildIdHistoryRoute
   AuthenticatedKidsChildIdSearchRoute: typeof AuthenticatedKidsChildIdSearchRoute
@@ -601,6 +621,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedParentRouteRoute: AuthenticatedParentRouteRouteWithChildren,
+  AuthenticatedTvLinkRoute: AuthenticatedTvLinkRoute,
   AuthenticatedKidsChildIdFavoritesRoute:
     AuthenticatedKidsChildIdFavoritesRoute,
   AuthenticatedKidsChildIdHistoryRoute: AuthenticatedKidsChildIdHistoryRoute,

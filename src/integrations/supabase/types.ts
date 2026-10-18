@@ -327,6 +327,36 @@ export type Database = {
         }
         Relationships: []
       }
+      tv_login_codes: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          secret: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          secret: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          secret?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

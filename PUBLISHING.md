@@ -207,3 +207,11 @@ The kids' video player blocks casting to external devices at multiple layers:
   page requests it; the controlsList and CSS above cover the WebView
   chrome. Screen mirroring from Quick Settings is an OS-level action
   outside the app.
+
+## 10. Google TV
+
+- Modo TV automático en Google TV (o forzado en navegador con `?tv=1`, desactivar con `?tv=0`).
+- Navegación con flechas/OK/Atrás; Atrás en el inicio cierra la app.
+- Login en TV: "Entrar con el móvil" muestra un QR y un código; el padre lo confirma en `/tv-link` desde el móvil.
+- Firma: exporta `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` y ejecuta `./gradlew bundleRelease`, o usa Android Studio.
+- Probar en el emulador "Television (1080p)" de Android Studio antes de enviar a revisión de TV.
