@@ -41,7 +41,7 @@ function TvSimulator() {
   useEffect(() => {
     const el = stage.current;
     if (!el) return;
-    const fit = () => setScale(Math.min((el.clientWidth - 32) / w, (el.clientHeight - 32) / h));
+    const fit = () => setScale(Math.min((el.clientWidth - 32) / (w + 28), (el.clientHeight - 32) / (h + 28)));
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(el);
