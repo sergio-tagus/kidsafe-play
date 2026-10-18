@@ -45,7 +45,7 @@ function loadYT(): Promise<any> {
   if (ytPromise) return ytPromise;
   ytPromise = new Promise((resolve) => {
     const tag = document.createElement("script");
-    tag.src = "https://www.youtube.com/iframe_api";
+    tag.src = "https://www.youtube-nocookie.com/iframe_api";
     document.body.appendChild(tag);
     (window as any).onYouTubeIframeAPIReady = () => resolve((window as any).YT);
   });
@@ -111,6 +111,9 @@ const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
       if (!mounted || !containerRef.current) return;
       playerRef.current = new YT.Player(containerRef.current, {
         videoId: video.youtube_video_id,
+        // Privacy-enhanced mode: serve the embed from youtube-nocookie.com so no
+        // YouTube cookies are set on the child's device until they interact.
+        host: "https://www.youtube-nocookie.com",
         playerVars: {
           rel: 0,
           modestbranding: 1,
