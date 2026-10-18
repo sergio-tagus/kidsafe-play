@@ -136,6 +136,7 @@ for (const d of DEVICES) {
   for (const p of PAGES) {
     const tvq = d.name === "android-tv" ? (p.path.includes("?") ? "&tv=1" : "?tv=1") : "";
     await page.goto(URL + p.path + tvq, { waitUntil: "networkidle" });
+    await waitForImages(page);
     await page.waitForTimeout(800);
     await maskSensitive(page);
     await page.screenshot({ path: join(OUT, `${d.name}-${p.name}.png`) });
