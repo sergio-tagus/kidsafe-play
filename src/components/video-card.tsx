@@ -9,7 +9,7 @@ export function VideoCard({ video, childId }: { video: SafeVideo; childId: strin
     <Link
       to="/kids/$childId/watch/$videoId"
       params={{ childId, videoId: video.youtube_video_id } as any}
-      className="group block rounded-2xl overflow-hidden bg-card shadow-md hover:shadow-xl transition-all hover:-translate-y-1"
+      className="video-card group block rounded-2xl overflow-hidden bg-card shadow-md hover:shadow-xl transition-all hover:-translate-y-1"
     >
       <div className="relative aspect-video bg-muted overflow-hidden">
         <img

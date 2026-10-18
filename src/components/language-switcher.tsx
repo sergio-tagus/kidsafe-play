@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useI18n, LANGS } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,14 +8,29 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Globe } from "lucide-react";
+import { isTvMode, moveFocus } from "@/lib/tv-mode";
 
 export function LanguageSwitcher() {
   const { lang, setLang } = useI18n();
+  const [open, setOpen] = useState(false);
   const current = LANGS.find((l) => l.code === lang);
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="rounded-full text-white hover:bg-white/10">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="rounded-full text-white hover:bg-white/10"
+          onKeyDownCapture={(e) => {
+            if (!isTvMode()) return;
+            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+              // Stop Radix from opening on arrows; move focus like the D-pad does.
+              e.stopPropagation();
+              e.preventDefault();
+              moveFocus(e.key === "ArrowDown" ? "down" : "up");
+            }
+          }}
+        >
           <Globe className="w-4 h-4 mr-1" /> {current?.flag}
         </Button>
       </DropdownMenuTrigger>

@@ -11,6 +11,7 @@ import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Heart, Lock, Play, Pause, RotateCcw, RotateCw, Maximize, Minimize } from "lucide-react";
 import { toast } from "sonner";
+import { isTvMode, isBackKey, mediaKeyAction, TV_EXIT_FULLSCREEN } from "@/lib/tv-mode";
 
 function sanitizeDescription(text: string): string {
   if (!text) return "";
@@ -245,29 +246,62 @@ const togglePlay = useCallback(() => {
 
 useEffect(() => {
     if (locked) return;
+    const tv = isTvMode();
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement | null;
       if (el && ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName)) return;
+      const media = mediaKeyAction(e.key);
+      if (media) {
+        e.preventDefault();
+        if (media === "toggle") togglePlay();
+        else if (media === "forward") seekBy(SEEK_SECONDS);
+        else seekBy(-SEEK_SECONDS);
+        nudgeControls();
+        return;
+      }
+      if (tv) {
+        // TV: arrows move focus between buttons, OK activates the focused one.
+        // When the overlay is hidden, the first press only reveals it.
+        if (!controlsVisible && !isBackKey(e.key, e.keyCode)) {
+          e.preventDefault();
+          nudgeControls();
+          const play = stageRef.current?.querySelector<HTMLElement>('[data-player-play]');
+          play?.focus({ preventScroll: true });
+          return;
+        }
+        nudgeControls();
+        return;
+      }
       if (e.key === "ArrowLeft") { e.preventDefault(); seekBy(-SEEK_SECONDS); }
       else if (e.key === "ArrowRight") { e.preventDefault(); seekBy(SEEK_SECONDS); }
       else if (e.key === " " || e.key === "Enter") { e.preventDefault(); togglePlay(); }
       else return;
       nudgeControls();
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [locked, seekBy, togglePlay, nudgeControls]);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [locked, seekBy, togglePlay, nudgeControls, controlsVisible]);
+
+  // TV: focus the play button when the player opens.
+  useEffect(() => {
+    if (!isTvMode() || !video) return;
+    const id = window.setTimeout(() => {
+      document.querySelector<HTMLElement>("[data-player-play]")?.focus({ preventScroll: true });
+    }, 300);
+    return () => window.clearTimeout(id);
+  }, [video]);
 
   const toggleFullscreen = useCallback(async () => {
     const el = stageRef.current as any;
     if (!el) return;
     const canNative =
+      !isTvMode() &&
       typeof document !== "undefined" &&
       (document as any).fullscreenEnabled !== false &&
       (typeof el.requestFullscreen === "function" || typeof el.webkitRequestFullscreen === "function");
 
     if (!canNative) {
-      // iOS Safari/Chrome: no Fullscreen API on non-video elements → simulate it.
+      // iOS Safari/Chrome and Google TV WebView: simulate fullscreen.
       setPseudoFullscreen((v) => {
         const next = !v;
         if (next) {
@@ -278,6 +312,9 @@ useEffect(() => {
         }
         return next;
       });
+      window.setTimeout(() => {
+        stageRef.current?.querySelector<HTMLElement>("[data-player-play]")?.focus({ preventScroll: true });
+      }, 50);
       return;
     }
     try {
@@ -308,15 +345,18 @@ useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" || e.key === "Backspace" || e.key === "GoBack") {
+      if (e.key === "Escape" || isBackKey(e.key, e.keyCode)) {
         e.preventDefault();
         setPseudoFullscreen(false);
       }
     };
-    window.addEventListener("keydown", onKey);
+    const onExit = () => setPseudoFullscreen(false);
+    window.addEventListener("keydown", onKey, true);
+    window.addEventListener(TV_EXIT_FULLSCREEN, onExit);
     return () => {
       document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener(TV_EXIT_FULLSCREEN, onExit);
       try { (window.screen?.orientation as any)?.unlock?.(); } catch { /* ignore */ }
     };
   }, [pseudoFullscreen]);
@@ -336,6 +376,7 @@ useEffect(() => {
       <Button
         size="lg"
         className="rounded-full h-16 w-16 p-0 shadow-lg"
+        data-player-play
         aria-label={t("player.playPause")}
         onClick={togglePlay}
       >
@@ -385,6 +426,7 @@ useEffect(() => {
         <div className="max-w-6xl mx-auto">
 <div
             ref={stageRef}
+            data-pseudo-fullscreen={pseudoFullscreen ? "1" : undefined}
             onPointerDown={nudgeControls}
             onMouseMove={nudgeControls}
             style={
