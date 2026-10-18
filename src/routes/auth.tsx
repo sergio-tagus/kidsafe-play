@@ -27,7 +27,9 @@ function AuthPage() {
   const { t, lang, setLang } = useI18n();
   const search = useSearch({ from: "/auth" });
   const [tv, setTv] = useState(false);
-  useEffect(() => { setTv(isTvMode()); }, []);
+  // Google blocks sign-in inside embedded WebViews, so the native app also
+  // offers the phone/QR sign-in as a reliable fallback.
+  useEffect(() => { setTv(isTvMode() || Capacitor.isNativePlatform()); }, []);
 
   useEffect(() => {
     if (!loading && session) {
