@@ -50,5 +50,6 @@ describe("textFieldKeyAction", () => {
     expect(textFieldKeyAction(true, "Escape")).toBe("exit-edit");
     expect(textFieldKeyAction(true, "Enter")).toBe("exit-edit");
     expect(textFieldKeyAction(true, "ArrowLeft")).toBe("pass");
+    expect(textFieldKeyAction(true, "Backspace")).toBe("pass");
   });
 });

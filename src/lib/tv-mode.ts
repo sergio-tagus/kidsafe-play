@@ -151,7 +151,8 @@ export function textFieldKeyAction(editing: boolean, key: string, keyCode?: numb
     if (back) return "pass";
     return keyToDir(key) ? "navigate" : "pass";
   }
-  if (back || key === "Enter") return "exit-edit";
+  // Backspace deletes text while editing; only real Back/Escape leave.
+  if (key === "Escape" || (back && key !== "Backspace") || key === "Enter") return "exit-edit";
   return "pass";
 }
 
