@@ -45,7 +45,9 @@ function loadYT(): Promise<any> {
   if (ytPromise) return ytPromise;
   ytPromise = new Promise((resolve) => {
     const tag = document.createElement("script");
-    tag.src = "https://www.youtube-nocookie.com/iframe_api";
+    // The IFrame API script is only served by youtube.com (youtube-nocookie.com
+    // returns 404); privacy-enhanced mode comes from the `host` player option.
+    tag.src = "https://www.youtube.com/iframe_api";
     document.body.appendChild(tag);
     (window as any).onYouTubeIframeAPIReady = () => resolve((window as any).YT);
   });
