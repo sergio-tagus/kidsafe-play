@@ -82,6 +82,9 @@ async function restoreSession(page) {
   await page.evaluate(
     (args) => {
       window.localStorage.setItem(args.key, args.value);
+      // Parent menu session gate (see src/routes/_authenticated/parent/route.tsx).
+      // The server-side unlock window must also be active for this user.
+      window.sessionStorage.setItem("safetube.parent_pin_ok", "1");
     },
     { key: storageKey, value: sessionJson },
   );
