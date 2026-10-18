@@ -15,3 +15,4 @@
 - Icons/splashes: `scripts/generate-icons.py` (source: `src/assets/brand/logo-mark-source.png`, white bg removed via edge flood-fill) then `scripts/sync-native-assets.mjs` copies every drawable*/mipmap* folder into `android/`. Re-run both after `cap add android` overwrites defaults.
 - `scripts/take-store-screenshots.mjs` needs the signed-in session env vars, `safetube.parent_pin_ok=1` in sessionStorage (client gate in `parent/route.tsx`) plus an active server unlock window in `parent_pins.unlocked_until`; `MASK_TEXTS` blurs child names/emails in captures.
 - Capacitor `server.url` must be the primary domain (kidsafe-play.mediaatlastv.com) with both domains in `allowNavigation` — a cross-host redirect opens externally and leaves Google TV blank.
+- TV simulator lives at `/tv-simulator`: iframes `/?tv=sim` (TV forced per-frame only, never persisted) and drives it by dispatching key events into the iframe — keeps the real app untouched.

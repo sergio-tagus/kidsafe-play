@@ -150,8 +150,11 @@ export function initTvMode() {
   started = true;
   const params = new URLSearchParams(window.location.search);
   const forcedParam = params.get("tv");
-  if (forcedParam) localStorage.setItem("safetube.tv", forcedParam);
-  const tv = detectTv(navigator.userAgent, {
+  // Simulator iframe: force TV per-frame (sessionStorage) without persisting it for the whole site.
+  if (forcedParam === "sim") sessionStorage.setItem("safetube.tv.sim", "1");
+  else if (forcedParam) localStorage.setItem("safetube.tv", forcedParam);
+  const simulated = window !== window.top && sessionStorage.getItem("safetube.tv.sim") === "1";
+  const tv = simulated || detectTv(navigator.userAgent, {
     width: window.screen.width,
     coarse: matchMedia("(pointer: coarse)").matches,
     touch: navigator.maxTouchPoints > 0,
