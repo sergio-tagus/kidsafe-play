@@ -19,9 +19,14 @@ export function applyDisplayScale(res: ForcedResolution = getForcedResolution())
   if (typeof document === "undefined") return;
   const html = document.documentElement;
   html.style.removeProperty("zoom");
+  html.style.removeProperty("--page-zoom");
   baseWidth = window.innerWidth;
   const z = zoomFor(baseWidth, res);
-  if (z !== 1) html.style.setProperty("zoom", String(z));
+  if (z !== 1) {
+    html.style.setProperty("zoom", String(z));
+    // Fullscreen layers divide viewport units by this to fill the real screen.
+    html.style.setProperty("--page-zoom", String(z));
+  }
 }
 
 export function setForcedResolution(res: ForcedResolution) {
