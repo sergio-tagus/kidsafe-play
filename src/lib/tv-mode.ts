@@ -114,9 +114,25 @@ function isTextField(el: Element | null) {
   return (el as HTMLElement).isContentEditable;
 }
 
-let exitArmedUntil = 0;
+/** Two Back presses within this window leave the app from any screen. */
+export const DOUBLE_BACK_MS = 1500;
+export function isDoubleBack(lastBackAt: number, now: number): boolean {
+  return lastBackAt > 0 && now - lastBackAt <= DOUBLE_BACK_MS;
+}
+
+let lastBackAt = 0;
+
+function backToast() {
+  const l = document.documentElement.lang ?? "";
+  const msg = l.startsWith("en") ? "Press Back again to exit" : l.startsWith("pt") ? "Prima Voltar novamente para sair" : "Pulsa Atrás otra vez para salir";
+  void import("sonner").then(({ toast }) => toast(msg, { id: "tv-exit", duration: DOUBLE_BACK_MS }));
+}
 
 function goBack(): boolean | "exit" {
+  const now = Date.now();
+  if (isDoubleBack(lastBackAt, now)) { lastBackAt = 0; return "exit"; }
+  lastBackAt = now;
+  backToast();
   if (document.querySelector('[role="dialog"][data-state="open"], [role="menu"], [role="listbox"]')) {
     document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     return true;
@@ -127,10 +143,6 @@ function goBack(): boolean | "exit" {
   }
   if (document.fullscreenElement) { void document.exitFullscreen(); return true; }
   if (window.location.pathname !== "/" && window.history.length > 1) { window.history.back(); return true; }
-  // At the root: require a second Back within 3 s to leave the app.
-  if (Date.now() < exitArmedUntil) return "exit";
-  exitArmedUntil = Date.now() + 3000;
-  void import("sonner").then(({ toast }) => toast(document.documentElement.lang?.startsWith("en") ? "Press Back again to exit" : document.documentElement.lang?.startsWith("pt") ? "Prima Voltar novamente para sair" : "Pulsa Atrás otra vez para salir"));
   return true;
 }
 

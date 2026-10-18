@@ -6,7 +6,9 @@ import { listChildProfiles } from "@/lib/parent.functions";
 import { getSafeVideo, listSafeVideos, toggleFavorite, isFavorite, recordWatchTick, checkScreenTime } from "@/lib/kids.functions";
 import { KidShell } from "@/components/kid-shell";
 import { useOnline } from "@/components/offline-banner";
-import { VideoCard } from "@/components/video-card";
+import { VideoRow } from "@/components/video-card";
+import { NextVideoCard } from "@/components/player/next-video-card";
+import { pickNextVideo, seekTarget, formatTime } from "@/lib/autoplay-next";
 import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Heart, Lock, Play, Pause, RotateCcw, RotateCw, Maximize, Minimize } from "lucide-react";
@@ -101,6 +103,12 @@ const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
   const isFullscreen = nativeFullscreen || pseudoFullscreen;
   const [controlsVisible, setControlsVisible] = useState(true);
   const hideTimerRef = useRef<number | null>(null);
+  const [ended, setEnded] = useState(false);
+  const [seekFlash, setSeekFlash] = useState<string | null>(null);
+  const [time, setTime] = useState({ cur: 0, dur: 0 });
+  const pendingSeekRef = useRef<{ t: number; at: number } | null>(null);
+  const nextVideo = useMemo(() => pickNextVideo(related as any[], videoId), [related, videoId]);
+  useEffect(() => { setEnded(false); }, [videoId]);
 
 
   useEffect(() => {
@@ -147,7 +155,9 @@ const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
           },
           onStateChange: (e: any) => {
             const p = playerRef.current;
+            if (e.data === YT.PlayerState.ENDED) setEnded(true);
             if (e.data === YT.PlayerState.PLAYING) {
+              setEnded(false);
               setPaused(false);
               if (heartbeatRef.current) return;
               heartbeatRef.current = window.setInterval(async () => {
@@ -198,11 +208,33 @@ const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
     try {
       const p = playerRef.current;
       if (!p?.seekTo) return;
-      const current = p.getCurrentTime?.() ?? 0;
-      const total = p.getDuration?.() ?? 0;
-      const next = Math.min(total > 0 ? total : Infinity, Math.max(0, current + delta));
+      // getCurrentTime lags right after seekTo; chain quick presses from the pending target.
+      const pend = pendingSeekRef.current;
+      const current = pend && Date.now() - pend.at < 1500 ? pend.t : (p.getCurrentTime?.() ?? 0);
+      const next = seekTarget(current, delta, p.getDuration?.() ?? 0);
       p.seekTo(next, true);
+      pendingSeekRef.current = { t: next, at: Date.now() };
+      setTime((x) => ({ ...x, cur: next }));
+      setSeekFlash(delta < 0 ? `−${Math.abs(delta)} s` : `+${delta} s`);
     } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    if (!seekFlash) return;
+    const id = window.setTimeout(() => setSeekFlash(null), 700);
+    return () => window.clearTimeout(id);
+  }, [seekFlash]);
+
+  // Progress bar polling.
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const p = playerRef.current;
+      if (!p?.getCurrentTime) return;
+      const pend = pendingSeekRef.current;
+      if (pend && Date.now() - pend.at < 1500) return;
+      setTime({ cur: p.getCurrentTime() ?? 0, dur: p.getDuration?.() ?? 0 });
+    }, 1000);
+    return () => window.clearInterval(id);
   }, []);
 
 const togglePlay = useCallback(() => {
@@ -260,6 +292,29 @@ useEffect(() => {
         return;
       }
       if (tv) {
+        if (ended) return;
+        const active = document.activeElement as HTMLElement | null;
+        // Up from "Up next" always returns to the player controls (never the header search).
+        if (e.key === "ArrowUp" && active?.closest('[data-focus-zone="upnext"]')) {
+          e.preventDefault();
+          nudgeControls();
+          const play = stageRef.current?.querySelector<HTMLElement>("[data-player-play]");
+          play?.focus({ preventScroll: true });
+          stageRef.current?.scrollIntoView({ block: "center", behavior: "auto" });
+          return;
+        }
+        if (e.key === "ArrowDown" && active?.closest('[data-focus-zone="player"]') && !isFullscreen) {
+          const first = document.querySelector<HTMLElement>('[data-focus-zone="upnext"] a, [data-focus-zone="upnext"] button');
+          if (first) { e.preventDefault(); first.focus({ preventScroll: true }); first.scrollIntoView({ block: "nearest", behavior: "auto" }); return; }
+        }
+        // OK on a seek button: act directly so it never depends on the click synthesis.
+        const seekBtn = active?.closest<HTMLElement>("[data-seek]");
+        if (e.key === "Enter" && seekBtn && controlsVisible) {
+          e.preventDefault();
+          seekBy(Number(seekBtn.dataset.seek));
+          nudgeControls();
+          return;
+        }
         // TV: arrows move focus between buttons, OK activates the focused one.
         // When the overlay is hidden, the first press only reveals it.
         if (!controlsVisible && !isBackKey(e.key, e.keyCode)) {
@@ -280,7 +335,7 @@ useEffect(() => {
     };
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
-  }, [locked, seekBy, togglePlay, nudgeControls, controlsVisible]);
+  }, [locked, seekBy, togglePlay, nudgeControls, controlsVisible, ended, isFullscreen]);
 
   // TV: focus the play button when the player opens.
   useEffect(() => {
@@ -362,12 +417,23 @@ useEffect(() => {
   }, [pseudoFullscreen]);
 
 
+  const progressBar = (
+    <div className="w-full max-w-3xl mx-auto flex items-center gap-3 px-4 text-xs tabular-nums">
+      <span className={isFullscreen ? "text-white/90" : "text-muted-foreground"}>{formatTime(time.cur)}</span>
+      <div className="flex-1 h-1.5 rounded-full bg-muted/60 overflow-hidden">
+        <div className="h-full bg-primary rounded-full transition-[width] duration-500" style={{ width: `${time.dur ? Math.min(100, (time.cur / time.dur) * 100) : 0}%` }} />
+      </div>
+      <span className={isFullscreen ? "text-white/90" : "text-muted-foreground"}>{formatTime(time.dur)}</span>
+    </div>
+  );
+
   const seekControls = (variant: "bar" | "overlay") => (
-    <div className={`flex items-center justify-center gap-3 ${variant === "bar" ? "mt-3" : ""}`}>
+    <div data-focus-zone="player" className={`flex items-center justify-center gap-3 ${variant === "bar" ? "mt-3" : ""}`}>
       <Button
         size="lg"
         variant={variant === "overlay" ? "secondary" : "outline"}
-        className="rounded-full h-14 px-6 text-base font-semibold shadow-lg"
+        className="rounded-full h-14 px-6 text-base font-semibold shadow-lg backdrop-blur-md bg-secondary/70 border-border/60"
+        data-seek={-SEEK_SECONDS}
         aria-label={t("player.rewind", { s: SEEK_SECONDS })}
         onClick={() => seekBy(-SEEK_SECONDS)}
       >
@@ -375,7 +441,7 @@ useEffect(() => {
       </Button>
       <Button
         size="lg"
-        className="rounded-full h-16 w-16 p-0 shadow-lg"
+        className="rounded-full h-[4.5rem] w-[4.5rem] p-0 shadow-xl ring-offset-2 ring-offset-background"
         data-player-play
         aria-label={t("player.playPause")}
         onClick={togglePlay}
@@ -385,7 +451,8 @@ useEffect(() => {
       <Button
         size="lg"
         variant={variant === "overlay" ? "secondary" : "outline"}
-        className="rounded-full h-14 px-6 text-base font-semibold shadow-lg"
+        className="rounded-full h-14 px-6 text-base font-semibold shadow-lg backdrop-blur-md bg-secondary/70 border-border/60"
+        data-seek={SEEK_SECONDS}
         aria-label={t("player.forward", { s: SEEK_SECONDS })}
         onClick={() => seekBy(SEEK_SECONDS)}
       >
@@ -394,7 +461,7 @@ useEffect(() => {
       <Button
         size="lg"
         variant={variant === "overlay" ? "secondary" : "outline"}
-        className="rounded-full h-14 w-14 p-0 shadow-lg"
+        className="rounded-full h-14 w-14 p-0 shadow-lg backdrop-blur-md bg-secondary/70 border-border/60"
         aria-label={isFullscreen ? t("player.exitFullscreen") : t("player.fullscreen")}
         onClick={toggleFullscreen}
       >
@@ -431,20 +498,20 @@ useEffect(() => {
             onMouseMove={nudgeControls}
             style={
               pseudoFullscreen
-                ? { width: "100dvw", height: "100dvh" }
+                ? { width: "calc(100dvw / var(--page-zoom, 1))", height: "calc(100dvh / var(--page-zoom, 1))" }
                 : undefined
             }
             className={
               isFullscreen
                 ? `${pseudoFullscreen ? "fixed inset-0 z-50" : "relative w-full h-full"} bg-black`
-                : ""
+                : "relative"
             }
           >
 
           <div
             style={
               isFullscreen
-                ? { width: "min(100dvw, calc(100dvh * 16 / 9))" }
+                ? { width: "min(calc(100dvw / var(--page-zoom, 1)), calc(100dvh / var(--page-zoom, 1) * 16 / 9))" }
                 : undefined
             }
             className={
@@ -517,6 +584,24 @@ useEffect(() => {
               </div>
             )}
 </div>
+          {seekFlash && (
+            <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
+              <div className="rounded-full bg-background/70 backdrop-blur px-6 py-3 text-2xl font-display font-bold text-foreground shadow-xl">{seekFlash}</div>
+            </div>
+          )}
+          {ended && !locked && nextVideo && (
+            <NextVideoCard
+              next={nextVideo as any}
+              onPlay={() => { setEnded(false); navigate({ to: "/kids/$childId/watch/$videoId", params: { childId, videoId: nextVideo.youtube_video_id } as any }); }}
+              onCancel={() => setEnded(false)}
+            />
+          )}
+          {isFullscreen && !locked && (
+            <div className={`absolute top-0 inset-x-0 z-30 p-4 bg-gradient-to-b from-black/70 to-transparent text-white transition-opacity duration-300 pointer-events-none ${controlsVisible ? "opacity-100" : "opacity-0"}`}>
+              <div className="font-display font-bold text-lg line-clamp-1">{video.title}</div>
+              <div className="text-sm opacity-80">{video.channel.channel_name}</div>
+            </div>
+          )}
           {/* Full-screen tap catcher: while playing with the controls hidden, a
               tap anywhere on the stage brings them back. Never blocks the
               paused overlay nor YouTube's native controls when visible. */}
@@ -539,10 +624,16 @@ useEffect(() => {
                   paddingRight: "env(safe-area-inset-right)",
                 }}
               >
-                {seekControls("bar")}
+                <div className="w-full">
+                  {progressBar}
+                  {seekControls("bar")}
+                </div>
               </div>
             ) : (
-              seekControls("bar")
+              <div className="mt-3">
+                {progressBar}
+                {seekControls("bar")}
+              </div>
             )
           )}
           </div>
@@ -574,14 +665,9 @@ useEffect(() => {
             </div>
           </div>
           {related.length > 1 && (
-            <section className="mt-8">
-              <h2 className="text-lg font-display font-bold mb-3">{t("player.upNext")}</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {related.filter((r) => r.youtube_video_id !== videoId).map((r) => (
-                  <VideoCard key={r.id} video={r} childId={childId} />
-                ))}
-              </div>
-            </section>
+            <div className="mt-8" data-focus-zone="upnext">
+              <VideoRow title={t("player.upNext")} videos={related.filter((r) => r.youtube_video_id !== videoId)} childId={childId} scroll />
+            </div>
           )}
         </div>
       )}
