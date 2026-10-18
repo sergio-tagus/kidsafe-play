@@ -33,6 +33,10 @@
 - Una sola pulsación sigue funcionando como ahora (cierra menús, sale de pantalla completa, vuelve atrás). Tras la primera aparece el aviso "Pulsa Atrás otra vez para salir".
 - Técnico: en `goBack()` de `src/lib/tv-mode.ts`, registrar la hora del último Atrás; si el siguiente llega dentro de la ventana, devolver "exit" (`App.exitApp()` en la app nativa). Test nuevo para la ventana de 1,5 s.
 
+## 7. ¿Dos reproductores?
+- Revisado: solo hay un reproductor. Los vídeos del inicio y de la página de canales abren la misma página de reproducción mediante la misma tarjeta de vídeo. Todos los cambios del plan se aplican a ambos casos.
+- Refactor: el reproductor (controles, cuenta atrás de siguiente vídeo, pantalla completa) se separa en un componente propio para que la página quede más clara y no se duplique código en el futuro.
+
 ## Detalles técnicos
 - Archivo principal: `src/routes/_authenticated/kids/$childId/watch/$videoId.tsx`; ajustes en `src/lib/tv-mode.ts` (zona `data-focus-zone="player"`, tratar los controles ocultos como destino válido hacia arriba) y textos nuevos en `src/lib/i18n.tsx` (es/en/pt: "Siguiente vídeo", "Ver ahora", "Cancelar", "en {s} s").
 - Detectar `YT.PlayerState.ENDED` por separado del resto de estados para lanzar la tarjeta; constante `AUTOPLAY_NEXT_SECONDS = 10`.
