@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -10,12 +10,16 @@ import { useIsSuperAdmin } from "@/hooks/use-superadmin";
 import { searchUsers, startImpersonation } from "@/lib/impersonation.functions";
 import { saveImpersonation } from "@/lib/impersonation";
 import { markParentUnlocked } from "./route";
+import { isLovableClient } from "@/lib/lovable-host";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Search, UserCheck, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/parent/impersonate")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined" && !isLovableClient()) throw redirect({ to: "/parent" });
+  },
   component: ImpersonatePage,
 });
 
