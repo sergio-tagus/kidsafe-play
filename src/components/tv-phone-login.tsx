@@ -46,7 +46,7 @@ export function TvPhoneLogin() {
       {pair ? (
         <>
           <div className="mt-4 inline-block rounded-xl bg-card p-3">
-            <QRCodeSVG value={url} size={180} />
+            <QRCodeSVG value={url} size={512} style={{ width: "9rem", height: "9rem" }} />
           </div>
           <p className="mt-3 text-sm text-muted-foreground">{PUBLIC_ORIGIN.replace("https://", "")}/tv-link</p>
           <p className="mt-2 font-mono text-4xl tracking-[0.3em] text-foreground">{pair.code}</p>
