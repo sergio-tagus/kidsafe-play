@@ -12,12 +12,15 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "com.safetube.kids",
   appName: "SafeTube Kids",
-  webDir: "dist/client",
+  // Remote mode: the app uses server functions, so the native shell loads
+  // the published site. capacitor-shell/ only holds a loading page.
+  webDir: "capacitor-shell",
   backgroundColor: "#FFF7EDFF",
-  // server: {
-  //   url: "https://safe-whitelisted-play.lovable.app",
-  //   cleartext: false,
-  // },
+  server: {
+    url: "https://kidsafe-play.lovable.app",
+    cleartext: false,
+    androidScheme: "https",
+  },
   ios: {
     contentInset: "always",
     limitsNavigationsToAppBoundDomains: false,

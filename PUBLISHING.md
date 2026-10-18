@@ -215,3 +215,7 @@ The kids' video player blocks casting to external devices at multiple layers:
 - Login en TV: "Entrar con el móvil" muestra un QR y un código; el padre lo confirma en `/tv-link` desde el móvil.
 - Firma: exporta `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` y ejecuta `./gradlew bundleRelease`, o usa Android Studio.
 - Probar en el emulador "Television (1080p)" de Android Studio antes de enviar a revisión de TV.
+
+## 11. Modo remoto (Capacitor)
+
+La app nativa carga `https://kidsafe-play.lovable.app` (ver `capacitor.config.ts`). `bun run cap:build` solo genera `capacitor-shell/index.html` y hace `cap sync`. Los cambios web llegan al publicar en Lovable, sin subir otro .aab. En la app nativa el login recomendado es "Entrar con el móvil" (Google bloquea el login dentro de WebViews).

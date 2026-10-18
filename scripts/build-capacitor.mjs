@@ -1,31 +1,18 @@
 #!/usr/bin/env node
 /**
- * Build wrapper for Capacitor.
+ * Build wrapper for Capacitor (remote mode).
  *
- * TanStack Start emits an SSR server but no static index.html. Capacitor
- * needs an index.html entry point, so this script generates one from the
- * production client assets after `vite build`.
+ * The app uses server functions, so it cannot be packaged as static files.
+ * The native app loads the published site (server.url in capacitor.config.ts).
+ * This script only writes a minimal loading shell to capacitor-shell/ and
+ * runs `npx cap sync`. No vite build.
  */
-import { readdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
 
 const ROOT = process.cwd();
-const CLIENT_DIR = join(ROOT, "dist/client");
-const ASSETS_DIR = join(CLIENT_DIR, "assets");
-
-function findAsset(prefix, ext) {
-  const files = readdirSync(ASSETS_DIR);
-  const match = files.find((f) => f.startsWith(prefix) && f.endsWith(ext));
-  if (!match) throw new Error(`Asset not found: ${prefix}*.${ext}`);
-  return `assets/${match}`;
-}
-
-console.log("Building web bundle...");
-execSync("bun run build", { stdio: "inherit", cwd: ROOT });
-
-const jsEntry = findAsset("index", ".js");
-const cssEntry = findAsset("styles", ".css");
+const SHELL_DIR = join(ROOT, "capacitor-shell");
 
 const html = `<!DOCTYPE html>
 <html lang="es">
@@ -34,18 +21,33 @@ const html = `<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>SafeTube Kids</title>
   <meta name="theme-color" content="#FF6B9D">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="${cssEntry}">
+  <style>
+    html,body{margin:0;height:100%;background:#FFF7ED;color:#3b2a1a;font-family:system-ui,sans-serif}
+    .c{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px}
+    .e{font-size:64px}.s{width:36px;height:36px;border:4px solid #FFD6E5;border-top-color:#FF6B9D;border-radius:50%;animation:r 1s linear infinite}
+    @keyframes r{to{transform:rotate(360deg)}}
+    #off{display:none}
+  </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="module" src="${jsEntry}"></script>
+  <div class="c">
+    <div class="e">🦄</div>
+    <div id="load"><div class="s"></div><p>Cargando SafeTube Kids…</p></div>
+    <div id="off"><p>Sin conexión. Comprueba tu Internet.</p><button onclick="location.reload()">Reintentar</button></div>
+  </div>
+  <script>
+    function off(){document.getElementById('load').style.display='none';document.getElementById('off').style.display='block';}
+    if(!navigator.onLine) off();
+    window.addEventListener('offline', off);
+    setTimeout(function(){ if(!navigator.onLine) off(); }, 8000);
+  </script>
 </body>
 </html>
 `;
 
-writeFileSync(join(CLIENT_DIR, "index.html"), html);
-console.log(`Wrote dist/client/index.html -> ${jsEntry}, ${cssEntry}`);
+mkdirSync(SHELL_DIR, { recursive: true });
+writeFileSync(join(SHELL_DIR, "index.html"), html);
+console.log("Wrote capacitor-shell/index.html");
 
 console.log("Syncing Capacitor...");
 execSync("npx cap sync", { stdio: "inherit", cwd: ROOT });

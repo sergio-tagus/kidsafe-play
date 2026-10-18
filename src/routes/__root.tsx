@@ -137,6 +137,7 @@ function RootComponent() {
   useEffect(() => {
     registerServiceWorker();
     initTvMode();
+    void import("../lib/native-auth").then((m) => m.initNativeAuth());
   }, []);
 
   return (
