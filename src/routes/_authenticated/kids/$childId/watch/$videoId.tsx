@@ -376,6 +376,7 @@ useEffect(() => {
       <Button
         size="lg"
         className="rounded-full h-16 w-16 p-0 shadow-lg"
+        data-player-play
         aria-label={t("player.playPause")}
         onClick={togglePlay}
       >
