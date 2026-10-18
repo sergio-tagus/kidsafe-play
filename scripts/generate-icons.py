@@ -182,9 +182,10 @@ def fredoka_for_bbox(text, target_h):
         size = new_size
     return fredoka(size)
 
-def verify_banner_text(im, text_x, h, lines, target, path):
-    """Measure the wordmark glyph bounding boxes in the FINAL PNG."""
-    arr = np.array(im.crop((text_x, 0, im.width, h))).astype(int)
+def verify_banner_text(im, y0, y1, lines, target, path):
+    """Measure the wordmark glyph bounding boxes in the FINAL PNG.
+    The cropped strip (y0..y1) contains only the text lines."""
+    arr = np.array(im.crop((0, y0, im.width, y1))).astype(int)
     diff = (np.abs(arr - np.array(BG)).sum(axis=-1) > 30)  # not background
     rows = np.where(diff.any(axis=1))[0]
     if len(rows) == 0:
@@ -196,45 +197,41 @@ def verify_banner_text(im, text_x, h, lines, target, path):
     groups.append((start, rows[-1]))
     print(f"  {path.name}: {len(groups)} text line(s), target {target:.0f}px")
     ok = len(groups) == len(lines)
-    for (y0, y1), (t, _) in zip(groups, lines):
-        hh = int(y1 - y0 + 1)
-        print(f"    {t!r}: bbox height {hh}px = {hh/target:.2f} x target ({hh/h:.3f} x H)")
+    for (gy0, gy1), (t, _) in zip(groups, lines):
+        hh = int(gy1 - gy0 + 1)
+        print(f"    {t!r}: bbox height {hh}px = {hh/target:.2f} x target ({hh/im.height:.3f} x H)")
         if not (0.90 <= hh / target <= 1.15):
             ok = False
     if not ok:
         raise SystemExit(f"BANNER VERIFICATION FAILED for {path}")
 
 def tv_banner(w, h, path):
-    """TV / feature banner. Each wordmark line's glyph bbox is ~h/4 tall."""
+    """TV / feature banner: mark on top, wordmark stacked below.
+    Each wordmark line's glyph bbox is ~h/4 tall, verified on the final PNG."""
     im = Image.new("RGB", (w, h), BG)
     draw = ImageDraw.Draw(im)
-    mark_side = int(h * 0.78)
-    mk = mark.copy(); mk.thumbnail((mark_side, mark_side), Image.LANCZOS)
-    mk_x = int(w * 0.06)
-    im.paste(mk, (mk_x, (h - mk.height)//2), mk)
-    text_x = mk_x + mk.width + int(w * 0.03)
 
     target = h / 4.0
+    gap = int(h * 0.04)
     lines = [("SafeTube", PLUM), ("Kids", ACCENT)]
     fonts = [fredoka_for_bbox(t, target) for t, _ in lines]
-    # shrink uniformly if the longest line would overflow the canvas
-    def line_w(f, t):
-        b = f.getbbox(t); return b[2] - b[0]
-    max_w = w - text_x - int(w * 0.05)
-    longest = max(line_w(f, t) for f, (t, _) in zip(fonts, lines))
-    if longest > max_w:
-        scale = max_w / longest
-        fonts = [fredoka(round(f.size * scale)) for f in fonts]
-    gap = int(h * 0.04)
     boxes = [f.getbbox(t) for f, (t, _) in zip(fonts, lines)]
     heights = [b[3] - b[1] for b in boxes]
     block = sum(heights) + gap
-    y = (h - block) // 2
+
+    text_top = h - int(h * 0.06) - block
+    avail = text_top - int(h * 0.05)
+    mk = mark.copy()
+    mk.thumbnail((min(avail, int(w * 0.5)), avail), Image.LANCZOS)
+    im.paste(mk, ((w - mk.width)//2, int(h * 0.05) + max(0, (avail - mk.height)//2)), mk)
+
+    y = text_top
     for f, (t, col), b in zip(fonts, lines, boxes):
-        draw.text((text_x - b[0], y - b[1]), t, font=f, fill=col)
+        x = (w - (b[2] - b[0]))//2 - b[0]
+        draw.text((x, y - b[1]), t, font=f, fill=col)
         y += (b[3] - b[1]) + gap
     im.save(path)
-    verify_banner_text(im, text_x, h, lines, target, path)
+    verify_banner_text(im, text_top, h, lines, target, path)
     return im
 
 tv = AND / "drawable-xhdpi"; tv.mkdir(parents=True, exist_ok=True)
