@@ -178,7 +178,9 @@
   }
 
   /* Google TV mode: 10-foot UI, overscan-safe margins, strong focus */
-  html.tv { font-size: 20px; cursor: none; }
+  /* Scales with the screen: 20px at 1080p, 40px at 4K, 80px at 8K. */
+  html.tv { font-size: max(20px, 1.0417vw); cursor: none; }
+  html.tv :where(a, button, [role="button"], [role="tab"], [role="option"], [tabindex]):focus { outline-width: max(4px, 0.2vw); }
   html.tv body { padding: 2.5vh 5vw; }
   html.tv :where(a, button, [role="button"], [role="tab"], [role="option"], [tabindex]):focus-visible,
   html.tv :where(a, button, [role="button"], [role="tab"], [role="option"], [tabindex]):focus {

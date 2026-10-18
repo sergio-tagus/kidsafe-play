@@ -10,6 +10,10 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { Switch } from "@/components/ui/switch";
 import { getAutoResume, setAutoResume, getLastChildId } from "@/lib/auto-resume";
 import { z } from "zod";
+import { useState } from "react";
+import { isTvMode } from "@/lib/tv-mode";
+import { getTvSetupStatus } from "@/lib/tv-setup.functions";
+import { TvWelcome } from "@/components/tv-welcome";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -39,11 +43,27 @@ function HomeSelector() {
   const list = useServerFn(listChildProfiles);
   const { data: kids = [], isLoading } = useQuery({ queryKey: ["kids"], queryFn: () => list() });
 
+  const [tv] = useState(() => isTvMode());
+  const [skipped, setSkipped] = useState(() => typeof sessionStorage !== "undefined" && sessionStorage.getItem("tvWelcomeSkipped") === "1");
+  const setupFn = useServerFn(getTvSetupStatus);
+  const setup = useQuery({ queryKey: ["tv-setup"], queryFn: () => setupFn(), enabled: tv && !skipped });
+
   const pickKid = (id: string) => {
     setActiveChildId(id);
     navigate({ to: "/kids/$childId", params: { childId: id } });
   };
 
+
+  if (tv && !skipped && setup.data?.needsSetup) {
+    return (
+      <TvWelcome
+        hasPin={setup.data.hasPin}
+        hasChannels={setup.data.channelCount > 0}
+        onRecheck={() => setup.refetch()}
+        onSkip={() => { sessionStorage.setItem("tvWelcomeSkipped", "1"); setSkipped(true); }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen gradient-cool">
