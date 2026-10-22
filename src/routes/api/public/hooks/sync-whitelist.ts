@@ -128,6 +128,11 @@ export const Route = createFileRoute("/api/public/hooks/sync-whitelist")({
               }
 
               const videos = await fetchRecentUploads(yt.uploadsPlaylistId, 200);
+              const liveIds = (videos as any).liveIds as string[] | undefined;
+              if (liveIds?.length) {
+                await supabaseAdmin.from("videos_cache").delete()
+                  .eq("parent_user_id", s.parent_user_id).in("youtube_video_id", liveIds);
+              }
               if (videos.length) {
                 const rows = videos.map((v) => ({
                   parent_user_id: s.parent_user_id,
