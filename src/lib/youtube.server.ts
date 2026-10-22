@@ -269,17 +269,20 @@ export async function fetchRecentUploads(uploadsPlaylistId: string, max = 200): 
     if (!pageToken) break;
   }
 
-  if (!ids.length) return [];
+  const out: YtVideo[] & { liveIds?: string[] } = [];
+  out.liveIds = [];
+  if (!ids.length) return out;
 
-  const out: YtVideo[] = [];
+  const { isLiveVideo } = await import("./live-filter");
   for (let i = 0; i < ids.length; i += 50) {
     const chunk = ids.slice(i, i + 50);
     const j: any = await ytFetch("/videos", {
-      part: "snippet,contentDetails",
+      part: "snippet,contentDetails,liveStreamingDetails",
       id: chunk.join(","),
       maxResults: 50,
     });
     for (const v of j.items ?? []) {
+      if (isLiveVideo(v)) { out.liveIds.push(v.id); continue; }
       const sn = v.snippet ?? {};
       const th = sn.thumbnails ?? {};
       out.push({
