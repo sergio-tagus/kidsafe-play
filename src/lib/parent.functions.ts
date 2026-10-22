@@ -433,6 +433,11 @@ async function importVideosForChannel(
 ): Promise<number> {
   const { fetchRecentUploads } = await import("@/lib/youtube.server");
   const videos = await fetchRecentUploads(uploadsPlaylistId, videoLimit);
+  const liveIds = (videos as any).liveIds as string[] | undefined;
+  if (liveIds?.length) {
+    await supabase.from("videos_cache").delete()
+      .eq("parent_user_id", parentUserId).in("youtube_video_id", liveIds);
+  }
   if (!videos.length) return 0;
   const rows = videos.map((v) => ({
     parent_user_id: parentUserId,
