@@ -274,7 +274,7 @@ function WhitelistPage() {
       setDetailForm(null);
       qc.invalidateQueries({ queryKey: ["wl"] });
     } catch (e: any) {
-      toast.error(e.message ?? "Error");
+      handleParentActionError(e);
     } finally {
       setSavingDetail(false);
     }
@@ -307,7 +307,7 @@ function WhitelistPage() {
       setRecItems(res.items ?? []);
       setRecEmpty(!!res.empty);
     } catch (e: any) {
-      toast.error(e.message ?? "Error");
+      handleParentActionError(e);
       setRecOpen(false);
     } finally {
       setRecLoading(false);
@@ -323,7 +323,7 @@ function WhitelistPage() {
       setRecPreview({ ...p, __rec: rec });
       setRecPreviewCat(rec.suggested_category || p.category);
     } catch (e: any) {
-      toast.error(e.message ?? "Error");
+      handleParentActionError(e);
       setRecPreview(null);
     } finally {
       setRecPreviewLoading(false);
@@ -342,7 +342,7 @@ function WhitelistPage() {
       setRecPreview(null);
       qc.invalidateQueries({ queryKey: ["wl"] });
     } catch (e: any) {
-      toast.error(e.message ?? "Error");
+      handleParentActionError(e);
     } finally {
       setRecImporting(false);
     }
@@ -377,7 +377,7 @@ function WhitelistPage() {
       setPreview(p);
       setPreviewCategory(p.category);
     } catch (e: any) {
-      toast.error(e.message ?? "Error");
+      handleParentActionError(e);
     } finally {
       setLooking(false);
     }
@@ -398,7 +398,7 @@ function WhitelistPage() {
       setAutoOpen(false);
       qc.invalidateQueries({ queryKey: ["wl"] });
     } catch (e: any) {
-      toast.error(e.message ?? "Error");
+      handleParentActionError(e);
     } finally {
       setImporting(false);
     }
@@ -417,7 +417,7 @@ function WhitelistPage() {
       }
     } catch (e: any) {
       setRefreshingId(null);
-      toast.error(e.message ?? "Error");
+      handleParentActionError(e);
       return;
     }
     await syncVideos(id);
@@ -481,7 +481,7 @@ function WhitelistPage() {
       qc.invalidateQueries({ queryKey: ["wl"] });
       await syncDetailFromServer(diffState.channelId);
     } catch (e: any) {
-      toast.error(e.message ?? "Error");
+      handleParentActionError(e);
     } finally {
       setDiffBusy(false);
     }
@@ -506,7 +506,7 @@ function WhitelistPage() {
       qc.invalidateQueries({ queryKey: ["wl"] });
       await syncDetailFromServer(id);
     } catch (e: any) {
-      toast.error(e.message ?? "Error");
+      handleParentActionError(e);
     } finally {
       setRefreshingId(null);
     }
@@ -543,7 +543,7 @@ function WhitelistPage() {
       setManualOpen(false);
       qc.invalidateQueries({ queryKey: ["wl"] });
     } catch (e: any) {
-      toast.error(e.message);
+      handleParentActionError(e);
     }
   };
 
