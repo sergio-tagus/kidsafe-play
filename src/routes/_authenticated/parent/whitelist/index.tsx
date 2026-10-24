@@ -578,8 +578,8 @@ function WhitelistPage() {
             <AlertDialogTitle>{t("common.confirmDelete")}</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction autoFocus onClick={confirmRemove}>{t("common.delete")}</AlertDialogAction>
+            <AlertDialogCancel>{t("common.no")}</AlertDialogCancel>
+            <AlertDialogAction autoFocus onClick={confirmRemove}>{t("common.yes")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
