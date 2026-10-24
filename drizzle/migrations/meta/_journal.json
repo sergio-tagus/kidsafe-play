@@ -29,6 +29,13 @@
       "when": 1792835704419,
       "tag": "0003_atomic_youtube_usage_increment",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792836174586,
+      "tag": "0004_merge_usage_before_channel_delete",
+      "breakpoints": true
     }
   ]
 }
