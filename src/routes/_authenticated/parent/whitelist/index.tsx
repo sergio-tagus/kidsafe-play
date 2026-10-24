@@ -34,6 +34,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Plus, Trash2, ExternalLink, Search, RefreshCw, Loader2, Sparkles, X, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { handleParentActionError } from "@/lib/parent-locked";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useIsSuperAdmin } from "@/hooks/use-superadmin";
 
 export const Route = createFileRoute("/_authenticated/parent/whitelist/")({
@@ -546,18 +548,41 @@ function WhitelistPage() {
   };
 
   const toggleActive = async (c: any) => {
-    await upsertFn({ data: { ...c, active: !c.active } });
-    qc.invalidateQueries({ queryKey: ["wl"] });
+    try {
+      await upsertFn({ data: { ...c, active: !c.active } });
+      qc.invalidateQueries({ queryKey: ["wl"] });
+    } catch (e) {
+      handleParentActionError(e);
+    }
   };
 
-  const remove = async (id: string) => {
-    if (!confirm(t("common.confirmDelete"))) return;
-    await delFn({ data: { id } });
-    qc.invalidateQueries({ queryKey: ["wl"] });
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const remove = (id: string) => setPendingDelete(id);
+  const confirmRemove = async () => {
+    const id = pendingDelete;
+    setPendingDelete(null);
+    if (!id) return;
+    try {
+      await delFn({ data: { id } });
+      qc.invalidateQueries({ queryKey: ["wl"] });
+    } catch (e) {
+      handleParentActionError(e);
+    }
   };
 
   return (
     <ParentShell>
+      <AlertDialog open={!!pendingDelete} onOpenChange={(o) => { if (!o) setPendingDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("common.confirmDelete")}</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction autoFocus onClick={confirmRemove}>{t("common.delete")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 data-tour="whitelist" className="text-3xl font-display font-bold">{t("parent.whitelist")}</h1>
         <div className="flex gap-2 flex-wrap">
@@ -800,7 +825,7 @@ function WhitelistPage() {
                           toast.success(t("parent.categoryUpdated"));
                           qc.invalidateQueries({ queryKey: ["wl"] });
                         } catch (e: any) {
-                          toast.error(e.message ?? "Error");
+                          handleParentActionError(e);
                         }
                       }}
                     >
@@ -823,7 +848,7 @@ function WhitelistPage() {
                           toast.success(t("parent.languageUpdated"));
                           qc.invalidateQueries({ queryKey: ["wl"] });
                         } catch (e: any) {
-                          toast.error(e.message ?? "Error");
+                          handleParentActionError(e);
                         }
                       }}
                     >
