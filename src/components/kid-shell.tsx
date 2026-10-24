@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 import { Home, Tv, LayoutGrid, Heart, Search, LogOut, ArrowLeft } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
@@ -13,6 +13,13 @@ export function KidShell({ childId, child, children }: { childId: string; child?
   const { signOut } = useSession();
   useLockParentZone();
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const router = useRouter();
+  const onWatch = /\/watch\//.test(path);
+  const goBackFromPlayer = () => {
+    const idx = (window.history.state as any)?.__TSR_index ?? (window.history.state as any)?.idx ?? 0;
+    if (idx > 0) router.history.back();
+    else router.navigate({ to: "/kids/$childId", params: { childId } as any });
+  };
 
   const nav = [
     { to: "/kids/$childId", label: t("nav.home"), icon: Home, exact: true },
@@ -72,9 +79,15 @@ export function KidShell({ childId, child, children }: { childId: string; child?
             <Button variant="ghost" size="icon" className="rounded-full"><Heart className="w-5 h-5" /></Button>
           </Link>
           <LanguageSwitcher />
-          <Link to="/" search={{ switch: true } as any} title={t("profile.switch")}>
-            <Button variant="ghost" size="icon" className="rounded-full"><ArrowLeft className="w-5 h-5" /></Button>
-          </Link>
+          {onWatch ? (
+            <Button variant="ghost" size="icon" className="rounded-full" title={t("common.back")} aria-label={t("common.back")} onClick={goBackFromPlayer}>
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+          ) : (
+            <Link to="/" search={{ switch: true } as any} title={t("profile.switch")}>
+              <Button variant="ghost" size="icon" className="rounded-full"><ArrowLeft className="w-5 h-5" /></Button>
+            </Link>
+          )}
           <Button variant="ghost" size="icon" className="rounded-full hidden sm:inline-flex" onClick={() => signOut()}>
             <LogOut className="w-5 h-5" />
           </Button>
