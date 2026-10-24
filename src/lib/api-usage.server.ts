@@ -19,29 +19,15 @@ export async function recordUsage(
     const day = today();
     for (const [operation, v] of Object.entries(meter.byOp)) {
       if (!v.calls) continue;
-      let q = supabase
-        .from("youtube_api_usage")
-        .select("id, units, calls")
-        .eq("parent_user_id", parentUserId)
-        .eq("day", day)
-        .eq("operation", operation);
-      q = channelId ? q.eq("whitelist_channel_id", channelId) : q.is("whitelist_channel_id", null);
-      const { data: existing } = await q.maybeSingle();
-      if (existing) {
-        await supabase
-          .from("youtube_api_usage")
-          .update({ units: (existing.units ?? 0) + v.units, calls: (existing.calls ?? 0) + v.calls })
-          .eq("id", existing.id);
-      } else {
-        await supabase.from("youtube_api_usage").insert({
-          parent_user_id: parentUserId,
-          day,
-          operation,
-          units: v.units,
-          calls: v.calls,
-          whitelist_channel_id: channelId,
-        });
-      }
+      const { error } = await supabase.rpc("increment_youtube_usage", {
+        _parent: parentUserId,
+        _day: day,
+        _operation: operation,
+        _channel: channelId,
+        _units: v.units,
+        _calls: v.calls,
+      });
+      if (error) console.error("[api-usage] failed to record usage", error);
     }
   } catch (e) {
     console.error("[api-usage] failed to record usage", e);
