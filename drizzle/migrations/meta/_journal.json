@@ -22,6 +22,13 @@
       "when": 1792367075081,
       "tag": "0002_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792835704419,
+      "tag": "0003_atomic_youtube_usage_increment",
+      "breakpoints": true
     }
   ]
 }

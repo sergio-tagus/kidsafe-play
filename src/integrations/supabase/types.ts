@@ -614,6 +614,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_youtube_usage: {
+        Args: {
+          _calls: number
+          _channel: string
+          _day: string
+          _operation: string
+          _parent: string
+          _units: number
+        }
+        Returns: undefined
+      }
       search_users: {
         Args: { term: string }
         Returns: {
