@@ -1,0 +1,1 @@
+ALTER TABLE public.categories ALTER COLUMN created_by SET DEFAULT auth.uid();
