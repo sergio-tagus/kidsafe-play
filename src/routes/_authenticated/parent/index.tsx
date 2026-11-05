@@ -1,3 +1,4 @@
+import { ScreenTimeAlertsCard } from "@/components/screen-time-alerts";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -41,6 +42,7 @@ function ParentDashboard() {
   return (
     <ParentShell>
       <OnboardingResumeBanner />
+      <ScreenTimeAlertsCard />
       <h1 data-tour="overview" className="text-3xl font-display font-bold mb-6">{t("parent.dashboard")}</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">

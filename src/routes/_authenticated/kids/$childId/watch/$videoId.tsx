@@ -90,6 +90,8 @@ function WatchPage() {
   const { data: screen, refetch: refetchScreen } = useQuery({
     queryKey: ["screen", childId],
     queryFn: () => checkFn({ data: { childId } }),
+    // While blocked, keep checking so a parent's "Extend 1 hour" unlocks the player.
+    refetchInterval: (q) => (q.state.data && !q.state.data.allowed ? 15_000 : false),
   });
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -117,6 +119,7 @@ const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
       setLocked(true);
       return;
     }
+    setLocked(false);
     let mounted = true;
     loadYT().then((YT) => {
       if (!mounted || !containerRef.current) return;

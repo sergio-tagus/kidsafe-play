@@ -5,6 +5,7 @@ import { useSession } from "@/lib/session";
 import { LanguageSwitcher } from "./language-switcher";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, Users, ListChecks, LogOut, ArrowLeft, Tags, History, Gauge, UserCheck, HelpCircle, PlayCircle, RotateCcw, Link2 } from "lucide-react";
+import { ScreenTimeAlertsBadge } from "./screen-time-alerts";
 import { ParentUnlockGuard } from "./parent-unlock-guard";
 import { useIsSuperAdmin } from "@/hooks/use-superadmin";
 import { OnboardingTour, openOnboardingTour } from "./onboarding-tour";
@@ -66,6 +67,7 @@ export function ParentShell({ children }: { children: ReactNode }) {
             <div className="font-display font-bold text-lg text-sidebar-foreground">SafeTube</div>
             <div className="text-xs text-muted-foreground">{t("parent.dashboard")}</div>
           </div>
+          <span className="ml-auto text-sidebar-foreground"><ScreenTimeAlertsBadge /></span>
         </Link>
         <nav className="flex-1 space-y-1">
           {nav.map((n) => {
