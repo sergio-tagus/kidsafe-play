@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { effectiveLimit } from "@/lib/screen-time";
 
 // SafeVideo is the canonical DTO for anything shown to a kid.
 // It ALWAYS results from an INNER JOIN on active whitelist channels + RLS scoped to the parent.
@@ -336,16 +337,26 @@ export const checkScreenTime = createServerFn({ method: "POST" })
       .select("daily_screen_time_minutes")
       .eq("id", data.childId)
       .single();
-    const limit = kid?.daily_screen_time_minutes ?? 60;
     const today = new Date().toISOString().slice(0, 10);
     const { data: st } = await context.supabase
       .from("screen_time_daily")
-      .select("minutes_watched")
+      .select("minutes_watched, bonus_minutes")
       .eq("child_profile_id", data.childId)
       .eq("date", today)
       .maybeSingle();
     const watched = Number(st?.minutes_watched ?? 0);
+    const limit = effectiveLimit(kid?.daily_screen_time_minutes ?? 60, Number((st as any)?.bonus_minutes ?? 0));
     const remaining = Math.max(0, limit - watched);
+    if (remaining <= 0) {
+      // Notify the parent once per child per day (unique index prevents duplicates).
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin
+        .from("screen_time_alerts")
+        .upsert(
+          { child_profile_id: data.childId, parent_id: context.userId, date: today, status: "pending" },
+          { onConflict: "child_profile_id,date", ignoreDuplicates: true },
+        );
+    }
     return { allowed: remaining > 0, watched, limit, remaining };
   });
 
