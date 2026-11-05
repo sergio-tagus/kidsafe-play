@@ -268,20 +268,61 @@ export type Database = {
         }
         Relationships: []
       }
+      screen_time_alerts: {
+        Row: {
+          child_profile_id: string
+          created_at: string
+          date: string
+          id: string
+          parent_id: string
+          resolved_at: string | null
+          status: string
+        }
+        Insert: {
+          child_profile_id: string
+          created_at?: string
+          date: string
+          id?: string
+          parent_id: string
+          resolved_at?: string | null
+          status?: string
+        }
+        Update: {
+          child_profile_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          parent_id?: string
+          resolved_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screen_time_alerts_child_profile_id_fkey"
+            columns: ["child_profile_id"]
+            isOneToOne: false
+            referencedRelation: "child_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       screen_time_daily: {
         Row: {
+          bonus_minutes: number
           child_profile_id: string
           date: string
           id: string
           minutes_watched: number
         }
         Insert: {
+          bonus_minutes?: number
           child_profile_id: string
           date: string
           id?: string
           minutes_watched?: number
         }
         Update: {
+          bonus_minutes?: number
           child_profile_id?: string
           date?: string
           id?: string

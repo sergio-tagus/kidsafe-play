@@ -43,6 +43,13 @@
       "when": 1793215286003,
       "tag": "0005_categories_created_by_default",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793916878971,
+      "tag": "0006_screen_time_alerts",
+      "breakpoints": true
     }
   ]
 }
