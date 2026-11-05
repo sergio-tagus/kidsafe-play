@@ -67,8 +67,8 @@ export function ParentShell({ children }: { children: ReactNode }) {
             <div className="font-display font-bold text-lg text-sidebar-foreground">SafeTube</div>
             <div className="text-xs text-muted-foreground">{t("parent.dashboard")}</div>
           </div>
-          <span className="ml-auto text-sidebar-foreground"><ScreenTimeAlertsBadge /></span>
         </Link>
+        <Link to="/parent" hash="screen-time-alerts" className="self-start px-2 mb-2 text-sidebar-foreground"><ScreenTimeAlertsBadge /></Link>
         <nav className="flex-1 space-y-1">
           {nav.map((n) => {
             const active = n.exact ? path === n.to : path.startsWith(n.to);
@@ -96,7 +96,7 @@ export function ParentShell({ children }: { children: ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="sticky top-0 z-30 flex items-center gap-2 bg-background/95 backdrop-blur border-b border-border px-4 py-3">
           <Link to="/" className="md:hidden text-2xl">🦄</Link>
-          <Link to="/parent" className="md:hidden"><ScreenTimeAlertsBadge /></Link>
+          <Link to="/parent" hash="screen-time-alerts" className="md:hidden"><ScreenTimeAlertsBadge /></Link>
           <div className="flex-1 min-w-0 truncate text-xs text-muted-foreground">
             {linkedEmail ? (lang === "en" ? "Signed in with: " : lang === "pt" ? "Entrou com: " : "Has entrado con: ") + linkedEmail : null}
           </div>

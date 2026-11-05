@@ -47,7 +47,7 @@ export function ScreenTimeAlertsCard() {
   });
   if (!data.length) return null;
   return (
-    <div className="space-y-3 mb-6">
+    <div id="screen-time-alerts" className="space-y-3 mb-6 scroll-mt-20">
       {data.map((a) => (
         <Card key={a.id} className="border-destructive/50">
           <CardContent className="py-4 flex flex-wrap items-center gap-3">
